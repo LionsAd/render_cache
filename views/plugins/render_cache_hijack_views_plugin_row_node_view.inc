@@ -13,6 +13,9 @@
  * @ingroup views_row_plugins
  */
 class render_cache_hijack_views_plugin_row_node_view extends views_plugin_row_node_view {
+  /**
+   * Override parent::views_plugin_row_node_view() to add caching.
+   */
   function render($row) {
     if (isset($this->nodes[$row->{$this->field_alias}])) {
       $node = $this->nodes[$row->{$this->field_alias}];

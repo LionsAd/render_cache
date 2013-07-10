@@ -1,39 +1,56 @@
 <?php
 
 /**
+ * @file
+ * Hook implementations and frequently used functions for render cache module.
+ */
+
+
+/**
  * Retrieve cache ID to use for render caching.
  *
- * @param $entity_type
+ * @param string $entity_type
  *   The type of the entity object being rendered.
- * @param $entity
+ * @param object $entity
  *   The entity object being rendered.
- * @param $view_mode
+ * @param string $view_mode
  *   The view mode the entity is being rendered through.
- * @param $language
+ * @param string|NULL $language
  *   The language the entity is being rendered in.
+ *
+ * @return string
  */
 function render_cache_get_cid($entity_type, $entity, $view_mode, $language = NULL) {
   $hash = array();
   $admin = '';
-  $info = entity_get_info($entity_type);
 
-  // Identifier
-  if (isset($info['entity keys']['revision']) && $info['entity keys']['revision']) {
-    $hash[] = $entity->{$info['entity keys']['revision']};
+  // Unique identifier.
+  $hash['id'] = $entity->{render_cache_id_name($entity_type)};
+
+  // Last modified timestamp.
+  $modified = render_cache_modified_name($entity_type);
+  if ($modified) {
+    $hash['modified'] = $entity->$modified;
   }
   else {
-    $hash[] = $entity->{$info['entity keys']['id']};
+    // TODO: Add query to retrieve custom modified tracker.
   }
-
-  // Timestamp
 
   // Language
   if (is_null($language)) {
-    $hash[] = $GLOBALS['language_content']->language;
+    $hash['lang'] = $GLOBALS['language_content']->language;
   }
   else {
-    $hash[] = $language;
+    $hash['lang'] = $language;
   }
+
+  // Allow modules to modify $hash for custom invalidating.
+  $context = array(
+    'entity_type' => $entity_type,
+    'view_mode' => $view_mode,
+    'language' => $language,
+  );
+  drupal_alter('render_cache_hash', $hash, $entity, $context);
 
   // Contextual links requires us to store two sets of caches.
   if (module_exists('contextual') && user_access('view pane admin links')) {
@@ -41,6 +58,69 @@ function render_cache_get_cid($entity_type, $entity, $view_mode, $language = NUL
   }
 
   return 'render_cache:' . $entity_type . ':' . $view_mode . ':' . $admin . sha1(implode('-', $hash));
+}
+
+/**
+ * Retrieve the unique identifying property name for use in cache ID hashing.
+ *
+ * @param string $entity_type
+ *   The entity type to retrieve the identifier for.
+ *
+ * @return void|string
+ *   Returns string if entity type is valid.
+ */
+function render_cache_id_name($entity_type) {
+  // Do not use drupal_static() as this is called very often, and there is no
+  // foreseeable reason to need to clear it during a page load.
+  static $names = array();
+
+  if (isset($names[$entity_type])) {
+    return $names[$entity_type];
+  }
+  else {
+    $info = entity_get_info($entity_type);
+    if (isset($info['entity keys']['revision']) && $info['entity keys']['revision']) {
+      $names[$entity_type] = $info['entity keys']['revision'];
+    }
+    else {
+      $names[$entity_type] = $info['entity keys']['id'];
+    }
+    return $names[$entity_type];
+  }
+}
+
+/**
+ * Retrieve the last modified property name for use in cache ID hashing.
+ *
+ * @param string $entity_type
+ *   The entity type to retrieve the property name for.
+ *
+ * @return void|string
+ *   Returns string if a property exists.
+ */
+function render_cache_modified_name($entity_type) {
+  // Do not use drupal_static() as this is called very often, and there is no
+  // foreseeable reason to need to clear it during a page load.
+  static $modified = array();
+
+  if (empty($modified)) {
+    drupal_alter('render_cache_modified_name', $modified);
+  }
+
+  if (isset($modified[$entity_type])) {
+    return $modified[$entity_type];
+  }
+}
+
+/**
+ * Implements hook_render_cache_modified_name_alter().
+ *
+ * Eating own dog food, define unique identifiers for entity types this module
+ * is aware of.
+ */
+function render_cache_render_cache_modified_name_alter(&$modified) {
+  $modified['node'] = 'changed';
+  $modified['file'] = 'timestamp';
 }
 
 /**
