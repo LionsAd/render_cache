@@ -17,12 +17,12 @@ class render_cache_hijack_views_plugin_row_node_view extends views_plugin_row_no
     if (isset($this->nodes[$row->{$this->field_alias}])) {
       $node = $this->nodes[$row->{$this->field_alias}];
       $cid = render_cache_get_cid('node', $node, $this->options['view_mode']);
-      if ($cache = cache_get($cid, 'cache_render_cache')) {
+      if ($cache = cache_get($cid, 'cache_render')) {
         return $cache->data;
       }
 
       $render = parent::render($row);
-      cache_set($cid, $render, 'cache_render_cache');
+      cache_set($cid, $render, 'cache_render');
       return $render;
     }
   }
