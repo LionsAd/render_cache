@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * @file
+ * Install, uninstall, and update implementations for render cache module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function render_cache_schema() {
+  // Define our own cache bin, for advanced management with external caching.
+  $schema['cache_render_cache'] = drupal_get_schema_unprocessed('system', 'cache');
+  return $schema;
+}
+

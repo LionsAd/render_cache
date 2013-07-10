@@ -1,0 +1,9 @@
+name = Render cache
+description = Cache rendered items to drastically improve performance.
+package = Performance and scalability
+core = 7.x
+
+configure = admin/config/development/render-cache
+
+files[] = views/plugins/render_cache_hijack_views_plugin_row_node_view.inc
+

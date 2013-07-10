@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * Retrieve cache ID to use for render caching.
+ *
+ * @param $entity_type
+ *   The type of the entity object being rendered.
+ * @param $entity
+ *   The entity object being rendered.
+ * @param $view_mode
+ *   The view mode the entity is being rendered through.
+ * @param $language
+ *   The language the entity is being rendered in.
+ */
+function render_cache_get_cid($entity_type, $entity, $view_mode, $language = NULL) {
+  $hash = array();
+  $admin = '';
+  $info = entity_get_info($entity_type);
+
+  // Identifier
+  if (isset($info['entity keys']['revision']) && $info['entity keys']['revision']) {
+    $hash[] = $entity->{$info['entity keys']['revision']};
+  }
+  else {
+    $hash[] = $entity->{$info['entity keys']['id']};
+  }
+
+  // Timestamp
+
+  // Language
+  if (is_null($language)) {
+    $hash[] = $GLOBALS['language_content']->language;
+  }
+  else {
+    $hash[] = $language;
+  }
+
+  // Contextual links requires us to store two sets of caches.
+  if (module_exists('contextual') && user_access('view pane admin links')) {
+    $admin = 'admin:';
+  }
+
+  return 'render_cache:' . $entity_type . ':' . $view_mode . ':' . $admin . sha1(implode('-', $hash));
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function render_cache_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'render_cache') . '/views',
+  );
+}
+
