@@ -5,6 +5,64 @@
  * Hook implementations and frequently used functions for render cache module.
  */
 
+/**
+ * Implements hook_entity_delete().
+ *
+ * Delete our custom stored entity modified record when the entity is deleted.
+ */
+function render_cache_entity_delete($entity, $type) {
+  // Attempt to delete any record we stored for the entity. We do not check
+  // if it has a modified property because our knowledge of the property could
+  // have occurred after we already had a record (module updates).
+  db_delete('render_cache_modified')
+      ->condition('entity_type', $type)
+      ->condition('entity_id', $entity->{render_cache_id_name($type)})
+      ->execute();
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function render_cache_entity_info_alter(&$entity_info) {
+  // Todo: We might be able to hijack node rendering by taking over the view
+  // callback (or controller class with entity API).
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function render_cache_entity_insert($entity, $type) {
+  // If the module does not have a modified property that we know about then
+  // insert.
+  if (!render_cache_modified_name($type)) {
+    db_insert('render_cache_modified')
+        ->fields(array(
+          'entity_type' => $type,
+          'entity_id' => $entity->{render_cache_id_name($type)},
+          'modified' => REQUEST_TIME,
+        ))
+        ->execute();
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function render_cache_entity_update($entity, $type) {
+  // If the module does not have a modified property that we know about then
+  // insert or update.
+  if (!render_cache_modified_name($type)) {
+    db_merge('render_cache_modified')
+        ->key(array(
+          'entity_type' => $type,
+          'entity_id' => $entity->{render_cache_id_name($type)},
+        ))
+        ->fields(array(
+          'modified' => REQUEST_TIME,
+        ))
+        ->execute();
+  }
+}
 
 /**
  * Retrieve cache ID to use for render caching.
@@ -33,7 +91,14 @@ function render_cache_get_cid($entity_type, $entity, $view_mode, $language = NUL
     $hash['modified'] = $entity->$modified;
   }
   else {
-    // TODO: Add query to retrieve custom modified tracker.
+    $hash['modified'] = db_query(
+      'SELECT modified FROM {render_cache_modified} WHERE entity_type = :entity_type AND entity_id = :entity_id',
+      array(':entity_type' => $entity_type, ':entity_id' => $hash['id'])
+    )->fetchField();
+    if (!$hash['modified']) {
+      render_cache_entity_insert($entity, $entity_type);
+      $hash['modified'] = REQUEST_TIME;
+    }
   }
 
   // Language
