@@ -21,14 +21,6 @@ function render_cache_entity_delete($entity, $type) {
 }
 
 /**
- * Implements hook_entity_info_alter().
- */
-function render_cache_entity_info_alter(&$entity_info) {
-  // Todo: We might be able to hijack node rendering by taking over the view
-  // callback (or controller class with entity API).
-}
-
-/**
  * Implements hook_entity_insert().
  */
 function render_cache_entity_insert($entity, $type) {
