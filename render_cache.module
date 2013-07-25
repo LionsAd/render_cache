@@ -23,7 +23,16 @@ function render_cache_entity_delete($entity, $type) {
 /**
  * Hijack entity API rendering callback to add a caching layer.
  */
-function render_cache_hijack_entity_view_callback($entities, $view_mode, $langcode, $entity_type) {
+function render_cache_hijack_entity_view_callback($entities, $view_mode, $langcode = NULL, $entity_type) {
+  // Remove any passed values that are not an object, this can happen with out
+  // of date Apache Solr search when entities are deleted and probably other
+  // situations.
+  foreach($entities as $key => $entity) {
+    if (!is_object($entity)) {
+      unset($entities[$key]);
+    }
+  }
+
   $entity_info = entity_get_info($entity_type);
   $cids = $cached = $rendered = array();
   $entity_order = array_keys($entities);
