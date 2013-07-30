@@ -5,5 +5,7 @@ core = 7.x
 
 configure = admin/config/development/render-cache
 
+dependencies[] = entity_modified
+
 files[] = views/plugins/render_cache_hijack_views_plugin_row_node_view.inc
 

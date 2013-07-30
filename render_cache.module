@@ -6,21 +6,6 @@
  */
 
 /**
- * Implements hook_entity_delete().
- *
- * Delete our custom stored entity modified record when the entity is deleted.
- */
-function render_cache_entity_delete($entity, $type) {
-  // Attempt to delete any record we stored for the entity. We do not check
-  // if it has a modified property because our knowledge of the property could
-  // have occurred after we already had a record (module updates).
-  db_delete('render_cache_modified')
-      ->condition('entity_type', $type)
-      ->condition('entity_id', $entity->{render_cache_id_name($type)})
-      ->execute();
-}
-
-/**
  * Hijack entity API rendering callback to add a caching layer.
  */
 function render_cache_hijack_entity_view_callback($entities, $view_mode, $langcode = NULL, $entity_type) {
@@ -147,42 +132,6 @@ function render_cache_entity_info_alter(&$entity_info) {
 }
 
 /**
- * Implements hook_entity_insert().
- */
-function render_cache_entity_insert($entity, $type) {
-  // If the module does not have a modified property that we know about then
-  // insert.
-  if (!render_cache_modified_name($type)) {
-    db_insert('render_cache_modified')
-        ->fields(array(
-          'entity_type' => $type,
-          'entity_id' => $entity->{render_cache_id_name($type)},
-          'modified' => REQUEST_TIME,
-        ))
-        ->execute();
-  }
-}
-
-/**
- * Implements hook_entity_update().
- */
-function render_cache_entity_update($entity, $type) {
-  // If the module does not have a modified property that we know about then
-  // insert or update.
-  if (!render_cache_modified_name($type)) {
-    db_merge('render_cache_modified')
-        ->key(array(
-          'entity_type' => $type,
-          'entity_id' => $entity->{render_cache_id_name($type)},
-        ))
-        ->fields(array(
-          'modified' => REQUEST_TIME,
-        ))
-        ->execute();
-  }
-}
-
-/**
  * Retrieve cache ID to use for render caching.
  *
  * @param string $entity_type
@@ -204,20 +153,7 @@ function render_cache_get_cid($entity_type, $entity, $view_mode, $language = NUL
   $hash['id'] = $entity->{render_cache_id_name($entity_type)};
 
   // Last modified timestamp.
-  $modified = render_cache_modified_name($entity_type);
-  if ($modified) {
-    $hash['modified'] = $entity->$modified;
-  }
-  else {
-    $hash['modified'] = db_query(
-      'SELECT modified FROM {render_cache_modified} WHERE entity_type = :entity_type AND entity_id = :entity_id',
-      array(':entity_type' => $entity_type, ':entity_id' => $hash['id'])
-    )->fetchField();
-    if (!$hash['modified']) {
-      render_cache_entity_insert($entity, $entity_type);
-      $hash['modified'] = REQUEST_TIME;
-    }
-  }
+  $hash['modified'] = entity_modified_last($entity_type, $entity);
 
   // Language
   if (is_null($language)) {
@@ -276,29 +212,6 @@ function render_cache_id_name($entity_type) {
 }
 
 /**
- * Retrieve the last modified property name for use in cache ID hashing.
- *
- * @param string $entity_type
- *   The entity type to retrieve the property name for.
- *
- * @return void|string
- *   Returns string if a property exists.
- */
-function render_cache_modified_name($entity_type) {
-  // Do not use drupal_static() as this is called very often, and there is no
-  // foreseeable reason to need to clear it during a page load.
-  static $modified = array();
-
-  if (empty($modified)) {
-    drupal_alter('render_cache_modified_name', $modified);
-  }
-
-  if (isset($modified[$entity_type])) {
-    return $modified[$entity_type];
-  }
-}
-
-/**
  * Implements hook_module_implements_alter().
  *
  * Moves our hook_entity_info_alter() implementation to occur last so that we
@@ -311,17 +224,6 @@ function render_cache_module_implements_alter(&$implementations, $hook) {
     unset($implementations['render_cache']);
     $implementations['render_cache'] = $group;
   }
-}
-
-/**
- * Implements hook_render_cache_modified_name_alter().
- *
- * Eating own dog food, define unique identifiers for entity types this module
- * is aware of.
- */
-function render_cache_render_cache_modified_name_alter(&$modified) {
-  $modified['node'] = 'changed';
-  $modified['file'] = 'timestamp';
 }
 
 /**
