@@ -6,9 +6,9 @@
  */
 
 /**
- * Hijack entity API rendering callback to add a caching layer.
+ * Override entity API rendering callback to add a caching layer.
  */
-function render_cache_hijack_entity_view_callback($entities, $view_mode, $langcode = NULL, $entity_type) {
+function render_cache_entity_view_callback($entities, $view_mode, $langcode = NULL, $entity_type) {
   // Remove any passed values that are not an object, this can happen with out
   // of date Apache Solr search when entities are deleted and probably other
   // situations.
@@ -19,57 +19,102 @@ function render_cache_hijack_entity_view_callback($entities, $view_mode, $langco
   }
 
   $entity_info = entity_get_info($entity_type);
-  $cids = $cached = $rendered = array();
   $entity_order = array_keys($entities);
 
-  // Store the order of the entities.
-  $id = $entity_info['entity keys']['id'];
-  foreach ($entities as $id => $entity) {
-    $cids[$id] = render_cache_get_cid($entity_type, $entity, $view_mode, $langcode);
-    // If cached then store the result and remove from $entities.
-    if ($cache = cache_get($cids[$id], 'cache_render')) {
-      $cached[$id] = $cache->data;
-      unset($entities[$id]);
-    }
+  // Prepare context
+  $context = array(
+    'entity_type' => $entity_type,
+    'view_mode' => $view_mode,
+    'langcode' => $langcode,
+  );
+
+  // Setup drupal_render style cache array.
+  $cache_info = render_cache_cache_info_defaults();
+  $cache_info['keys'] = array(
+    'render_cache',
+    $entity_type,
+    $view_mode,
+  );
+  if ($entity_type == 'node') {
+    $cache_info['render_cache_render_to_markup'] = TRUE;
   }
+
+  drupal_alter('render_cache_entity_default_cache_info', $cache_info, $context);
+
+  // Retrieve a list of cache_ids
+  $cid_map = array();
+  foreach ($entities as $id => $entity) {
+    list($entity_id, $entity_revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
+    $entity_context = $context + array(
+      'entity_id' => $entity_id,
+      'entity_revision_id' => $entity_revision_id,
+      'bundle' => $bundle,
+    );
+    $cid_map[$id] = render_cache_get_entity_cid($entity, $cache_info, $entity_context);
+  }
+
+  $cids = array_values($cid_map);
+
+  $cached_entities = array();
+  if (isset($cache_info['granularity']) && $cache_info['granularity'] != DRUPAL_NO_CACHE) {
+    $cached_entities = cache_get_multiple($cids, 'cache_render');
+  }
+
+  // Calculate remaining entities
+  $cid_remaining = array_intersect($cid_map, $cids);
+  $entities = array_intersect_key($entities, $cid_remaining);
 
   // Render non-cached entities.
   if (!empty($entities)) {
     // If this is a view callback.
     if (isset($entity_info['render cache']['callback'])) {
       $rendered = $entity_info['render cache']['callback']($entities, $view_mode, $langcode, $entity_type);
-      $rendered = reset($rendered);
     }
     // Otherwise this is a controller class callback.
     else {
       // We need the $page variable from entity_view() that it does not pass us.
-      $backtrace = debug_backtrace();
+      $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2);
       $page = NULL;
-      // As a safety, to not grab an unexpected arg for $page, check that this
+      // As a safety, do not grab an unexpected arg for $page, check that this
       // was called from entity_view().
-      if ($backtrace[1]['function'] === 'entity_view' && isset($backtrace[0]['args'][4])) {
-        $page = $backtrace[0]['args'][4];
+      if ($backtrace[1]['function'] === 'entity_view' && isset($backtrace[1]['args'][4])) {
+        $page = $backtrace[1]['args'][4];
       }
       $rendered = entity_get_controller($entity_type)->view($entities, $view_mode, $langcode, $page);
-      $rendered = reset($rendered);
     }
+    $rendered = reset($rendered);
+
     // Store rendered entities in cache for future views.
     foreach (element_children($rendered) as $id) {
       // Remove #weight as it will not be accurate, we weight in the cached and
       // rendered merge below.
       unset($rendered[$id]['#weight']);
 
-      // Render and cache.
-      if (variable_get('render_cache__method', 0)) {
-        // Cache result as a string.
-        $cached[$id] = drupal_render($rendered[$id]);
+      // Cache the entity.
+      $cid = $cid_map[$id];
+      $render = $rendered[$id];
+
+      if (isset($cache_info['granularity']) && $cache_info['granularity'] != DRUPAL_NO_CACHE) {
+        if (empty($cache_info['render_cache_render_to_markup'])) {
+          cache_set($cid, $render, 'cache_render');
+        }
+        else {
+          // Process markup with drupal_render() caching.
+          $render['#cache'] = $cache_info;
+
+          // Explicitly set cache id.
+          $render['#cache']['cid'] = $cid;
+
+          // And save things.
+          $render = array(
+            '#markup' => drupal_render($render),
+          );
+        }
       }
-      else {
-        // Cache result as a render array.
-        $cached[$id] = $rendered[$id];
-      }
-      // Store in cache.
-      cache_set($cids[$id], $cached[$id], 'cache_render');
+
+      $cached_entities[$cid] = (object) array(
+        'data' => $render,
+      );
     }
   }
 
@@ -78,28 +123,19 @@ function render_cache_hijack_entity_view_callback($entities, $view_mode, $langco
 
   // Return false if no entities are available, matches entity_view()'s
   // functionality.
-  if (empty($cached)) {
+  if (empty($cached_entities)) {
     return FALSE;
   }
 
   // Put entities back in their request order and output.
   $return = array();
-  if (variable_get('render_cache__method', 0)) {
-    // Render entities cached as strings.
-    foreach ($entity_order as $weight => $id) {
-      if (isset($cached[$id])) {
-        $return[$id] = array('#markup' => $cached[$id]);
-        $return[$id]['#weight'] = $weight;
-      }
-    }
-  }
-  else {
-    // Render entities cached as render arrays.
-    foreach ($entity_order as $weight => $id) {
-      if (isset($cached[$id])) {
-        $return[$id] = $cached[$id];
-        $return[$id]['#weight'] = $weight;
-      }
+  // Render entities cached as render arrays.
+  foreach ($entity_order as $weight => $id) {
+    $cid = $cid_map[$id];
+    if (!empty($cached_entities[$cid]->data)) {
+      $render = $cached_entities[$cid]->data;
+      $return[$id] = $render;
+      $return[$id]['#weight'] = $weight;
     }
   }
   // Return $return, wrap with entity type key in array to match
@@ -120,95 +156,83 @@ function render_cache_entity_info_alter(&$entity_info) {
       // Since we are overwriting the view callback we record the original
       // callback so that we know how to render.
       $entity_info[$type]['render cache']['callback'] = $info['view callback'];
-      $entity_info[$type]['view callback'] = 'render_cache_hijack_entity_view_callback';
+      $entity_info[$type]['view callback'] = 'render_cache_entity_view_callback';
     }
     elseif (isset($info['controller class']) &&
         in_array('EntityAPIControllerInterface', class_implements($info['controller class']))) {
       // We do not set the render cache callback, when it is missing we will
       // render using the controller class.
-      $entity_info[$type]['view callback'] = 'render_cache_hijack_entity_view_callback';
+      $entity_info[$type]['view callback'] = 'render_cache_entity_view_callback';
     }
   }
+}
+
+/**
+ * Returns default values for cache info.
+ */
+function render_cache_cache_info_defaults() {
+  // Setup defaults.
+  return array(
+    'bin' => 'cache_render',
+    'expire' => CACHE_PERMANENT,
+    'granularity' => DRUPAL_CACHE_PER_ROLE, // Use per role to support contextual and its safer anyway.
+    'keys' => array(),
+    // Special keys that are only related to our implementation.
+    'render_cache_render_to_markup' => FALSE,
+  );
 }
 
 /**
  * Retrieve cache ID to use for render caching.
  *
- * @param string $entity_type
- *   The type of the entity object being rendered.
  * @param object $entity
  *   The entity object being rendered.
- * @param string $view_mode
- *   The view mode the entity is being rendered through.
- * @param string|NULL $language
- *   The language the entity is being rendered in.
+ * @param array $cache_info
+ *   A drupal_render style cache array().
+ * @param array $context
+ *   The context of the entity, with the following keys:
+ *
+ *   - entity_type
+ *   - entity_id
+ *   - entity_revision_id
+ *   - bundle
+ *   - langcode
+ *   - view_mode
  *
  * @return string
  */
-function render_cache_get_cid($entity_type, $entity, $view_mode, $language = NULL) {
+function render_cache_get_entity_cid($entity, $cache_info, $context) {
+  if (isset($cache_info['cid'])) {
+    return $cache_info[$cid];
+  }
+
+  $cache_info += render_cache_cache_info_defaults();
+  
+  drupal_alter('render_cache_entity_cache_info', $cache_info, $entity, $context);
+
+  $cid_parts = array();
   $hash = array();
-  $admin = '';
 
-  // Unique identifier.
-  $hash['id'] = $entity->{render_cache_id_name($entity_type)};
-
-  // Last modified timestamp.
-  $hash['modified'] = entity_modified_last($entity_type, $entity);
-
-  // Language
-  if (is_null($language)) {
-    $hash['lang'] = $GLOBALS['language_content']->language;
-  }
-  else {
-    $hash['lang'] = $language;
+  if (!empty($cache_info['keys']) && is_array($cache_info['keys'])) {
+    $cid_parts = $cache_info['keys'];
   }
 
-  // Cache method.
-  $hash['method'] = variable_get('render_cache__method', 0);
+  // Add drupal_render cid_parts based on granularity
+  $granularity = isset($cache_info['granularity']) ? $cache_info['granularity'] : NULL;
+  $cid_parts = array_merge($cid_parts, drupal_render_cid_parts($granularity));
+
+  // Calculate hash to expire cached items automatically.
+  $hash['id'] = !empty($context['entity_revision_id']) ? $context['entity_revision_id'] : $context['entity_id'];
+  $hash['modified'] = entity_modified_last($context['entity_type'], $entity);
+  $hash['render_method'] = !empty($cache_info['render_cache_render_to_markup']);
 
   // Allow modules to modify $hash for custom invalidating.
-  $context = array(
-    'entity_type' => $entity_type,
-    'view_mode' => $view_mode,
-    'language' => $language,
-  );
-  drupal_alter('render_cache_hash', $hash, $entity, $context);
+  drupal_alter('render_cache_entity_hash', $hash, $entity, $cache_info, $context);
 
-  // Contextual links requires us to store two sets of caches.
-  if (module_exists('contextual') && user_access('view pane admin links')) {
-    $admin = 'admin:';
-  }
+  $cid_parts[] = sha1(implode('-', $hash));
+  drupal_alter('render_cache_entity_cid', $cid_parts, $entity, $cache_info, $context);
 
-  return 'render_cache:' . $entity_type . ':' . $view_mode . ':' . $admin . sha1(implode('-', $hash));
-}
-
-/**
- * Retrieve the unique identifying property name for use in cache ID hashing.
- *
- * @param string $entity_type
- *   The entity type to retrieve the identifier for.
- *
- * @return void|string
- *   Returns string if entity type is valid.
- */
-function render_cache_id_name($entity_type) {
-  // Do not use drupal_static() as this is called very often, and there is no
-  // foreseeable reason to need to clear it during a page load.
-  static $names = array();
-
-  if (isset($names[$entity_type])) {
-    return $names[$entity_type];
-  }
-  else {
-    $info = entity_get_info($entity_type);
-    if (isset($info['entity keys']['revision']) && $info['entity keys']['revision']) {
-      $names[$entity_type] = $info['entity keys']['revision'];
-    }
-    else {
-      $names[$entity_type] = $info['entity keys']['id'];
-    }
-    return $names[$entity_type];
-  }
+  return implode(':', $cid_parts);
 }
 
 /**
@@ -236,3 +260,9 @@ function render_cache_views_api() {
   );
 }
 
+/**
+ * Implements hook_flush_caches().
+ */
+function render_cache_flush_caches() {
+  return array('cache_render');
+}
