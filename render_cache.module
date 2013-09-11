@@ -248,16 +248,6 @@ function render_cache_module_implements_alter(&$implementations, $hook) {
 }
 
 /**
- * Implements hook_views_api().
- */
-function render_cache_views_api() {
-  return array(
-    'api' => 3,
-    'path' => drupal_get_path('module', 'render_cache') . '/views',
-  );
-}
-
-/**
  * Implements hook_flush_caches().
  */
 function render_cache_flush_caches() {
