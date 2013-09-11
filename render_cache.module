@@ -251,5 +251,9 @@ function render_cache_module_implements_alter(&$implementations, $hook) {
  * Implements hook_flush_caches().
  */
 function render_cache_flush_caches() {
-  return array('cache_render');
+  // @todo: This should not be necessary
+  // but drush installation fails without it.
+  if (drupal_get_schema('cache_render')) {
+    return array('cache_render');
+  }
 }
