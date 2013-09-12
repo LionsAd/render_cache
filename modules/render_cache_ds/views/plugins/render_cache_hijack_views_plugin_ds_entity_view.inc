@@ -12,4 +12,73 @@
  */
 class render_cache_hijack_views_plugin_ds_entity_view extends views_plugin_ds_entity_view {
 
+  /**
+   * Overrides views_plugin_ds_entity_view::ds_views_row_render_entity().
+   *
+   * @todo Ask DS to provide a method to return the render function
+   *       and override it here.
+   */
+  function ds_views_row_render_entity($view_mode, $row, $load_comments) {
+    // Save the original base table.
+    $original_base_table = $this->base_table;
+    // Override the base table as that will change the render function being called.
+    $this->base_table = 'render_cache_' . $this->base_table;
+    // Call the original function
+    $output = parent::ds_views_row_render_entity($view_mode, $row, $load_comments);
+    // And restore the base table again,
+    $this->base_table = $original_base_table;
+    return $output;
+  }
+}
+
+/**
+ * Render the node through the entity plugin.
+ */
+function ds_views_row_render_render_cache_node($entity, $view_mode, $load_comments) {
+  $node_display = node_view($entity, $view_mode);
+  if ($load_comments && module_exists('comment')) {
+    $node_display['comments'] = comment_node_page_additions($entity);
+  }
+  return $node_display;
+}
+
+/**
+ * Render the comment through the entity plugin.
+ */
+function ds_views_row_render_render_cache_comment($entity, $view_mode, $load_comments) {
+  $node = node_load($entity->nid);
+  $element = comment_view($entity, $node, $view_mode);
+  return $element;
+}
+
+/**
+ * Render the user through the entity plugin.
+ */
+function ds_views_row_render_render_cache_users($entity, $view_mode, $load_comments) {
+  $element = user_view($entity, $view_mode);
+  return $element;
+}
+
+/**
+ * Render the taxonomy term through the entity plugin.
+ */
+function ds_views_row_render_render_cache_taxonomy_term_data($entity, $view_mode, $load_comments) {
+  $element = taxonomy_term_view($entity, $view_mode);
+  return $element;
+}
+
+/**
+ * Render the file through the entity plugin.
+ */
+function ds_views_row_render_render_cache_file_managed($entity, $view_mode, $load_comments) {
+  $element = file_view($entity, $view_mode);
+  return $element;
+}
+
+/**
+ * Render the micro through the entity plugin.
+ */
+function ds_views_row_render_render_cache_micro($entity, $view_mode, $load_comments) {
+  $element = micro_view($entity, $view_mode);
+  return $element;
 }
