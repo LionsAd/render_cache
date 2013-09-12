@@ -35,7 +35,7 @@ class render_cache_hijack_views_plugin_ds_entity_view extends views_plugin_ds_en
  * Render the node through the entity plugin.
  */
 function ds_views_row_render_render_cache_node($entity, $view_mode, $load_comments) {
-  $node_display = node_view($entity, $view_mode);
+  $node_display = render_cache_entity_view_single('node', $entity, $view_mode);
   if ($load_comments && module_exists('comment')) {
     $node_display['comments'] = comment_node_page_additions($entity);
   }
@@ -46,8 +46,7 @@ function ds_views_row_render_render_cache_node($entity, $view_mode, $load_commen
  * Render the comment through the entity plugin.
  */
 function ds_views_row_render_render_cache_comment($entity, $view_mode, $load_comments) {
-  $node = node_load($entity->nid);
-  $element = comment_view($entity, $node, $view_mode);
+  $element = render_cache_entity_view_single('comment', $entity, $view_mode);
   return $element;
 }
 
@@ -55,7 +54,7 @@ function ds_views_row_render_render_cache_comment($entity, $view_mode, $load_com
  * Render the user through the entity plugin.
  */
 function ds_views_row_render_render_cache_users($entity, $view_mode, $load_comments) {
-  $element = user_view($entity, $view_mode);
+  $element = render_cache_entity_view_single('user', $entity, $view_mode);
   return $element;
 }
 
@@ -63,7 +62,7 @@ function ds_views_row_render_render_cache_users($entity, $view_mode, $load_comme
  * Render the taxonomy term through the entity plugin.
  */
 function ds_views_row_render_render_cache_taxonomy_term_data($entity, $view_mode, $load_comments) {
-  $element = taxonomy_term_view($entity, $view_mode);
+  $element = render_cache_entity_view_single('taxonomy_term', $entity, $view_mode);
   return $element;
 }
 
@@ -71,7 +70,7 @@ function ds_views_row_render_render_cache_taxonomy_term_data($entity, $view_mode
  * Render the file through the entity plugin.
  */
 function ds_views_row_render_render_cache_file_managed($entity, $view_mode, $load_comments) {
-  $element = file_view($entity, $view_mode);
+  $element = render_cache_entity_view_single('file', $entity, $view_mode);
   return $element;
 }
 
@@ -79,6 +78,6 @@ function ds_views_row_render_render_cache_file_managed($entity, $view_mode, $loa
  * Render the micro through the entity plugin.
  */
 function ds_views_row_render_render_cache_micro($entity, $view_mode, $load_comments) {
-  $element = micro_view($entity, $view_mode);
+  $element = render_cache_entity_view_single('micro', $entity, $view_mode);
   return $element;
 }
