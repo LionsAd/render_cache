@@ -257,3 +257,20 @@ function render_cache_flush_caches() {
     return array('cache_render');
   }
 }
+
+/**
+ * Helper function to view a single entity.
+ *
+ * This can be used to replace node_view(), comment_view(), easier.
+ *
+ * @param $entity_type
+ *   The type of the entity.
+ * $parem $entity
+ *   The entity to render.
+ * $param $view_mode
+ *   A view mode as used by this entity type, e.g. 'full', 'teaser'...
+ */
+function render_cache_entity_view_single($entity_type, $entity, $view_mode) {
+  list($entity_id) = entity_extract_ids($entity_type, $entity);
+  return entity_view($entity_type, array($entity_id => $entity), $view_mode);
+}
