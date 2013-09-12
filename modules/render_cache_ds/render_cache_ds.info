@@ -1,0 +1,11 @@
+name = Render cache for display suite views integration
+description = Hijacks the display suite row plugin of views to enable entity_view caching.
+package = Performance and scalability
+core = 7.x
+
+dependencies[] = render_cache
+dependencies[] = views
+dependencies[] = ds
+dependencies[] = entity
+
+files[] = views/plugins/render_cache_hijack_views_plugin_ds_entity_view.inc
