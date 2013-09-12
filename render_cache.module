@@ -274,3 +274,16 @@ function render_cache_entity_view_single($entity_type, $entity, $view_mode) {
   list($entity_id) = entity_extract_ids($entity_type, $entity);
   return entity_view($entity_type, array($entity_id => $entity), $view_mode);
 }
+
+/**
+ * Implements hook_render_cache_entity_hash_alter().
+ */
+function node_render_cache_entity_hash_alter(&$hash, $entity, $cache_info, $context) {
+  // We generally cache nodes based on comment count.
+  if ($context['entity_type'] == 'node' && isset($entity->comment_count)) {
+    // @todo This is very unreliable if comments can be edited, it would be better
+    //       to directly save a list of entity_modified values but entity_modified
+    //       needs to support multiple get and caching for that first.
+    $hash['node_comment_count'] = $entity->comment_count;
+  }
+}
