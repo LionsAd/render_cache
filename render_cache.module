@@ -272,7 +272,14 @@ function render_cache_flush_caches() {
  */
 function render_cache_entity_view_single($entity_type, $entity, $view_mode) {
   list($entity_id) = entity_extract_ids($entity_type, $entity);
-  return entity_view($entity_type, array($entity_id => $entity), $view_mode);
+  $build = entity_view($entity_type, array($entity_id => $entity), $view_mode);
+
+  // The output needs to be compatible to what the single function would have
+  // returned.
+  if (isset($build[$entity_type][$entity_id])) {
+    return $build[$entity_type][$entity_id];
+  }
+  return array();
 }
 
 /**
