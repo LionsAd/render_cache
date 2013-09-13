@@ -26,10 +26,18 @@ function render_cache_node_node_show($node, $message = FALSE) {
   }
 
   // Use entity_view to display this node potentially cached.
+  // entity_view() is almost compatible to node_view_multiple().
+  // just the key is different ('node' vs 'nodes').
   $nodes = entity_view('node', array($node->nid => $node), 'full');
 
   // Update the history table, stating that this user viewed this node.
   node_tag_new($node);
 
+  // Re-key the array key here to be compatible to normal node_show().
+  if (isset($nodes['node'])) {
+    return array(
+      'nodes' => $nodes['node'],
+    );
+  }
   return $nodes;
 }
