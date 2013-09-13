@@ -19,11 +19,12 @@ class render_cache_hijack_views_plugin_row_node_view extends views_plugin_row_no
   function render($row) {
     if (isset($this->nodes[$row->{$this->field_alias}])) {
       $node = $this->nodes[$row->{$this->field_alias}];
+      $node->view = $this->view;
 
-      // Use entity_view to display this node potentially cached.
-      $nodes = entity_view('node', array($node->nid => $node), $this->options['view_mode']);
+      // Use render_cache_entity_view_single to display this node potentially cached.
+      $build = render_cache_entity_view_single('node', $node, $this->options['view_mode']);
 
-      return drupal_render($nodes);
+      return drupal_render($build);
     }
   }
 }
