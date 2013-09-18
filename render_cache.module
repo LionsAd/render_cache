@@ -102,10 +102,24 @@ function render_cache_entity_view_callback($entities, $view_mode, $langcode = NU
           // Explicitly set cache id.
           $render['#cache']['cid'] = $cid;
 
-          // And save things.
+          $render_cache_attached = array();
+          // Preserve some properties in #attached?
+          if (!empty($cache_info['render_cache_render_to_markup']['preserve properties']) &&
+              is_array($cache_info['render_cache_render_to_markup']['preserve properties'])) {
+            foreach ($cache_info['render_cache_render_to_markup']['preserve properties'] as $key) {
+              if (isset($render[$key])) {
+                $render_cache_attached[$key] = $render[$key];
+              }
+            }
+          }
+          if (!empty($render_cache_attached)) {
+            $render['#attached']['render_cache'] = $render_cache_attached;
+          }
+
+          // And save things. Also add our preserved properties back.
           $render = array(
             '#markup' => drupal_render($render),
-          );
+          ) + $render_cache_attached;
         }
       }
 
@@ -131,6 +145,13 @@ function render_cache_entity_view_callback($entities, $view_mode, $langcode = NU
     $cid = $cid_map[$id];
     if (!empty($cached_entities[$cid]->data)) {
       $render = $cached_entities[$cid]->data;
+
+      // Potentially merge back previously saved properties.
+      if (!empty($render['#attached']['render_cache'])) {
+        $render += $render['#attached']['render_cache'];
+        unset($render['#attached']['render_cache']);
+      }
+
       $return[$id] = $render;
       $return[$id]['#weight'] = $weight;
     }
