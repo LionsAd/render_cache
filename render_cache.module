@@ -244,6 +244,9 @@ function render_cache_get_entity_cid($entity, &$cache_info, $context) {
   $hash['modified'] = entity_modified_last($context['entity_type'], $entity);
   $hash['render_method'] = !empty($cache_info['render_cache_render_to_markup']);
 
+  // Generally hash per view_mode - its unlikely they are the same.
+  $hash['view_mode'] = !empty($context['view_mode']) ? $context['view_mode'] : 'default';
+
   // Allow modules to modify $hash for custom invalidating.
   drupal_alter('render_cache_entity_hash', $hash, $entity, $cache_info, $context);
 
