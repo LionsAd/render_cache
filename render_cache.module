@@ -221,7 +221,7 @@ function render_cache_cache_info_defaults() {
  */
 function render_cache_get_entity_cid($entity, &$cache_info, $context) {
   if (isset($cache_info['cid'])) {
-    return $cache_info[$cid];
+    return $cache_info['cid'];
   }
 
   $cache_info += render_cache_cache_info_defaults();
