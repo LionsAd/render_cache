@@ -116,10 +116,13 @@ function render_cache_entity_view_callback($entities, $view_mode, $langcode = NU
             $render['#attached']['render_cache'] = $render_cache_attached;
           }
 
-          // And save things. Also add our preserved properties back.
-          $render = array(
-            '#markup' => drupal_render($render),
-          ) + $render_cache_attached;
+          // Do we want to render now?
+          if (empty($cache_info['render_cache_render_to_markup']['cache late'])) {
+            // And save things. Also add our preserved properties back.
+            $render = array(
+              '#markup' => drupal_render($render),
+            ) + $render_cache_attached;
+          }
         }
       }
 
