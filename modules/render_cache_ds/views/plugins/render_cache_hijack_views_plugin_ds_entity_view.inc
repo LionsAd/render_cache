@@ -23,6 +23,17 @@ class render_cache_hijack_views_plugin_ds_entity_view extends views_plugin_ds_en
     $original_base_table = $this->base_table;
     // Override the base table as that will change the render function being called.
     $this->base_table = 'render_cache_' . $this->base_table;
+
+    // This context is created by the parent function _after_ rendering.
+    // We need to provide the context for caching purposes within the entity.
+    $context = array(
+      'row' => $row,
+      'view' => &$this->view,
+      'view_mode' => $view_mode,
+      'load_comments' => $load_comments,
+    );
+    $entity->render_cache_ds_context = $context;
+
     // Call the original function
     $output = parent::ds_views_row_render_entity($view_mode, $row, $load_comments);
     // And restore the base table again,
