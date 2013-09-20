@@ -244,6 +244,9 @@ function render_cache_get_entity_cid($entity, &$cache_info, $context) {
   $hash['bundle'] = !empty($context['bundle']) ? $context['bundle'] : $context['entity_type'];
   $hash['modified'] = entity_modified_last($context['entity_type'], $entity);
   $hash['render_method'] = !empty($cache_info['render_cache_render_to_markup']);
+  if ($hash['render_method']) {
+    $hash['render_options'] = serialize($cache_info['render_cache_render_to_markup']);
+  }
 
   // Generally hash per view_mode - its unlikely they are the same.
   $hash['view_mode'] = !empty($context['view_mode']) ? $context['view_mode'] : 'default';
