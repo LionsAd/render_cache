@@ -241,6 +241,7 @@ function render_cache_get_entity_cid($entity, &$cache_info, $context) {
 
   // Calculate hash to expire cached items automatically.
   $hash['id'] = !empty($context['entity_revision_id']) ? $context['entity_revision_id'] : $context['entity_id'];
+  $hash['bundle'] = !empty($context['bundle']) ? $context['bundle'] : $context['entity_type'];
   $hash['modified'] = entity_modified_last($context['entity_type'], $entity);
   $hash['render_method'] = !empty($cache_info['render_cache_render_to_markup']);
 
