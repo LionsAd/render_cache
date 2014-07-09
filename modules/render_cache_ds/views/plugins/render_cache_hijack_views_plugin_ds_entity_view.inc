@@ -32,7 +32,7 @@ class render_cache_hijack_views_plugin_ds_entity_view extends views_plugin_ds_en
       'view_mode' => $view_mode,
       'load_comments' => $load_comments,
     );
-    $entity->render_cache_ds_context = $context;
+    $this->entities[$row->{$this->field_alias}]->render_cache_ds_context = $context;
 
     // Call the original function
     $output = parent::ds_views_row_render_entity($view_mode, $row, $load_comments);
