@@ -3,6 +3,11 @@ description = Cache rendered items to drastically improve performance.
 package = Performance and scalability
 core = 7.x
 
+; Configuration
 configure = admin/config/development/render-cache
 
+; Dependencies
 dependencies[] = entity_modified
+
+; Included files
+files[] = includes/RenderCachePluginBase.class.php
