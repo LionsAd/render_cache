@@ -2,13 +2,130 @@
 
 /**
  * @file
- * Hook implementations and frequently used functions for render cache module.
+ * Hook implementations and frequently used functions for render cache entity module.
  */
+
+// -----------------------------------------------------------------------
+// Core Hooks
+
+/**
+ * Implements hook_entity_info_alter().
+ *
+ * We hijack entity rendering, as performed through the Entity API module, to
+ * provide full entity caching.
+ */
+function render_cache_entity_entity_info_alter(&$entity_info) {
+  foreach ($entity_info as $type => $info) {
+    if (isset($info['view callback'])) {
+      // Since we are overwriting the view callback we record the original
+      // callback so that we know how to render.
+      $entity_info[$type]['render cache storage']['callback'] = $info['view callback'];
+      $entity_info[$type]['view callback'] = 'render_cache_entity_view_callback';
+    }
+    elseif (isset($info['controller class']) &&
+        in_array('EntityAPIControllerInterface', class_implements($info['controller class']))) {
+      // We do not set the render cache callback, when it is missing we will
+      // render using the controller class.
+      $entity_info[$type]['view callback'] = 'render_cache_entity_view_callback';
+    }
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * Moves our hook_entity_info_alter() implementation to occur last so that we
+ * can consistently hijack the render function of the entity type.
+ */
+function render_cache_entity_module_implements_alter(&$implementations, $hook) {
+  if ($hook === 'entity_info_alter') {
+    // Move our hook implementation to the bottom.
+    $group = $implementations['render_cache_entity'];
+    unset($implementations['render_cache_entity']);
+    $implementations['render_cache_entity'] = $group;
+  }
+}
+
+// -----------------------------------------------------------------------
+// Contrib Hooks
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function render_cache_entity_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'render_cache') {
+    return 'plugins/render_cache/' . $plugin_type;
+  }
+}
+
+// -----------------------------------------------------------------------
+// Public API
+
 
 /**
  * Override entity API rendering callback to add a caching layer.
  */
 function render_cache_entity_view_callback($entities, $view_mode, $langcode = NULL, $entity_type) {
+
+  // Remove any passed values that are not an object, this can happen with out
+  // of date Apache Solr search when entities are deleted and probably other
+  // situations.
+  foreach($entities as $key => $entity) {
+    if (!is_object($entity)) {
+      unset($entities[$key]);
+    }
+  }
+
+  $entity_info = entity_get_info($entity_type);
+
+  // Prepare context.
+  $context = array(
+    'entity_type' => $entity_type,
+    'view_mode' => $view_mode,
+    'langcode' => $langcode,
+  );
+
+  // Delegate to render cache controller.
+  $rcc = render_cache_get_controller('entity');
+  $rcc->setContext($context);
+  return $rcc->view($entities);
+}
+
+/**
+ * Helper function to view a single entity.
+ *
+ * This can be used to replace node_view(), comment_view(), easier.
+ *
+ * @param $entity_type
+ *   The type of the entity.
+ * $parem $entity
+ *   The entity to render.
+ * $param $view_mode
+ *   A view mode as used by this entity type, e.g. 'full', 'teaser'...
+ */
+function render_cache_entity_view_single($entity_type, $entity, $view_mode) {
+  list($entity_id) = entity_extract_ids($entity_type, $entity);
+  $build = entity_view($entity_type, array($entity_id => $entity), $view_mode);
+rray();
+  foreach ($entities as $id => $entity) {
+    list($entity_id, $entity_revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
+    $entity_context = $context + array(
+      'entity_id' => $entity_id,
+      'entity_revision_id' => $entity_revision_id,
+      'bundle' => $bundle,
+    );
+    $cid_map[$id] = render_cache_get_entity_cid($entity, $cache_info, $entity_context);
+  }
+
+  // The output needs to be compatible to what the single function would have
+  // returned.
+  if (isset($build[$entity_type][$entity_id])) {
+    return $build[$entity_type][$entity_id];
+  }
+  return array();
+}
+
+/**
   // Remove any passed values that are not an object, this can happen with out
   // of date Apache Solr search when entities are deleted and probably other
   // situations.
@@ -64,8 +181,8 @@ function render_cache_entity_view_callback($entities, $view_mode, $langcode = NU
   // Render non-cached entities.
   if (!empty($entities)) {
     // If this is a view callback.
-    if (isset($entity_info['render cache']['callback'])) {
-      $rendered = $entity_info['render cache']['callback']($entities, $view_mode, $langcode, $entity_type);
+    if (isset($entity_info['render cache storage']['callback'])) {
+      $rendered = $entity_info['render cache storage']['callback']($entities, $view_mode, $langcode, $entity_type);
     }
     // Otherwise this is a controller class callback.
     else {
@@ -172,33 +289,12 @@ function render_cache_entity_view_callback($entities, $view_mode, $langcode = NU
   // entity_view()'s functionality.
   return array($entity_type => $return);
 }
-
-/**
- * Implements hook_entity_info_alter().
- *
- * We hijack entity rendering, as performed through the Entity API module, to
- * provide full entity caching.
- */
-function render_cache_entity_info_alter(&$entity_info) {
-  foreach ($entity_info as $type => $info) {
-    if (isset($info['view callback'])) {
-      // Since we are overwriting the view callback we record the original
-      // callback so that we know how to render.
-      $entity_info[$type]['render cache']['callback'] = $info['view callback'];
-      $entity_info[$type]['view callback'] = 'render_cache_entity_view_callback';
-    }
-    elseif (isset($info['controller class']) &&
-        in_array('EntityAPIControllerInterface', class_implements($info['controller class']))) {
-      // We do not set the render cache callback, when it is missing we will
-      // render using the controller class.
-      $entity_info[$type]['view callback'] = 'render_cache_entity_view_callback';
-    }
-  }
-}
+*/
 
 /**
  * Returns default values for cache info.
  */
+/*
 function render_cache_cache_info_defaults() {
   // Setup defaults.
   return array(
@@ -210,6 +306,7 @@ function render_cache_cache_info_defaults() {
     'render_cache_render_to_markup' => FALSE,
   );
 }
+*/
 
 /**
  * Retrieve cache ID to use for render caching.
@@ -230,6 +327,7 @@ function render_cache_cache_info_defaults() {
  *
  * @return string
  */
+/*
 function render_cache_get_entity_cid($entity, &$cache_info, $context) {
   if (isset($cache_info['cid'])) {
     return $cache_info['cid'];
@@ -270,45 +368,8 @@ function render_cache_get_entity_cid($entity, &$cache_info, $context) {
 
   return implode(':', $cid_parts);
 }
+*/
 
-/**
- * Implements hook_module_implements_alter().
- *
- * Moves our hook_entity_info_alter() implementation to occur last so that we
- * can consistently hijack the render function of the entity type.
- */
-function render_cache_module_implements_alter(&$implementations, $hook) {
-  if ($hook === 'entity_info_alter') {
-    // Move our hook implementation to the bottom.
-    $group = $implementations['render_cache'];
-    unset($implementations['render_cache']);
-    $implementations['render_cache'] = $group;
-  }
-}
-
-/**
- * Helper function to view a single entity.
- *
- * This can be used to replace node_view(), comment_view(), easier.
- *
- * @param $entity_type
- *   The type of the entity.
- * $parem $entity
- *   The entity to render.
- * $param $view_mode
- *   A view mode as used by this entity type, e.g. 'full', 'teaser'...
- */
-function render_cache_entity_view_single($entity_type, $entity, $view_mode) {
-  list($entity_id) = entity_extract_ids($entity_type, $entity);
-  $build = entity_view($entity_type, array($entity_id => $entity), $view_mode);
-
-  // The output needs to be compatible to what the single function would have
-  // returned.
-  if (isset($build[$entity_type][$entity_id])) {
-    return $build[$entity_type][$entity_id];
-  }
-  return array();
-}
 
 /**
  * Implements hook_render_cache_entity_hash_alter().
