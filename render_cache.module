@@ -5,6 +5,16 @@
  */
 
 // -----------------------------------------------------------------------
+// Core Hooks
+
+/**
+ * Implements hook_flush_caches().
+ */
+function render_cache_flush_caches() {
+  return array('cache_render');
+}
+
+// -----------------------------------------------------------------------
 // Contrib Hooks
 
 /**
@@ -47,6 +57,29 @@ function render_cache_get_controller($type) {
  */
 function render_cache_get_validator($type) {
   return render_cache_get_plugin_handler('validator', $type);
+}
+
+/**
+ * Invokes attached post-render callbacks.
+ *
+ * This function can not be named "render_cache_post_render" because that is
+ * the name of the #attached element.  Any function with the name of an
+ * #attached element will be invoked to process it from
+ * drupal_process_attached().
+ *
+ * @param &$element Array
+ *    The renderable element to check for and run post-render callbacks on.
+ * @param $id String
+ *    An identifier for this render-cacheable elements.
+ */
+function render_cache_process_attached_callbacks(&$element, $id) {
+  if (isset($element['#markup']) && !empty($element['#attached']['render_cache_post_render'])) {
+    foreach ($element['#attached']['render_cache_post_render'] as $function) {
+      // Fail fatally if the function has not been defined.
+      $element['#markup'] = call_user_func($function, $element['#markup'], $id);
+    }
+    unset($element['#attached']['render_cache_post_render']);
+  }
 }
 
 // -----------------------------------------------------------------------
