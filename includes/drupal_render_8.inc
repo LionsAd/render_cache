@@ -105,7 +105,6 @@ function _drupal_render_process_post_render_cache(array &$elements) {
  * @see drupal_render()
  * @see _drupal_render_process_post_render_cache()
  */
-/*
 function drupal_render_collect_post_render_cache(array &$elements, array $callbacks = array(), $is_root_element = TRUE) {
   // Try to fetch the prerendered element from cache, to determine
   // #post_render_cache callbacks for this element and all its children. If we
@@ -123,13 +122,13 @@ function drupal_render_collect_post_render_cache(array &$elements, array $callba
 
   // Collect all #post_render_cache callbacks for this element.
   if (isset($elements['#post_render_cache'])) {
-    $callbacks = NestedArray::mergeDeep($callbacks, $elements['#post_render_cache']);
+    $callbacks = drupal_array_merge_deep($callbacks, $elements['#post_render_cache']);
   }
 
   // Collect the #post_render_cache callbacks for all child elements, unless
   // we've already collected them above by retrieving this element (and its
   // children) from the render cache.
-  if (!$retrieved_from_cache && $children = Element::children($elements)) {
+  if (!$retrieved_from_cache && $children = element_children($elements)) {
     foreach ($children as $child) {
       $callbacks = drupal_render_collect_post_render_cache($elements[$child], $callbacks, FALSE);
     }
@@ -137,7 +136,6 @@ function drupal_render_collect_post_render_cache(array &$elements, array $callba
 
   return $callbacks;
 }
-*/
 
 /**
  * Collects cache tags for an element and its children into a single array.
