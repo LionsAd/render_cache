@@ -1,0 +1,75 @@
+diff --git a/includes/drupal_render_8.inc b/includes/drupal_render_8.inc
+index a41ce53..02954db 100644
+--- a/includes/drupal_render_8.inc
++++ b/includes/drupal_render_8.inc
+@@ -27,22 +27,13 @@
+  * @see drupal_render_cache_get()
+  */
+ function drupal_render_cache_generate_placeholder($callback, array &$context) {
+-  if (is_string($callback) && strpos($callback, '::') === FALSE) {
+-    /** @var \Drupal\Core\Controller\ControllerResolverInterface $controller_resolver */
+-    $controller_resolver = \Drupal::service('controller_resolver');
+-    $callable = \Drupal::service('controller_resolver')->getControllerFromDefinition($callback);
+-  }
+-  else {
+-   $callable = $callback;
+-  }
+-
+-  if (!is_callable($callable)) {
++  if (!is_callable($callback)) {
+     throw new Exception(t('$callable must be a callable function or of the form service_id:method.'));
+   }
+ 
+   // Generate a unique token if one is not already provided.
+   $context += array(
+-    'token' => \Drupal\Component\Utility\Crypt::randomBytesBase64(55),
++    'token' => drupal_random_bytes(55),
+   );
+ 
+   return '<drupal-render-cache-placeholder callback="' . $callback . '" token="' . $context['token'] . '"></drupal-render-cache-placeholder>';
+@@ -67,19 +58,10 @@ function drupal_render_cache_generate_placeholder($callback, array &$context) {
+  */
+ function _drupal_render_process_post_render_cache(array &$elements) {
+   if (isset($elements['#post_render_cache'])) {
+-    /** @var \Drupal\Core\Controller\ControllerResolverInterface $controller_resolver */
+-    $controller_resolver = \Drupal::service('controller_resolver');
+-
+     // Call all #post_render_cache callbacks, passing the provided context.
+     foreach (array_keys($elements['#post_render_cache']) as $callback) {
+-      if (strpos($callback, '::') === FALSE) {
+-        $callable = $controller_resolver->getControllerFromDefinition($callback);
+-      }
+-      else {
+-        $callable = $callback;
+-      }
+       foreach ($elements['#post_render_cache'][$callback] as $context) {
+-        $elements = call_user_func_array($callable, array($elements, $context));
++        $elements = call_user_func_array($callback, array($elements, $context));
+       }
+     }
+     // Make sure that any attachments added in #post_render_cache callbacks are
+@@ -123,6 +105,7 @@ function _drupal_render_process_post_render_cache(array &$elements) {
+  * @see drupal_render()
+  * @see _drupal_render_process_post_render_cache()
+  */
++/*
+ function drupal_render_collect_post_render_cache(array &$elements, array $callbacks = array(), $is_root_element = TRUE) {
+   // Try to fetch the prerendered element from cache, to determine
+   // #post_render_cache callbacks for this element and all its children. If we
+@@ -154,6 +137,7 @@ function drupal_render_collect_post_render_cache(array &$elements, array $callba
+ 
+   return $callbacks;
+ }
++*/
+ 
+ /**
+  * Collects cache tags for an element and its children into a single array.
+@@ -190,7 +174,7 @@ function drupal_render_collect_cache_tags($element, $tags = array()) {
+       }
+     }
+   }
+-  if ($children = Element::children($element)) {
++  if ($children = element_children($element)) {
+     foreach ($children as $child) {
+       $tags = drupal_render_collect_cache_tags($element[$child], $tags);
+     }
