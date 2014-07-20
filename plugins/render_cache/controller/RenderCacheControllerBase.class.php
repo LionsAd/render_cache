@@ -8,6 +8,9 @@ interface RenderCacheControllerInterface {
   public function setContext(array $context);
 
   public function view(array $objects);
+
+  public function isRecursive();
+  public function getRecursionLevel();
 }
 
 /**
@@ -44,6 +47,9 @@ abstract class RenderCacheControllerAbstractBase extends RenderCachePluginBase i
   abstract protected function getDefaultCacheInfo($context);
   abstract protected function getCacheInfo($object, array $cache_info = array(), array $context = array());
 
+  abstract protected function increaseRecursion();
+  abstract protected function decreaseRecursion();
+
   abstract protected function alter($type, &$data, &$context1 = NULL, &$context2 = NULL, &$context3 = NULL);
 }
 
@@ -55,6 +61,11 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
    * An optional context provided by this controller.
    */
   protected $context = array();
+
+  /**
+   * Recursion level of current call stack.
+   */
+  protected static $recursionLevel = 0;
 
   /**
    * {@inheritdoc}
@@ -143,6 +154,20 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     }
 
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isRecursive() {
+    return static::$recursionLevel > 0;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRecursionLevel() {
+    return static::$recursionLevel;
   }
 
   /**
@@ -341,6 +366,20 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
         ) + $render_cache_attached;
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function increaseRecursion() {
+    static::$recursionLevel += 1;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function decreaseRecursion() {
+    static::$recursionLevel -= 1;
   }
 
   /**
