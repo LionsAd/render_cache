@@ -7,7 +7,7 @@ class RenderCacheControllerEntity extends RenderCacheControllerBase {
   /**
    * {@inheritdoc}
    */
-  protected function getCacheContext($object, $context) {
+  protected function getCacheContext($object, array $context) {
     // Helper variables.
     $entity = $object;
     $entity_type = $context['entity_type'];
@@ -28,17 +28,17 @@ class RenderCacheControllerEntity extends RenderCacheControllerBase {
   /**
    * {@inheritdoc}
    */
-  protected function getCacheKeys($object, $context) {
+  protected function getCacheKeys($object, array $context) {
     return array_merge(parent::getCacheKeys($object, $context), array(
       $context['entity_type'],
       $context['view_mode'],
-    );
+    ));
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getCacheHash($object, $context) {
+  protected function getCacheHash($object, array $context) {
     // Helper variables.
     $entity = $object;
 
@@ -59,7 +59,7 @@ class RenderCacheControllerEntity extends RenderCacheControllerBase {
   /**
    * {@inheritdoc}
    */
-  protected function getCacheTags($object, $context) {
+  protected function getCacheTags($object, array $context) {
     // Helper variables.
     $entity_type = $context['entity_type'];
     $entity_id = $context['entity_id'];
@@ -90,9 +90,9 @@ class RenderCacheControllerEntity extends RenderCacheControllerBase {
       $page = $this->getPageArgument();
       $build = entity_get_controller($entity_type)->view($entities, $view_mode, $langcode, $page);
     }
-    $build = reset($rendered);
+    $build = reset($build);
 
-    return $rendered;
+    return $build;
   }
 
   /**

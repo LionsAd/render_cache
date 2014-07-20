@@ -169,3 +169,21 @@ function render_cache_get_plugin_handler($plugin_type, $type) {
   }
   return !empty($cache[$plugin['name']]) ? $cache[$plugin['name']] : FALSE;
 }
+
+/**
+ * Returns default values for cache info.
+ *
+ * @deprecated
+ * @todo remove when all modules are converted.
+ */
+function render_cache_cache_info_defaults() {
+  // Setup defaults.
+  return array(
+    'bin' => 'cache_render',
+    'expire' => CACHE_PERMANENT,
+    'granularity' => DRUPAL_CACHE_PER_ROLE, // Use per role to support contextual and its safer anyway.
+    'keys' => array(),
+    // Special keys that are only related to our implementation.
+    'render_cache_render_to_markup' => FALSE,
+  );
+}
