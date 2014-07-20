@@ -205,19 +205,36 @@ abstract class RenderCacheControllerBase extends RenderCachePluginBase implement
   /**
    * {@inheritdoc}
    */
+  protected function isCacheable(array $default_cache_info, array $context) {
+    $ignore_request_method_check = $default_cache_info['render_cache_ignore_request_method_check'];
+    return isset($default_cache_info['granularity'])
+        && variable_get('render_cache_enabled', TRUE)
+        && variable_get('render_cache_' . $this->getType() . '_enabled')
+        && render_cache_call_is_cacheable(NULL, $ignore_request_method_check);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function view(array $objects) {
-    // Ensure all properties are set.
-    $cache_info = $this->getDefaultCacheInfo();
+    // Retrieve controller context.
     $context = $this->getContext();
 
-    $this->alter('default_cache_info', $cache_info, $context);
+    // Get default cache info and allow modules to alter it.
+    $default_cache_info = $this->getDefaultCacheInfo();
+    $this->alter('default_cache_info', $default_cache_info, $context);
+
+    // Bail out early, when this is not cacheable.
+    if (!$this->cacheable($default_cache_info, $context)) {
+      return $this->render($objects);
+    }
 
     // Retrieve a list of cache_ids
     $cid_map = array();
     $cache_info_map = array();
     foreach ($objects as $id => $object) {
       $context['id'] = $id;
-      $cache_info_map[$id] = $this->getCacheInfo($object, $cache_info, $context);
+      $cache_info_map[$id] = $this->getCacheInfo($object, $default_cache_info, $context);
       $cid_map[$id] = $cache_info_map[$id]['cid'];
     }
   

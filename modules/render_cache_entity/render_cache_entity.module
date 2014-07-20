@@ -16,6 +16,13 @@
  */
 function render_cache_entity_entity_info_alter(&$entity_info) {
   foreach ($entity_info as $type => $info) {
+    // If this type is not render cacheable, continue.
+    if (isset($info['render cache']) && $info['render cache'] == FALSE) {
+      continue;
+    }
+    // Store that this entity type is render cached.
+    $entity_info[$type]['render cache'] = TRUE;
+
     if (isset($info['view callback'])) {
       // Since we are overwriting the view callback we record the original
       // callback so that we know how to render.

@@ -82,6 +82,34 @@ function render_cache_process_attached_callbacks(&$element, $id) {
   }
 }
 
+/**
+ * Check if this call should / can be served from the cache.
+ *
+ * By default only GET and / or HEAD requests are cacheable.
+ *
+ * @param bool $allow_caching
+ *   Set to FALSE if you want to prevent this call to get the cached version and
+ *   / or fill the cache.
+  * @param bool $ignore_request_method_check
+ *   Set to TRUE if you want to ignore the request method check.
+ *
+ * @return bool
+ *   TRUE if the current call can be cached, FALSE otherwise.
+ *
+ * @see drupal_page_is_cacheable()
+ */
+function render_cache_call_is_cacheable($allow_caching = NULL, $ignore_request_method_check = FALSE) {
+  $allow_caching_static = &drupal_static(__FUNCTION__, TRUE);
+  if (isset($allow_caching)) {
+    $allow_caching_static = $allow_caching;
+  }
+
+  return $allow_caching_static
+    && ($ignore_request_method_check
+      || ($_SERVER['REQUEST_METHOD'] == 'GET' || $_SERVER['REQUEST_METHOD'] == 'HEAD'))
+    && !drupal_is_cli();
+}
+
 // -----------------------------------------------------------------------
 // Helper functions
 
