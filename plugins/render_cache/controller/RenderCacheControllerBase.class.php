@@ -98,11 +98,14 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     $object_order = array_keys($objects);
 
     $cids = array_filter(array_values($cid_map));
-    $cached_objects = cache_get_multiple($cids, $default_cache_info['bin']);
 
-     // Calculate remaining entities
-    $ids_remaining = array_intersect($cid_map, $cids);
-    $objects = array_intersect_key($objects, $ids_remaining);
+    if (!empty($cids)) {
+      $cached_objects = cache_get_multiple($cids, $default_cache_info['bin']);
+
+       // Calculate remaining entities
+      $ids_remaining = array_intersect($cid_map, $cids);
+      $objects = array_intersect_key($objects, $ids_remaining);
+   }
 
     // Render non-cached entities.
     if (!empty($objects)) {
@@ -125,36 +128,8 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
         }
       } else {
         $render = $object_build[$id];
-
-        // @todo Helper
-        if (empty($cache_info['render_cache_render_to_markup'])) {
-          cache_set($cid, $render, $cache_info['bin']);
-        }
-        else {
-          // Process markup with drupal_render() caching.
-          $render['#cache'] = $cache_info;
-
-          $render_cache_attached = array();
-          // Preserve some properties in #attached?
-          if (!empty($cache_info['render_cache_render_to_markup']['preserve properties']) &&
-              is_array($cache_info['render_cache_render_to_markup']['preserve properties'])) {
-            foreach ($cache_info['render_cache_render_to_markup']['preserve properties'] as $key) {
-              if (isset($render[$key])) {
-                $render_cache_attached[$key] = $render[$key];
-              }
-            }
-          }
-          if (!empty($render_cache_attached)) {
-            $render['#attached']['render_cache'] = $render_cache_attached;
-          }
-
-          // Do we want to render now?
-          if (empty($cache_info['render_cache_render_to_markup']['cache late'])) {
-            // And save things. Also add our preserved properties back.
-            $render = array(
-              '#markup' => drupal_render($render),
-            ) + $render_cache_attached;
-          }
+        if ($cid) {
+          $render = $this->cacheRenderArray($render, $cache_info);
         }
       }
 
@@ -331,6 +306,41 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     $cache_info['cid'] = implode(':', $cid_parts);
 
     return $cache_info;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function cacheRenderArray($render, $cache_info) {
+    if (empty($cache_info['render_cache_render_to_markup'])) {
+      cache_set($cache_info['cid'], $render, $cache_info['bin']);
+    }
+    else {
+      // Process markup with drupal_render() caching.
+      $render['#cache'] = $cache_info;
+
+      $render_cache_attached = array();
+      // Preserve some properties in #attached?
+      if (!empty($cache_info['render_cache_render_to_markup']['preserve properties']) &&
+          is_array($cache_info['render_cache_render_to_markup']['preserve properties'])) {
+        foreach ($cache_info['render_cache_render_to_markup']['preserve properties'] as $key) {
+          if (isset($render[$key])) {
+            $render_cache_attached[$key] = $render[$key];
+          }
+        }
+      }
+      if (!empty($render_cache_attached)) {
+        $render['#attached']['render_cache'] = $render_cache_attached;
+      }
+
+      // Do we want to render now?
+      if (empty($cache_info['render_cache_render_to_markup']['cache late'])) {
+        // And save things. Also add our preserved properties back.
+        $render = array(
+          '#markup' => drupal_render($render),
+        ) + $render_cache_attached;
+      }
+    }
   }
 
   /**
