@@ -45,7 +45,6 @@ function render_cache_entity_view_callback($entities, $view_mode, $langcode = NU
   // Setup drupal_render style cache array.
   $cache_info = render_cache_cache_info_defaults();
   $cache_info['keys'] = array(
-    'render_cache',
     'entity',
     $entity_type,
     $view_mode,
