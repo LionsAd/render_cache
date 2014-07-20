@@ -7,6 +7,14 @@ class RenderCacheControllerEntity extends RenderCacheControllerBase {
   /**
    * {@inheritdoc}
    */
+  protected function isCacheable(array $default_cache_info, array $context) {
+    return variable_get('render_cache_' . $this->getType() . '_' . $context['entity_type'] . '_enabled', TRUE)
+        && parent::isCacheable($default_cache_info, $context);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function getCacheContext($object, array $context) {
     // Helper variables.
     $entity = $object;
