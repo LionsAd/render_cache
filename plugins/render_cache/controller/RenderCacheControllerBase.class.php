@@ -9,8 +9,11 @@ interface RenderCacheControllerInterface {
 
   public function view(array $objects);
 
-  public function isRecursive();
-  public function getRecursionLevel();
+  public static function isRecursive();
+  public static function getRecursionLevel();
+  public static function getRecursionStorage();
+  public static function setRecursionStorage(array $storage);
+  public static function addRecursionStorage(array $storage);
 }
 
 /**
@@ -66,6 +69,11 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
    * Recursion level of current call stack.
    */
   protected static $recursionLevel = 0;
+
+  /**
+   * Recursion storage of current call stack.
+   */
+  protected static $recursionStorage = array();
 
   /**
    * {@inheritdoc}
@@ -129,7 +137,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
       $object_build = $this->render($objects);
     }
 
-    $this->decreaseRecursion();
+    $storage = $this->decreaseRecursion();
 
     // Load Drupal 8 helper functions.
     module_load_include('inc', 'render_cache', 'includes/drupal_render_8');
@@ -143,6 +151,11 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
         $render = $cached_objects[$cid]->data;
       } else {
         $render = $object_build[$id];
+
+        // @todo support multiple vars here.
+        if (count($object_order) == 1) {
+          $render['previous_render'] = $storage;
+        }
 
         // @todo Retrieve recursive data here and store in $render.
         $render = $this->cacheRenderArray($render, $cache_info);
@@ -171,7 +184,6 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
       // Merge back previously saved properties.
       if (!empty($render['#attached']['render_cache'])) {
-        error_log(print_r($render['#attached']['render_cache'], TRUE));
         $render += $render['#attached']['render_cache'];
         unset($render['#attached']['render_cache']);
       }
@@ -179,15 +191,21 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
       // The cache late option is incompatible with render cache post processing.
       if (!empty($cache_info['render_cache_render_to_markup'])
          && empty($cache_info['render_cache_render_to_markup']['cache late'])
-         && !$this->isRecursive()) {
+         && !static::isRecursive()) {
         _drupal_render_process_post_render_cache($render);
       }
+
+      // Store recursive storage.
+      static::addRecursionStorage(array(
+        '#attached' => $render['#attached'],
+        '#cache' => $render['#cache'],
+        '#post_render_cache' => $render['#post_render_cache'],
+      ));
 
       // Unset any remaining weight properties.
       unset($render['#weight']);
 
       $build[$id] = $render;
-
     }
 
     return $build;
@@ -196,16 +214,51 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
   /**
    * {@inheritdoc}
    */
-  public function isRecursive() {
+  public static function isRecursive() {
     return static::$recursionLevel > 0;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getRecursionLevel() {
+  public static function getRecursionLevel() {
     return static::$recursionLevel;
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getRecursionStorage() {
+    $storage = static::$recursionStorage[static::$recursionLevel];
+    $render = array();
+
+    // pseudo-collect the new storage.
+    if (!empty($storage)) {
+      module_load_include('inc', 'render_cache', 'includes/drupal_render_8');
+      $render['#cache']['tags'] = drupal_render_collect_cache_tags($storage);
+
+      $post_render_cache = drupal_render_collect_post_render_cache($storage);
+      $render['#post_render_cache'] = $post_render_cache;
+      $render['#attached'] = drupal_render_collect_attached($storage, TRUE);
+    }
+
+    return $render;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function setRecursionStorage(array $storage) {
+    static::$recursionStorage[static::$recursionLevel] = $storage;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function addRecursionStorage(array $storage) {
+    static::$recursionStorage[static::$recursionLevel][] = $storage;
+  }
+
 
   /**
    * {@inheritdoc}
@@ -386,9 +439,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     $render['#cache']['tags'] = drupal_render_collect_cache_tags($render);
 
     $post_render_cache = drupal_render_collect_post_render_cache($render);
-    if ($post_render_cache) {
-      $render['#post_render_cache'] = $post_render_cache;
-    }
+    $render['#post_render_cache'] = $post_render_cache;
 
     $render_cache_attached = array();
     // Preserve some properties in #attached?
@@ -415,13 +466,17 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
    */
   protected function increaseRecursion() {
     static::$recursionLevel += 1;
+    static::$recursionStorage[static::$recursionLevel] = array();
   }
 
   /**
    * {@inheritdoc}
    */
   protected function decreaseRecursion() {
+    $storage = static::getRecursionStorage();
     static::$recursionLevel -= 1;
+    $this->addRecursionStorage($storage);
+    return $storage;
   }
 
   /**
