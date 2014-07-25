@@ -8,7 +8,8 @@ interface RenderCacheControllerInterface {
   public function setContext(array $context);
 
   public function view(array $objects);
-  public function drupalRender(array &$render);
+
+  public static function drupalRender(array &$render);
 
   public static function isRecursive();
   public static function getRecursionLevel();
