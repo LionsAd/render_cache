@@ -4,6 +4,8 @@
  * A straight port of Drupal 8 render functions for advanced render caching.
  */
 
+if (!variable_get('render_cache_drupal_8_render_defined', FALSE)) {
+
 /**
  * Generates a render cache placeholder.
  *
@@ -33,7 +35,7 @@ function drupal_render_cache_generate_placeholder($callback, array &$context) {
 
   // Generate a unique token if one is not already provided.
   $context += array(
-    'token' => drupal_random_bytes(55),
+    'token' => base64_encode(drupal_random_bytes(55)),
   );
 
   return '<drupal-render-cache-placeholder callback="' . $callback . '" token="' . $context['token'] . '"></drupal-render-cache-placeholder>';
@@ -179,4 +181,6 @@ function drupal_render_collect_cache_tags($element, $tags = array()) {
   }
 
   return $tags;
+}
+
 }
