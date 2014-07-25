@@ -345,7 +345,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
        // Special keys that are only related to our implementation.
        // @todo Remove and replace with something else.
-       'render_cache_render_to_markup' => FALSE,
+       'render_cache_render_to_markup' => TRUE,
        'render_cache_ignore_request_method_check' => FALSE,
     );
   }
