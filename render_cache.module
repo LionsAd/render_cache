@@ -4,6 +4,9 @@
  * Main module file for the Render Cache caching system.
  */
 
+// Include Drupal 8 render helper functions.
+require_once __DIR__ . '/includes/drupal_render_8.inc';
+
 // -----------------------------------------------------------------------
 // Core Hooks
 
@@ -168,6 +171,15 @@ function render_cache_get_plugin_handler($plugin_type, $type) {
     $cache[$plugin['name']] = new $class($plugin);
   }
   return !empty($cache[$plugin['name']]) ? $cache[$plugin['name']] : FALSE;
+}
+
+/**
+ * Overrides drupal_render().
+ *
+ * If we really need to render early, at least collect the cache tags, etc.
+ */
+function render_cache_drupal_render(&$render) {
+  return RenderCacheControllerBase::drupalRender($render);
 }
 
 /**
