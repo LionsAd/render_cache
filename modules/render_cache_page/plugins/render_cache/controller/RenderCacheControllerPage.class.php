@@ -38,7 +38,8 @@ class RenderCacheControllerPage extends RenderCacheControllerBase implements Ren
    * {@inheritdoc}
    */
   protected function isCacheable(array $default_cache_info, array $context) {
-    return variable_get('render_cache_' . $this->getType() . '_' . $context['page_callback'] . '_enabled', TRUE)
+    // Disabled caching for now.
+    return variable_get('render_cache_' . $this->getType() . '_' . $context['page_callback'] . '_enabled', FALSE)
         && parent::isCacheable($default_cache_info, $context);
   }
 
@@ -57,7 +58,6 @@ class RenderCacheControllerPage extends RenderCacheControllerBase implements Ren
   protected function getCacheHash($object, array $context) {
     // Simple 1 hour cache to begin with.
     $hash['expiration'] = round(time() / 3600);
-    $hash['fabian'] = rand();
 
     return $hash;
   }
