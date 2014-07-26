@@ -74,6 +74,7 @@ class RenderCacheControllerEntity extends RenderCacheControllerBase {
 
     $tags = parent::getCacheTags($object, $context);
     $tags[$entity_type][] = $entity_id;
+    $tags[$entity_type . '_view'] = TRUE;
 
     return $tags;
   }
