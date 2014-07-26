@@ -331,8 +331,8 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
    */
   protected function getCacheTags($object, array $context) {
     return array(
-      'content' => TRUE,
-      $this->getType() => TRUE,
+      'rendered' => TRUE,
+      $this->getType() . '_view' => TRUE,
     );
   }
 
