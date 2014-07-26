@@ -67,8 +67,13 @@ class RenderCacheControllerPage extends RenderCacheControllerBase implements Ren
    */
   protected function getCacheTags($object, array $context) {
     $tags = parent::getCacheTags($object, $context);
-    // Same as in D8, the page has a content tag.
-    $tags['content'] = TRUE;
+    // @see drupal_pre_render_page() in Drupal 8.
+    $tags['theme_global_settings'] = TRUE;
+
+    // Deliberately commented out as the theme might not be loaded, yet.
+    // We do this in render() instead.
+    //global $theme;
+    //$tags['theme'][] = $theme;
 
     return $tags;
   }
@@ -80,6 +85,9 @@ class RenderCacheControllerPage extends RenderCacheControllerBase implements Ren
     foreach ($objects as $id => $page) {
       $build[$id] = render_cache_page_drupal_render_page_helper($page);
     }
+    // @see drupal_pre_render_page() in Drupal 8.
+    global $theme;
+    $build['#cache']['tags']['theme'] = $theme;
 
     return $build;
   }
