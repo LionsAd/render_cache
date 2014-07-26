@@ -27,7 +27,17 @@ abstract class RenderCacheControllerAbstractBase extends RenderCachePluginBase i
 
   abstract protected function isCacheable(array $default_cache_info, array $context);
 
+  /**
+   * Provides the cache info for all objects based on the context.
+   */
+  abstract protected function getDefaultCacheInfo($context);
+
   abstract protected function getCacheContext($object, array $context);
+
+  /**
+   * Specific cache info overrides based on the $object.
+   */
+  abstract protected function getCacheInfo($object, array $context);
   abstract protected function getCacheKeys($object, array $context);
   abstract protected function getCacheHash($object, array $context);
   abstract protected function getCacheTags($object, array $context);
@@ -49,8 +59,10 @@ abstract class RenderCacheControllerAbstractBase extends RenderCachePluginBase i
   // -----------------------------------------------------------------------
   // Helper functions.
 
-  abstract protected function getDefaultCacheInfo($context);
-  abstract protected function getCacheInfo($object, array $cache_info = array(), array $context = array());
+  /**
+   * Provides the fully pouplated cache information for a specific object.
+   */
+  abstract protected function getCacheIdInfo($object, array $cache_info = array(), array $context = array());
 
   abstract protected function increaseRecursion();
   abstract protected function decreaseRecursion();
@@ -111,7 +123,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     // Retrieve a list of cache_info structures.
     foreach ($objects as $id => $object) {
       $context['id'] = $id;
-      $cache_info_map[$id] = $this->getCacheInfo($object, $default_cache_info, $context);
+      $cache_info_map[$id] = $this->getCacheIdInfo($object, $default_cache_info, $context);
 
       // If it is not cacheable, set the 'cid' to NULL.
       if (!$is_cacheable) {
@@ -210,6 +222,8 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     // If this is the main entry point.
     if (!static::isRecursive()) {
       $storage = RenderCacheControllerBase::getRecursionStorage();
+      error_log(print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), TRUE));
+      error_log(print_r($storage['#post_render_cache'], TRUE));
       $header = static::convertCacheTagsToHeader($storage['#cache']['tags']);
       // @todo ensure render_cache is the top module.
       // Currently this header can be send multiple times.
@@ -300,11 +314,18 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
         && render_cache_call_is_cacheable(NULL, $ignore_request_method_check);
   }
 
-   /**
+  /**
    * {@inheritdoc}
    */
   protected function getCacheContext($object, array $context) {
     return $context;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getCacheInfo($object, array $context) {
+    return array();
   }
 
   /**
@@ -373,9 +394,15 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
   /**
    * {@inheritdoc}
    */
-  protected function getCacheInfo($object, array $cache_info = array(), array $context = array()) {
+  protected function getCacheIdInfo($object, array $cache_info = array(), array $context = array()) {
     $context = $this->getCacheContext($object, $context);
 
+    $cache_info = drupal_array_merge_deep(
+      $cache_info,
+      $this->getCacheInfo($object, $context)
+    );
+
+    // Ensure these properties are always set.
     $cache_info += array(
       'keys' => array(),
       'hash' => array(),
