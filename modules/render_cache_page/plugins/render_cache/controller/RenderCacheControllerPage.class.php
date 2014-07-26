@@ -37,6 +37,17 @@ class RenderCacheControllerPage extends RenderCacheControllerBase implements Ren
   /**
    * {@inheritdoc}
    */
+  protected function getDefaultCacheInfo($context) {
+    $default_cache_info = parent::getDefaultCacheInfo($context);
+
+    // The page cache is per page and per role by default.
+    $default_cache_info['granularity'] = DRUPAL_CACHE_PER_ROLE | DRUPAL_CACHE_PER_PAGE;
+    return $default_cache_info;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function isCacheable(array $default_cache_info, array $context) {
     // Disabled caching for now.
     return variable_get('render_cache_' . $this->getType() . '_' . $context['page_callback'] . '_enabled', FALSE)
