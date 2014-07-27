@@ -29,9 +29,17 @@ class RenderCacheControllerPage extends RenderCacheControllerBase implements Ren
   public function view(array $objects) {
     // We need to decrease recursion again.
     // Because this only adds to the recursion storage, it is safe to call.
+    $this->pageStorage = static::getRecursionStorage();
     $this->decreaseRecursion();
 
     return parent::view($objects);
+  }
+
+  protected function renderRecursive(array $objects) {
+    $build = parent::renderRecursive($objects);
+    $page_id = current(array_keys($objects));
+    $build[$page_id]['x_render_cache_page_storage'] = $this->pageStorage;
+    return $build;
   }
 
   /**
@@ -42,6 +50,7 @@ class RenderCacheControllerPage extends RenderCacheControllerBase implements Ren
 
     // The page cache is per page and per role by default.
     $default_cache_info['granularity'] = DRUPAL_CACHE_PER_ROLE | DRUPAL_CACHE_PER_PAGE;
+    $default_cache_info['render_cache_render_to_markup'] = TRUE;
     return $default_cache_info;
   }
 
@@ -98,7 +107,8 @@ class RenderCacheControllerPage extends RenderCacheControllerBase implements Ren
     }
     // @see drupal_pre_render_page() in Drupal 8.
     global $theme;
-    $build['#cache']['tags']['theme'] = $theme;
+    $page_id = current(array_keys($objects));
+    $build[$page_id]['#cache']['tags']['theme'] = $theme;
 
     return $build;
   }
