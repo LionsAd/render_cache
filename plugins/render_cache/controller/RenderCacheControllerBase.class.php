@@ -200,16 +200,8 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
         $this->setCache($render, $cache_info, $strategy);
       }
 
-      // Merge back previously saved properties.
-      if (!empty($render['#attached']['render_cache'])) {
-        $render += $render['#attached']['render_cache'];
-        unset($render['#attached']['render_cache']);
-      }
-
-      // The cache late option is incompatible with render cache post processing.
-      if (!empty($cache_info['render_cache_render_to_markup'])
-         && empty($cache_info['render_cache_render_to_markup']['cache late'])
-         && !static::isRecursive()) {
+      // Only when we have #markup we can post process.
+      if ($strategy == RENDER_CACHE_STRATEGY_DIRECT_RENDER && !static::isRecursive()) {
         _drupal_render_process_post_render_cache($render);
       }
 
@@ -224,9 +216,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
     // If this is the main entry point.
     if (!static::isRecursive()) {
-      $storage = RenderCacheControllerBase::getRecursionStorage();
-      error_log(print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), TRUE));
-      error_log(print_r($storage['#post_render_cache'], TRUE));
+      $storage = static::getRecursionStorage();
       $header = static::convertCacheTagsToHeader($storage['#cache']['tags']);
       // @todo ensure render_cache is the top module.
       // Currently this header can be send multiple times.
