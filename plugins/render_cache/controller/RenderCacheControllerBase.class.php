@@ -519,6 +519,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     $render_cache_attached['#cache']['tags'] = $render['#cache']['tags'];
     $render_cache_attached['#post_render_cache'] = $render['#post_render_cache'];
 
+    $render['#attached'] = drupal_render_collect_attached($render, TRUE);
     $render['#attached']['render_cache'] = $render_cache_attached;
 
     return $render;
