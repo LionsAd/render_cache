@@ -164,9 +164,13 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     if (!empty($cids)) {
       $cached_build = $this->getCache($cids, $default_cache_info);
 
-       // Calculate remaining entities
-      $ids_remaining = array_intersect($cid_map, $cids);
-      $objects = array_intersect_key($objects, $ids_remaining);
+      // Calculate remaining entities
+      foreach ($object_order as $id) {
+        $cid = $cid_map[$id];
+        if ($cid && isset($cached_build[$cid])) {
+          unset($objects[$id]);
+        }
+      }
    }
 
     // Render non-cached entities.
