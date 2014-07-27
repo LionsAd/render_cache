@@ -19,7 +19,7 @@ interface RenderCacheControllerInterface {
   public static function getRecursionLevel();
   public static function getRecursionStorage();
   public static function setRecursionStorage(array $storage);
-  public static function addRecursionStorage(array $storage);
+  public static function addRecursionStorage(array $render);
 }
 
 /**
@@ -59,6 +59,27 @@ abstract class RenderCacheControllerAbstractBase extends RenderCachePluginBase i
    *   Render array keyed by id.
    */
   abstract protected function render(array $objects);
+
+  /**
+   * Render uncached objects in a recursion compatible way.
+   *
+   * The default implementation is dumb and expensive performance wise, as
+   * it calls the render() method for each object seperately.
+   *
+   * Controllers that support recursions should implement the
+   * RenderCacheControllerRecursionInterface and subclass from
+   * RenderCacheControllerRecursionBase.
+   *
+   * @see RenderCacheControllerRecursionInterface
+   * @see RenderCacheControllerRecursionBase
+   *
+   * @param $objects
+   *   Array of $objects to be rendered keyed by id.
+   *
+   * @return array
+   *   Render array keyed by id.
+   */
+  abstract protected function renderRecursive(array $objects);
 
   // -----------------------------------------------------------------------
   // Helper functions.
@@ -120,6 +141,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
     $cid_map = array();
     $cache_info_map = array();
+    $object_order = array_keys($objects);
 
     // Determine if this is cacheable.
     $is_cacheable = $this->isCacheable($default_cache_info, $context);
@@ -136,26 +158,21 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
       $cid_map[$id] = $cache_info_map[$id]['cid'];
     }
 
-    $object_order = array_keys($objects);
-
+    // Retrieve data from the cache.
     $cids = array_filter(array_values($cid_map));
 
     if (!empty($cids)) {
-      $cached_objects = cache_get_multiple($cids, $default_cache_info['bin']);
+      $cached_build = $this->getCache($cids, $default_cache_info);
 
        // Calculate remaining entities
       $ids_remaining = array_intersect($cid_map, $cids);
       $objects = array_intersect_key($objects, $ids_remaining);
    }
 
-    $this->increaseRecursion();
-
     // Render non-cached entities.
     if (!empty($objects)) {
-      $object_build = $this->render($objects);
+      $object_build = $this->renderRecursive($objects);
     }
-
-    $storage = $this->decreaseRecursion();
 
     $build = array();
     foreach ($object_order as $id) {
@@ -163,17 +180,15 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
       $cache_info = $cache_info_map[$id];
       $strategy = $this->determineCachingStrategy($cache_info, $id);
 
-      if (isset($cached_objects[$cid])) {
-        $render = $cached_objects[$cid]->data;
+      if (isset($cached_build[$cid])) {
+        // This has been already processed by the processCacheEntry() function.
+        $render = $cached_build[$cid];
       } else {
-        $render = $object_build[$id];
-
-        // @todo support multiple vars here.
-        if (count($object_order) == 1) {
-          $render['previous_render'] = $storage;
+        // If the object is not set, there is nothing we can do here.
+        if (!isset($object_build[$id])) {
+          continue;
         }
-
-        // @todo Retrieve recursive data here and store in $render.
+        $render = $object_build[$id];
         $render = static::cacheRenderArray($render, $cache_info);
 
         // If this should not be cached, unset the cache info properties.
@@ -199,11 +214,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
       }
 
       // Store recursive storage.
-      static::addRecursionStorage(array(
-        '#attached' => $render['#attached'],
-        '#cache' => $render['#cache'],
-        '#post_render_cache' => $render['#post_render_cache'],
-      ));
+      static::addRecursionStorage($render);
 
       // Unset any remaining weight properties.
       unset($render['#weight']);
@@ -268,7 +279,8 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
   /**
    * {@inheritdoc}
    */
-  public static function addRecursionStorage(array $storage) {
+  public static function addRecursionStorage(array $render) {
+    $storage = static::getCleanStorage($render);
     static::$recursionStorage[static::$recursionLevel][] = $storage;
   }
 
@@ -286,11 +298,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     }
 
     // Store recursive storage.
-    static::addRecursionStorage(array(
-      '#attached' => $render['#attached'],
-      '#cache' => $render['#cache'],
-      '#post_render_cache' => $render['#post_render_cache'],
-    ));
+    static::addRecursionStorage($render);
 
     return drupal_render($render);
   }
@@ -479,8 +487,11 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
     // Tags are special so collect them first to add them in again.
     if (isset($render['#cache']['tags'])) {
-      $render['render_cache_collected_tags']['#cache']['tags'] = $render['#cache']['tags'];
+      $render['x_render_cache_collected_tags']['#cache']['tags'] = $render['#cache']['tags'];
       unset($render['#cache']['tags']);
+    }
+    if (!isset($render['#cache'])) {
+      $render['#cache'] = array();
     }
 
     $render['#cache'] = drupal_array_merge_deep($render['#cache'], $cache_info);
@@ -510,6 +521,124 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
   }
 
   /**
+   * Retrieves results from the cache.
+   */
+  protected function getCache(&$cids, $default_cache_info) {
+    $objects = cache_get_multiple($cids, $default_cache_info['bin']);
+    foreach ($objects as $cid => $cache) {
+      $build = $this->processCacheEntry($cache->data, $default_cache_info);
+      if (!$this->validateCacheEntry($build, $default_cache_info)) {
+        unset($objects[$cid]);
+        $cids[] = $cid;
+        continue;
+      }
+      $objects[$cid] = $build;
+    }
+    return $objects;
+  }
+
+  protected function processCacheEntry(array $build, array $default_cache_info) {
+    // Merge back previously saved properties.
+    if (!empty($build['#attached']['render_cache'])) {
+      $build += $build['#attached']['render_cache'];
+      unset($build['#attached']['render_cache']);
+    }
+
+    return $build;
+  }
+
+  protected function validateCacheEntry(array $build, array $default_cache_info) {
+    // @ todo revalidate objects here.
+    return TRUE;
+  }
+
+  protected function determineCachingStrategy($cache_info, $id) {
+    if (empty($cache_info['render_cache_render_to_markup'])) {
+      return RENDER_CACHE_STRATEGY_NO_RENDER;
+    }
+
+    if (!empty($cache_info['render_cache_render_to_markup']['cache late'])) {
+      return RENDER_CACHE_STRATEGY_LATE_RENDER;
+    }
+
+    return RENDER_CACHE_STRATEGY_DIRECT_RENDER;
+  }
+
+  protected static function getCleanStorage($render, $remove_render_cache = TRUE) {
+    // Ensure all properties are set.
+    $render += array(
+      '#cache' => array(),
+      '#attached' => array(),
+      '#post_render_cache' => array(),
+    );
+    $render['#cache'] += array(
+      'tags' => array()
+    );
+
+    // Store only relevant parts.
+    $storage = array(
+      '#attached' => $render['#attached'],
+      '#cache' => array(
+        'tags' => $render['#cache']['tags']
+      ),
+      '#post_render_cache' => $render['#post_render_cache'],
+    );
+    if ($remove_render_cache) {
+      // Remove render cache properties.
+      unset($storage['#attached']['render_cache']);
+    }
+
+    return $storage;
+  }
+
+  protected function setCache(&$render, $cache_info, $strategy) {
+    switch ($strategy) {
+      case RENDER_CACHE_STRATEGY_NO_RENDER:
+        if (!empty($render['#cache']['cid'])) {
+          cache_set($cache_info['cid'], $render, $cache_info['bin'], $cache_info['expire']);
+
+          // Prevent further caching.
+          unset($render['#cache']['cid']);
+          unset($render['#cache']['keys']);
+        }
+      break;
+      case RENDER_CACHE_STRATEGY_DIRECT_RENDER:
+        $storage = static::getCleanStorage($render, FALSE);
+        $render = array(
+          '#markup' => drupal_render($render),
+        );
+        $render += $storage;
+        $render = $this->processCacheEntry($render, $cache_info);
+      break;
+      case RENDER_CACHE_STRATEGY_LATE_RENDER:
+        // Nothing to be done here.
+      break;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function renderRecursive(array $objects) {
+    $build = array();
+    foreach ($objects as $id => $object) {
+
+      $single_objects = array(
+        $id => $object,
+      );
+
+      $this->increaseRecursion();
+      $render = $this->render($single_objects);
+      $storage = $this->decreaseRecursion();
+      if (!empty($render[$id])) {
+        $build[$id] = $render[$id];
+        $build[$id]['x_render_cache_recursion_storage'] = $storage;
+      }
+    }
+    return $build;
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function increaseRecursion() {
@@ -523,7 +652,6 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
   protected function decreaseRecursion() {
     $storage = static::getRecursionStorage();
     static::$recursionLevel -= 1;
-    $this->addRecursionStorage($storage);
     return $storage;
   }
 
