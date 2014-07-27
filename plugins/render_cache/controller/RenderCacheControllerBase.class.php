@@ -211,6 +211,12 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
       // Unset any remaining weight properties.
       unset($render['#weight']);
 
+      if ($strategy == RENDER_CACHE_STRATEGY_DIRECT_RENDER) {
+        unset($render['#attached']);
+        unset($render['#cache']);
+        unset($render['#post_render_cache']);
+      }
+
       $build[$id] = $render;
     }
 
@@ -250,6 +256,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     // pseudo-collect the new storage.
     if (!empty($storage)) {
       $render['#cache']['tags'] = drupal_render_collect_cache_tags($storage);
+      ksort($render['#cache']['tags']);
 
       $post_render_cache = drupal_render_collect_post_render_cache($storage);
       $render['#post_render_cache'] = $post_render_cache;
@@ -376,7 +383,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
        // Special keys that are only related to our implementation.
        // @todo Remove and replace with something else.
-       'render_cache_render_to_markup' => TRUE,
+       'render_cache_render_to_markup' => FALSE,
        'render_cache_ignore_request_method_check' => FALSE,
     );
   }
@@ -486,6 +493,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
     $render['#cache'] = drupal_array_merge_deep($render['#cache'], $cache_info);
     $render['#cache']['tags'] = drupal_render_collect_cache_tags($render);
+    ksort($render['#cache']['tags']);
 
     $post_render_cache = drupal_render_collect_post_render_cache($render);
     $render['#post_render_cache'] = $post_render_cache;
@@ -585,11 +593,11 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     switch ($strategy) {
       case RENDER_CACHE_STRATEGY_NO_RENDER:
         if (!empty($render['#cache']['cid'])) {
-          cache_set($cache_info['cid'], $render, $cache_info['bin'], $cache_info['expire']);
-
           // Prevent further caching.
           unset($render['#cache']['cid']);
           unset($render['#cache']['keys']);
+
+          cache_set($cache_info['cid'], $render, $cache_info['bin'], $cache_info['expire']);
         }
       break;
       case RENDER_CACHE_STRATEGY_DIRECT_RENDER:
