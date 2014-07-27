@@ -1,5 +1,9 @@
 <?php
 
+define('RENDER_CACHE_STRATEGY_NO_RENDER', 0);
+define('RENDER_CACHE_STRATEGY_DIRECT_RENDER', 1);
+define('RENDER_CACHE_STRATEGY_LATE_RENDER', 2);
+
 /**
  * Interface to describe how RenderCache controller plugin objects are implemented.
  */
@@ -157,6 +161,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     foreach ($object_order as $id) {
       $cid = $cid_map[$id];
       $cache_info = $cache_info_map[$id];
+      $strategy = $this->determineCachingStrategy($cache_info, $id);
 
       if (isset($cached_objects[$cid])) {
         $render = $cached_objects[$cid]->data;
@@ -177,20 +182,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
           unset($render['#cache']['keys']);
         }
 
-        if (!empty($cache_info['render_cache_render_to_markup'])
-          && empty($cache_info['render_cache_render_to_markup']['cache late'])) {
-
-          $attached = drupal_render_collect_attached($render, TRUE);
-
-          // Render the markup.
-          $render = array(
-            '#attached' => $attached ?: array(),
-            '#markup' => drupal_render($render),
-          );
-        }
-        if ($cid && empty($cache_info['render_cache_render_to_markup'])) {
-          cache_set($cache_info['cid'], $render, $cache_info['bin'], $cache_info['expire']);
-        }
+        $this->setCache($render, $cache_info, $strategy);
       }
 
       // Merge back previously saved properties.
@@ -427,15 +419,15 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
       $cache_info['validate'],
       $this->getCacheValidate($object, $context)
     );
- 
+
     // @todo Remove this later.
     $cache_info['hash']['render_method'] = !empty($cache_info['render_cache_render_to_markup']);
     if ($cache_info['hash']['render_method']) {
       $cache_info['hash']['render_options'] = serialize($cache_info['render_cache_render_to_markup']);
     }
-   
+
     $this->alter('cache_info', $cache_info, $object, $context);
-  
+
     // If we can't cache this, return with cid set to NULL.
     if ($cache_info['granularity'] == DRUPAL_NO_CACHE) {
       $cache_info['cid'] = NULL;
@@ -446,7 +438,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     if (isset($cache_info['cid'])) {
       return $cache_info;
     }
-  
+
     $keys = &$cache_info['keys'];
     $hash = &$cache_info['hash'];
 
@@ -459,7 +451,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
     $this->alter('tags', $tags, $object, $cache_info, $context);
     $this->alter('validate', $validate, $object, $cache_info, $context);
-    
+
     // Add drupal_render cid_parts based on granularity.
     $granularity = isset($cache_info['granularity']) ? $cache_info['granularity'] : NULL;
     $cid_parts = array_merge(
