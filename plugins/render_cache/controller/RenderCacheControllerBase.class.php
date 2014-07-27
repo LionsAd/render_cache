@@ -202,7 +202,13 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
       // Only when we have #markup we can post process.
       if ($strategy == RENDER_CACHE_STRATEGY_DIRECT_RENDER && !static::isRecursive()) {
-        _drupal_render_process_post_render_cache($render);
+        $storage = $render;
+        while (!empty($storage['#post_render_cache'])) {
+          $this->increaseRecursion();
+          _drupal_render_process_post_render_cache($render);
+          $storage = $this->decreaseRecursion();
+          static::addRecursionStorage($storage);
+        }
       }
 
       // Store recursive storage.
@@ -221,7 +227,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     }
 
     // If this is the main entry point.
-    if (!static::isRecursive()) {
+    if (!static::isRecursive() && variable_get('render_cache_send_drupal_cache_tags', TRUE)) {
       $storage = static::getRecursionStorage();
       $header = static::convertCacheTagsToHeader($storage['#cache']['tags']);
       // @todo ensure render_cache is the top module.
