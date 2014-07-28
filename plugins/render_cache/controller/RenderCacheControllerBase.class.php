@@ -144,7 +144,6 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     $object_order = array_keys($objects);
 
     // Determine if this is cacheable.
-//    $is_cacheable = FALSE; //$this->isCacheable($default_cache_info, $context);
     $is_cacheable = $this->isCacheable($default_cache_info, $context);
 
     // Retrieve a list of cache_info structures.
@@ -234,10 +233,6 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     // If this is the main entry point.
     if (!static::isRecursive() && variable_get('render_cache_send_drupal_cache_tags', TRUE)) {
       $storage = static::getRecursionStorage();
-      error_log(print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), TRUE));
-      error_log(print_r($storage, TRUE));
-//      error_log(print_r($storage['#post_render_cache'], TRUE));
-//      error_log(print_r($storage['#cache'], TRUE));
       $header = static::convertCacheTagsToHeader($storage['#cache']['tags']);
       // @todo ensure render_cache is the top module.
       // Currently this header can be send multiple times.
