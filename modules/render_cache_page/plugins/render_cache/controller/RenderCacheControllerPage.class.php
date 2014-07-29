@@ -103,7 +103,7 @@ class RenderCacheControllerPage extends RenderCacheControllerBase implements Ren
    */
   protected function render(array $objects) {
     foreach ($objects as $id => $page) {
-      $build[$id] = render_cache_page_drupal_render_page_helper($page);
+      $build[$id] = render_cache_page_drupal_render_page_helper($page->content);
     }
     // @see drupal_pre_render_page() in Drupal 8.
     global $theme;

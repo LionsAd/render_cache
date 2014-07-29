@@ -122,7 +122,9 @@ function render_cache_page_drupal_render_page($page) {
  
   // The view() method always takes multiple objects.
   $pages = array(
-    'page' => $page,
+    'page' => (object) array(
+      'content' => $page,
+    ),
   );
 
   // Delegate to render cache controller.
