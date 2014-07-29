@@ -307,8 +307,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
    * {@inheritdoc}
    */
   public static function drupalRender(array &$render) {
-    $cache_info = array();
-    static::cacheRenderArray($render, $cache_info);
+    static::cacheRenderArray($render);
 
     // Merge back previously saved properties.
     if (!empty($render['#attached']['render_cache'])) {
@@ -507,7 +506,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
   /**
    * {@inheritdoc}
    */
-  protected static function cacheRenderArray($render, $cache_info) {
+  protected static function cacheRenderArray($render, $cache_info = array()) {
     // Process markup with drupal_render() caching.
 
     // Tags are special so collect them first to add them in again.
@@ -631,9 +630,30 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
       break;
       case RENDER_CACHE_STRATEGY_DIRECT_RENDER:
         $storage = static::getCleanStorage($render, FALSE);
+
+        // Do not have drupal_render() render this, as we need recursion
+        // support.
+        unset($render['#cache']['cid']);
+        unset($render['#cache']['keys']);
+
+        // This will catch resources added during preprocess phases.
+        $this->increaseRecursion();
         $render = array(
           '#markup' => drupal_render($render),
         );
+        $render_storage = $this->decreaseRecursion();
+
+        if (!empty($render_storage)) {
+          // Add to storage.
+          $storage['x_render_cache_drupal_render_recursion_storage'] = $render_storage;
+          $storage = static::cacheRenderArray($storage);
+          $storage = static::getCleanStorage($storage, FALSE);
+        }
+
+        $render['#attached'] = $storage['#attached'];
+
+        cache_set($cache_info['cid'], $render, $cache_info['bin'], $cache_info['expire']);
+
         $render += $storage;
         $render = $this->processCacheEntry($render, $cache_info);
       break;
