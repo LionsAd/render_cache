@@ -93,8 +93,6 @@ class RenderCachePlaceholder implements RenderCachePlaceholderInterface {
    * {@inheritdoc}
    */
   public static function postRenderCacheCallback(array $element, array $context) {
-    error_log('x-rc-called 2: ' . print_r($context, TRUE));
-
     $placeholder = drupal_render_cache_generate_placeholder($context['function'], $context);
 
     // Check if the placeholder is present at all.
