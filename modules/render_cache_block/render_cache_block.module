@@ -17,6 +17,12 @@ function render_cache_block_module_implements_alter(&$implementations, $hook) {
   if ($hook === 'page_build') {
     unset($implementations['block']);
   }
+  if ($hook === 'block_view_alter') {
+    // Move our hook implementation to the bottom.
+    $group = $implementations['render_cache_block'];
+    unset($implementations['render_cache_block']);
+    $implementations['render_cache_block'] = $group;
+  }
 }
 
 /**
@@ -54,6 +60,21 @@ function render_cache_block_page_build(&$page) {
   // because it is used each time block_get_blocks_by_region() gets called
   // above.
   drupal_static_reset('block_list');
+}
+
+/**
+ * Implements hook_block_view_alter().
+ */
+function render_cache_block_block_view_alter(&$data, $block) {
+  if (!empty($block->render_cache_controller) && !empty($data['content'])) {
+    // Normalize to the drupal_render() structure so we can add something.
+    if (is_string($data['content'])) {
+      $data['content'] = array(
+        '#markup' => $data['#content'],
+      );
+    }
+    $block->render_cache_controller->recursionStep($data['content']);
+  }
 }
 
 // -----------------------------------------------------------------------

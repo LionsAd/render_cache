@@ -3,7 +3,7 @@
 /**
  * RenderCacheController Block - Provides render caching for block objects.
  */
-class RenderCacheControllerBlock extends RenderCacheControllerBase {
+class RenderCacheControllerBlock extends RenderCacheControllerRecursionBase {
 
   /**
    * {@inheritdoc}
