@@ -14,3 +14,4 @@ dependencies[] = entity_modified
 files[] = includes/RenderCachePluginBase.class.php
 files[] = includes/RenderCachePlaceholder.class.php
 files[] = plugins/render_cache/controller/RenderCacheControllerBase.class.php
+files[] = plugins/render_cache/controller/RenderCacheControllerRecursionBase.class.php
