@@ -182,7 +182,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     foreach ($object_order as $id) {
       $cid = $cid_map[$id];
       $cache_info = $cache_info_map[$id];
-      $strategy = $this->determineCachingStrategy($cache_info, $id);
+      $strategy = $this->determineCachingStrategy($cache_info);
 
       if (isset($cached_build[$cid])) {
         // This has been already processed by the processCacheEntry() function.
@@ -567,7 +567,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     return TRUE;
   }
 
-  protected function determineCachingStrategy($cache_info, $id) {
+  protected function determineCachingStrategy($cache_info) {
     if (empty($cache_info['render_cache_render_to_markup'])) {
       return RENDER_CACHE_STRATEGY_NO_RENDER;
     }
