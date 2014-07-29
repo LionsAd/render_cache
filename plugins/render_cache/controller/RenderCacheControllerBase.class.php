@@ -204,24 +204,36 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
         $this->setCache($render, $cache_info, $strategy);
       }
 
-      // Only when we have #markup we can post process.
-      if ($strategy == RENDER_CACHE_STRATEGY_DIRECT_RENDER && !static::isRecursive()) {
-        $storage = $render;
-        while (!empty($storage['#post_render_cache'])) {
-          $this->increaseRecursion();
-          _drupal_render_process_post_render_cache($render);
-          $storage = $this->decreaseRecursion();
-          static::addRecursionStorage($storage);
-        }
-      }
-
       // Store recursive storage.
       static::addRecursionStorage($render);
 
       // Unset any remaining weight properties.
       unset($render['#weight']);
 
+      $post_render_cache = array();
+
       if ($strategy == RENDER_CACHE_STRATEGY_DIRECT_RENDER) {
+        unset($render['#attached']);
+        unset($render['#cache']);
+        if (!empty($render['#post_render_cache'])) {
+          $post_render_cache = $render['#post_render_cache'];
+        }
+        unset($render['#post_render_cache']);
+      }
+
+      // Only when we have #markup we can post process.
+      if ($strategy == RENDER_CACHE_STRATEGY_DIRECT_RENDER
+         && !empty($post_render_cache)
+         && !static::isRecursive()) {
+
+        $render['#post_render_cache'] = $post_render_cache;
+
+        // @todo add back recursive post render cache.
+        $this->increaseRecursion();
+        _drupal_render_process_post_render_cache($render);
+        $storage = $this->decreaseRecursion();
+        static::addRecursionStorage($storage);
+
         unset($render['#attached']);
         unset($render['#cache']);
         unset($render['#post_render_cache']);
