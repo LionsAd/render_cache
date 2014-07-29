@@ -132,6 +132,20 @@ function render_cache_page_drupal_render_page($page) {
   $rcc->setContext($context);
   $build = $rcc->view($pages);
 
+  // Now that we have build the page succesfully and ran post_render functions,
+  // lets add the HTML back to it.
+  if (!empty($build['page']['#render_cache_page_theme_wrappers'])) {
+    $build['page']['#theme_wrappers'] = $build['page']['#render_cache_page_theme_wrappers'];
+    unset($build['page']['#render_cache_page_theme_wrappers']);
+  }
+
+  // If the #theme_wrappers is still empty, then just put back the default from
+  // element_info('page').
+  if (empty($build['page']['#theme_wrappers'])) {
+    $element_info = element_info('page');
+    $build['page']['#theme_wrappers'] = $element_info['#theme_wrappers'];
+  }
+
   // Call drupal_render() like the original function.
   return drupal_render($build);
 }
@@ -169,6 +183,15 @@ function render_cache_page_drupal_render_page_helper($page) {
     $page['content']['system_main'] = drupal_set_page_content();
   }
 
-  // --- This was changed.
+  // --- These lines were changed.
+
+  // Remove the #theme_wrappers to remove the chicken-egg-situation of page and html
+  // for #post_render_cache and script adding. Store it in another var, in
+  // case some module tries to alter it in hook_page_alter().
+  if (!empty($page['#theme_wrappers'])) {
+    $page['#render_cache_page_theme_wrappers'] = $page['#theme_wrappers'];
+  }
+  $page['#theme_wrappers'] = array();
+
   return $page;
 }
