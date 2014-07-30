@@ -3,7 +3,7 @@
 /**
  * RenderCacheController Entity - Provides render caching for entity objects.
  */
-class RenderCacheControllerEntity extends RenderCacheControllerBase {
+class RenderCacheControllerEntity extends RenderCacheControllerRecursionBase {
   /**
    * {@inheritdoc}
    */

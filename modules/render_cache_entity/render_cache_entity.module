@@ -43,10 +43,12 @@ function render_cache_entity_entity_info_alter(&$entity_info) {
  *
  * Moves our hook_entity_info_alter() implementation to occur last so that we
  * can consistently hijack the render function of the entity type.
+ *
+ * This also adjusts the weights for entity_view() and entity_view_alter().
  */
 function render_cache_entity_module_implements_alter(&$implementations, $hook) {
-  if ($hook === 'entity_info_alter') {
-    // Move our hook implementation to the bottom.
+  if (in_array($hook, array('entity_info_alter', 'entity_view', 'entity_view_alter'))) {
+    // Move our hook implementations to the bottom.
     $group = $implementations['render_cache_entity'];
     unset($implementations['render_cache_entity']);
     $implementations['render_cache_entity'] = $group;
@@ -64,6 +66,30 @@ function render_cache_entity_ctools_plugin_directory($owner, $plugin_type) {
     return 'plugins/render_cache/' . $plugin_type;
   }
 }
+
+/**
+ * Implements hook_entity_view().
+ */
+function render_cache_entity_entity_view($entity, $type, $view_mode, $langcode) {
+  if (!empty($entity->render_cache_controller) && !empty($entity->content)) {
+    // Store the entity we are processing in a special variable
+    // as hook_entity_view_alter() does not give us the entity.
+    $entity->content['#render_cache_entity'] = $entity;
+  }
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function render_cache_entity_entity_view_alter(&$build, $type) {
+  // Ensure recursion works properly.
+  if (!empty($build['#render_cache_entity'])) {
+    $entity = $build['#render_cache_entity'];
+    unset($build['#render_cache_entity']);
+    $entity->render_cache_controller->recursionStep($build);
+  }
+}
+
 
 // -----------------------------------------------------------------------
 // Public API
