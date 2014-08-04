@@ -239,6 +239,16 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
         unset($render['#post_render_cache']);
       }
 
+      if (isset($render['#markup'])
+         && (variable_get('render_cache_debug_output', FALSE)
+           || variable_get('render_cache_debug_output_' , $this->getType(), FALSE)
+           || !empty($cache_info['render_cache_debug_output']))
+         ) {
+	$prefix = '<!-- START RENDER ID: ' . $id . ' CACHE INFO: ' . "\n" . print_r($cache_info, TRUE) . '-->';
+        $suffix = '<!-- END RENDER -->';
+        $render['#markup'] = "\n$prefix\n" . $render['#markup'] . "\n$suffix\n";
+      }
+
       $build[$id] = $render;
     }
 
