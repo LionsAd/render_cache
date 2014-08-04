@@ -21,12 +21,16 @@ interface RenderCachePlaceholderInterface {
    *   @endcode
    *   Given %node the function node_load() will be called with the argument, the resulting
    *   function will just be given the $node as argument.
+   * @param bool $multi
+   *   Whether the function accepts multiple contexts. This is useful to group similar objects
+   *   together.
+   *
    * @return array
    *   A render array with #markup set to the placeholder and
    *   #post_render_cache callback set to callback postRenderCacheCallback()
    *   with the given arguments and function encoded in the context.
    */
-  public static function getPlaceholder($function, array $args = array());
+  public static function getPlaceholder($function, array $args = array(), $multiple = FALSE);
 
   /**
    * Generic #post_render_cache callback for getPlaceholder().
@@ -42,6 +46,22 @@ interface RenderCachePlaceholderInterface {
    *   A renderable array with the placeholder replaced.
    */
   public static function postRenderCacheCallback(array $element, array $context);
+
+  /**
+   * Generic #post_render_cache callback for getPlaceholder() with multi=TRUE.
+   *
+   * This is useful to group several related elements together.
+   *
+   * @param array $element
+   *   The renderable array that contains the to be replaced placeholders.
+   * @param array $contexts
+   *   An array keyed by function with the contexts as values.
+   *
+   * @return array
+   *   A renderable array with the placeholders replaced.
+   */
+  public static function postRenderCacheMultiCallback(array $element, array $contexts);
+
 
   /**
    * Loads the %load arguments within $context['args'].
@@ -69,8 +89,8 @@ class RenderCachePlaceholder implements RenderCachePlaceholderInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getPlaceholder($function, array $args = array()) {
-    $callback = 'RenderCachePlaceholder::postRenderCacheCallback';
+  public static function getPlaceholder($function, array $args = array(), $multiple = FALSE) {
+    $callback = $multiple ? 'RenderCachePlaceholder::postRenderCacheMultiCallback' : 'RenderCachePlaceholder::postRenderCacheCallback';
 
     $context = array(
       'function' => $function,
@@ -79,11 +99,16 @@ class RenderCachePlaceholder implements RenderCachePlaceholderInterface {
 
     $placeholder = drupal_render_cache_generate_placeholder($context['function'], $context);
 
+    $context = array($context);
+    if ($multiple) {
+      $context = array(
+        $function => $context,
+      );
+    }
+
     return array(
       '#post_render_cache' => array(
-          $callback => array(
-          $context,
-        ),
+        $callback => $context,
       ),
       '#markup' => $placeholder,
     );
@@ -92,7 +117,41 @@ class RenderCachePlaceholder implements RenderCachePlaceholderInterface {
   /**
    * {@inheritdoc}
    */
+  public static function postRenderCacheMultiCallback(array $element, array $contexts) {
+    // Check this is really a multi placeholder.
+    if (isset($contexts['function']) || !isset($contexts[0]['function'])) {
+      return $element;
+    }
+
+    $function = $contexts[0]['function'];
+    $args = array();
+    foreach ($contexts as $context) {
+      $placeholder = drupal_render_cache_generate_placeholder($context['function'], $context);
+
+      // Check if the placeholder is present at all.
+      if (strpos($element['#markup'], $placeholder) === FALSE) {
+        continue;
+      }
+
+      $args[$placeholder] = $context['args'];
+    }
+
+    // This expects an array keyed by placeholder with the build as value.
+    $placeholders = call_user_func($function, $args);
+
+    foreach ($placeholders as $placeholder => $new_element) {
+      $markup = drupal_render($new_element);
+      $element['#markup'] = str_replace($placeholder, $markup, $element['#markup']);
+    }
+
+    return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function postRenderCacheCallback(array $element, array $context) {
+
     $placeholder = drupal_render_cache_generate_placeholder($context['function'], $context);
 
     // Check if the placeholder is present at all.
