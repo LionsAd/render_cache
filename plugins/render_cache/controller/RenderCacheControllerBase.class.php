@@ -282,6 +282,9 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
    * {@inheritdoc}
    */
   public static function getRecursionStorage() {
+    if (!isset(static::$recursionStorage[static::$recursionLevel])) {
+      static::$recursionStorage[static::$recursionLevel] = array();
+    }
     $storage = static::$recursionStorage[static::$recursionLevel];
     $render = array();
 
