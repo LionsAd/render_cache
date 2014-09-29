@@ -64,8 +64,8 @@ function render_cache_big_pipe_render_cache_page_post_render_alter(&$markup, $bu
   }
 
   // Immediately output things so far.
-  ob_flush();
-  flush();
+  ob_implicit_flush(TRUE);
+  ob_end_flush();
 
   $rcs = render_cache_get_renderer('big_pipe');
 
@@ -77,10 +77,6 @@ function render_cache_big_pipe_render_cache_page_post_render_alter(&$markup, $bu
     }
 
     print $rcs->renderPlaceholder($placeholder, $ph_object);
-
-    // Immediately output things so far.
-    ob_flush();
-    flush();
   }
   // Now render the scripts and closing body tag.
   $bottom = array(
