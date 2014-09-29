@@ -8,6 +8,23 @@
 // -----------------------------------------------------------------------
 // Core Hooks
 
+
+/**
+ * Implements hook_theme().
+ */
+function render_cache_big_pipe_theme() {
+  return array(
+    'html_top' => array(
+      'render element' => 'page',
+      'template' => 'html-top',
+    ),
+    'html_bottom' => array(
+      'variables' => array( 'scripts' => '' ),
+      'template' => 'html-bottom',
+    ),
+  );
+}
+
 // -----------------------------------------------------------------------
 // Contrib Hooks
 
@@ -20,10 +37,7 @@ function render_cache_big_pipe_ctools_plugin_directory($owner, $plugin_type) {
   }
 }
 
-// -----------------------------------------------------------------------
-// Public API
-
-function render_cache_page_pre_render_alter(&$build) {
+function render_cache_big_pipe_render_cache_page_pre_render_alter(&$build) {
   if (!class_exists('RenderCacheRenderStrategyBigPipe')) {
     return;
   }
@@ -34,31 +48,87 @@ function render_cache_page_pre_render_alter(&$build) {
   }
 
   // Store for later usage.
-  $build['#render_cache_big_pipe_placeholders'] - $placeholders;
+  $build['#render_cache_big_pipe_placeholders'] = $placeholders;
 
   // Replace HTML with just the html_top part.
-  foreach ($build['#theme_wrappers'] as $key => $theme_wrapper) {
+  foreach ($build['page']['#theme_wrappers'] as $key => $theme_wrapper) {
     if ($theme_wrapper == 'html') {
-      $build['#theme_wrappers'][$key] = 'html_top';
+      $build['page']['#theme_wrappers'][$key] = 'html_top';
     }
   }
 }
 
-function render_cache_page_post_render_alter(&$markup, $build) {
+function render_cache_big_pipe_render_cache_page_post_render_alter(&$markup, $build) {
   if (empty($build['#render_cache_big_pipe_placeholders'])) {
     return;
   }
+
+  // Immediately output things so far.
+  ob_flush();
+  flush();
+
+  $rcs = render_cache_get_renderer('big_pipe');
+
   // Replace the placeholders.
   foreach ($build['#render_cache_big_pipe_placeholders'] as $placeholder => $ph_object) {
     // Check if the placeholder is present at all.
     if (strpos($markup, $placeholder) === FALSE) {
       continue;
     }
-    $output = 'Big Pipe Placeholder';
-    $markup = str_replace($placeholder, $output, $markup);
+
+    print $rcs->renderPlaceholder($placeholder, $ph_object);
+
+    // Immediately output things so far.
+    ob_flush();
+    flush();
   }
+  // Now render the scripts and closing body tag.
   $bottom = array(
     '#theme' => 'html_bottom',
   );
-  $markup .= drupal_render($bottom);
+  print drupal_render($bottom);
 }
+
+// -----------------------------------------------------------------------
+// Theme API
+
+/**
+ * Overrides template_preprocess_html().
+ *
+ * Moves the scripts to the bottom.
+ */
+function template_preprocess_html_top(&$variables) {
+  // @todo Call all preprocess functions for the html hook.
+  template_preprocess_html($variables);
+
+ // Populate the page template suggestions.
+  if ($suggestions = theme_get_suggestions(arg(), 'html-top')) {
+    $variables['theme_hook_suggestions'] = $suggestions;
+  }
+}
+
+/**
+ * Overrides template_process_html().
+ *
+ * Moves the scripts to the bottom.
+ */
+function template_process_html_top(&$variables) {
+  // Render page_top and page_bottom into top level variables.
+  $variables['page_top'] = drupal_render($variables['page']['page_top']);
+  $variables['page_bottom'] = drupal_render($variables['page']['page_bottom']);
+  // Place the rendered HTML for the page body into a top level variable.
+  $variables['page'] = $variables['page']['#children'];
+  $variables['page_bottom'] .= drupal_get_js('footer');
+
+  $variables['head'] = drupal_get_html_head();
+  $variables['css'] = drupal_add_css();
+  $variables['styles'] = drupal_get_css();
+  $variables['scripts'] = '';
+}
+
+function template_process_html_bottom(&$variables) {
+  $variables['scripts'] = drupal_get_js();
+}
+
+// -----------------------------------------------------------------------
+// Public API
