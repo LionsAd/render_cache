@@ -149,8 +149,9 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
     // Retrieve a list of cache_info structures.
     foreach ($objects as $id => $object) {
-      $context['id'] = $id;
-      $cache_info_map[$id] = $this->getCacheIdInfo($object, $default_cache_info, $context);
+      $object_context = $context;
+      $object_context['id'] = $id;
+      $cache_info_map[$id] = $this->getCacheIdInfo($object, $default_cache_info, $object_context);
 
       // If it is not cacheable, set the 'cid' to NULL.
       if (!$is_cacheable) {
@@ -187,8 +188,12 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
       // @todo Serialize the object.
       $ph_object = array(
         'id' => $id,
+        'type' => $this->getType(),
+        'context' => $context,
         'object' => $objects[$id],
         'cache_info' => $cache_info_map[$id],
+        // Put this for easy access here.
+        'render_strategy' => $cache_info_map[$id]['render_strategy'],
       );
       unset($objects[$id]);
       $placeholder_build[$id] = RenderCachePlaceholder::getPlaceholder(get_class($this) . '::viewPlaceholders', $ph_object, TRUE);
@@ -792,11 +797,36 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
   }
 
   public static function viewPlaceholders(array $args) {
-    $placeholders = array();
+    $all_placeholders = array();
+    $strategies = array();
+
     foreach ($args as $placeholder => $ph_object) {
-      $placeholders[$placeholder] = array( '#markup' => 'Placeholder' );
+      foreach ($ph_object['render_strategy'] as $render_strategy) {
+        $strategies[$render_strategy][$placeholder] = $placeholder;
+      }
+
+      // Fallback to direct rendering.
+      $strategies['direct'][$placeholder] = $placeholder;
     }
 
-    return $placeholders;
+    foreach ($strategies as $render_strategy => $placeholder_keys) {
+      $rcs = render_cache_get_renderer($render_strategy);
+      if (!$rcs) {
+        continue;
+      }
+
+      $objects = array_intersect_key($args, $placeholder_keys);
+      if (empty($objects)) {
+        continue;
+      }
+
+      $placeholders = $rcs->render($objects);
+      foreach ($placeholders as $placeholder => $render) {
+        $all_placeholders[$placeholder] = $render;
+        unset($args[$placeholder]);
+      }
+    }
+
+    return $all_placeholders;
   }
 }
