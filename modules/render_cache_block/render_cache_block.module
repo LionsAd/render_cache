@@ -70,7 +70,7 @@ function render_cache_block_block_view_alter(&$data, $block) {
     // Normalize to the drupal_render() structure so we can add something.
     if (is_string($data['content'])) {
       $data['content'] = array(
-        '#markup' => $data['#content'],
+        '#markup' => $data['content'],
       );
     }
     $block->render_cache_controller->recursionStep($data['content']);

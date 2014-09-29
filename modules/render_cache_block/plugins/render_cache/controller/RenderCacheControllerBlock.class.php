@@ -44,7 +44,7 @@ class RenderCacheControllerBlock extends RenderCacheControllerRecursionBase {
     // Overwrite the default granularity, this is a pretty sane default.
     $cache_info['granularity'] = isset($block->cache) ? $block->cache : DRUPAL_NO_CACHE;
 
-    return $context;
+    return $cache_info;
   }
 
 
