@@ -35,7 +35,9 @@ class RenderCacheRenderStrategyEsiValidate extends RenderCacheRenderStrategyBase
         ),
       ));
 
-      $placeholders[$placeholder] = '<esi:include src="' . $url . '" />';
+      $placeholders[$placeholder] = array(
+        '#markup' => '<esi:include src="' . $url . '" />',
+      );
     }
 
     return $placeholders;
