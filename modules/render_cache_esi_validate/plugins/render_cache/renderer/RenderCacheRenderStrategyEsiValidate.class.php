@@ -8,18 +8,17 @@ class RenderCacheRenderStrategyEsiValidate extends RenderCacheRenderStrategyBase
   /**
    * {@inheritdoc}
    */
-  public function render(array $placeholders) {
-    $remaining_placeholders = array();
+  public function render(array $args) {
+    $placeholders = array();
 
     // This will only work if the caller allows ESI.
     if (empty($_SERVER['HTTP_X_DRUPAL_ESI_VALIDATE'])) {
-      return $placeholders;
+      return array();
     }
 
-    foreach ($placeholders as $key => $placeholder) {
+    foreach ($args as $placeholder => $ph_object) {
       // If there is no cache ID, we can't ESI validate this.
-      if (empty($placeholder['cache_info']['cid']) {
-        $remaining_placeholders[$key] = $placeholder;
+      if (empty($ph_object['cache_info']['cid']) {
 	continue;
       }
 
@@ -31,14 +30,14 @@ class RenderCacheRenderStrategyEsiValidate extends RenderCacheRenderStrategyBase
       // The markup is already cached, so just provide a Cache ID.
       $url = url($base_esi, array(
         'query' => array(
-          'cid' => $placeholder['cache_info']['cid'],
-          'bin' => $placeholder['cache_info']['bin'],
+          'cid' => $ph_object['cache_info']['cid'],
+          'bin' => $ph_object['cache_info']['bin'],
         ),
       ));
 
-      $placeholders[$key] = '<esi:include src="' . $url . '" />';
+      $placeholders[$placeholder] = '<esi:include src="' . $url . '" />';
     }
 
-    return $remaining_placeholders;
+    return $placeholders;
   }
 }
