@@ -14,6 +14,7 @@ interface RenderCacheControllerInterface {
   public function view(array $objects);
 
   public static function drupalRender(array &$render);
+  public static function renderPlaceholders(array $args);
 
   public static function isRecursive();
   public static function getRecursionLevel();
@@ -196,7 +197,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
         'render_strategy' => $cache_info_map[$id]['render_strategy'],
       );
       unset($objects[$id]);
-      $placeholder_build[$id] = RenderCachePlaceholder::getPlaceholder(get_class($this) . '::viewPlaceholders', $ph_object, TRUE);
+      $placeholder_build[$id] = RenderCachePlaceholder::getPlaceholder(get_class($this) . '::renderPlaceholders', $ph_object, TRUE);
     }
 
     // Render non-cached entities.
@@ -796,7 +797,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     return implode(' ', $flat_tags);
   }
 
-  public static function viewPlaceholders(array $args) {
+  public static function renderPlaceholders(array $args) {
     $all_placeholders = array();
     $strategies = array();
 
