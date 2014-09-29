@@ -12,6 +12,7 @@ interface RenderCacheControllerInterface {
   public function setContext(array $context);
 
   public function view(array $objects);
+  public function viewPlaceholders(array $objects);
 
   public static function drupalRender(array &$render);
   public static function renderPlaceholders(array $args);
@@ -127,6 +128,19 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
    */
   public function setContext(array $context) {
     $this->context = $context;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewPlaceholders(array $objects) {
+    $object_build = array();
+
+    if (!empty($objects)) {
+      $object_build = $this->render($objects);
+    }
+
+    return $object_build;
   }
 
   /**
