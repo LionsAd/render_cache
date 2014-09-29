@@ -244,7 +244,14 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
            || variable_get('render_cache_debug_output_' , $this->getType(), FALSE)
            || !empty($cache_info['render_cache_debug_output']))
          ) {
-	$prefix = '<!-- START RENDER ID: ' . $id . ' CACHE INFO: ' . "\n" . print_r($cache_info, TRUE) . '-->';
+        // @todo Move to helper function.
+        $prefix = '<!-- START RENDER ID: ' . $id . ' CACHE INFO: ' . "\n" . print_r($cache_info, TRUE);
+        $prefix .= "\nHOOKS:\n";
+        $hook_prefix = 'render_cache_' . $this->getType() . '_';
+        foreach (array('default_cache_info', 'cache_info', 'keys', 'tags', 'hash', 'validate') as $hook) {
+          $prefix .= '* hook_' . $hook_prefix . $hook . "_alter()\n";
+        }
+        $prefix .= '-->';
         $suffix = '<!-- END RENDER -->';
         $render['#markup'] = "\n$prefix\n" . $render['#markup'] . "\n$suffix\n";
       }
