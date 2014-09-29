@@ -253,7 +253,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     }
 
     // If this is the main entry point.
-    if (!static::isRecursive() && variable_get('render_cache_send_drupal_cache_tags', TRUE)) {
+    if (!static::isRecursive() && variable_get('render_cache_send_drupal_cache_tags', TRUE) && !empty($storage['#cache']['tags'])) {
       $storage = static::getRecursionStorage();
       $header = static::convertCacheTagsToHeader($storage['#cache']['tags']);
       // @todo ensure render_cache is the top module.
