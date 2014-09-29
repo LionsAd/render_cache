@@ -35,6 +35,17 @@ class RenderCacheControllerBlock extends RenderCacheControllerRecursionBase {
   /**
    * {@inheritdoc}
    */
+  protected function getDefaultCacheInfo($context) {
+    $default_cache_info = parent::getDefaultCacheInfo($context);
+
+    // The block cache renders to markup by default.
+    $default_cache_info['render_cache_render_to_markup'] = TRUE;
+    return $default_cache_info;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function getCacheInfo($object, array $context) {
     // Helper variables.
     $block = $object;
