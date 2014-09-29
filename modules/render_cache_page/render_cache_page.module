@@ -100,7 +100,8 @@ function render_cache_page_deliver_html_page($page_callback_result) {
   if (isset($page_callback_result)) {
     // Print anything besides a menu constant, assuming it's not NULL or
     // undefined.
-    print render_cache_page_drupal_render_page($page_callback_result);
+    // The function does the printing.
+    render_cache_page_drupal_render_page($page_callback_result);
   }
 
   // Perform end-of-request tasks.
@@ -151,11 +152,10 @@ function render_cache_page_drupal_render_page($page) {
 
   // Call drupal_render() like the original function.
   $output = drupal_render($build);
+  print $output;
 
-  // ... and to replace placeholders.
+  // ... and to replace placeholders via Javascript.
   drupal_alter('render_cache_page_post_render', $output, $build);
-
-  return $output;
 }
 
 /**
