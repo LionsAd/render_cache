@@ -14,6 +14,6 @@ interface RenderCacheRenderStrategyInterface {
 /**
  * Base class for RenderCacheRenderCacheValidationStrategy plugin objects.
  */
-abstract class RenderCacheRenderStrategyBase extends RenderCachePluginInterface implements RenderCacheRenderStrategyInterface {
+abstract class RenderCacheRenderStrategyBase extends RenderCachePluginBase implements RenderCacheRenderStrategyInterface {
 
 }

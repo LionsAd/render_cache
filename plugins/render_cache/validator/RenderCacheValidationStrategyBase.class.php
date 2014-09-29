@@ -11,14 +11,5 @@ interface RenderCacheValidationStrategyInterface {
 /**
  * Base class for RenderCacheRenderCacheValidationStrategy plugin objects.
  */
-abstract class RenderCacheValidationStrategyBase implements RenderCacheValidationStrategyInterface {
-
-  /**
-   * Public constructor.
-   *
-   * @param $plugin
-   */
-  public function __construct($plugin) {
-    $this->plugin = $plugin;
-  }
+abstract class RenderCacheValidationStrategyBase extends RenderCachePluginBase implements RenderCacheValidationStrategyInterface {
 }

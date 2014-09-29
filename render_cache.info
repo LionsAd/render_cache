@@ -15,3 +15,5 @@ files[] = includes/RenderCachePluginBase.class.php
 files[] = includes/RenderCachePlaceholder.class.php
 files[] = plugins/render_cache/controller/RenderCacheControllerBase.class.php
 files[] = plugins/render_cache/controller/RenderCacheControllerRecursionBase.class.php
+files[] = plugins/render_cache/validator/RenderCacheValidationStrategyBase.class.php
+files[] = plugins/render_cache/renderer/RenderCacheRenderStrategyBase.class.php

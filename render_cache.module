@@ -32,6 +32,10 @@ function render_cache_ctools_plugin_type() {
     'cache' => FALSE,
     'classes' => array('class'),
   );
+  $items['renderer'] = array(
+    'cache' => FALSE,
+    'classes' => array('class'),
+  );
 
   return $items;
 }
