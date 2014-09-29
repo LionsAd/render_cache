@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations and frequently used functions for render cache big pipe module.
+ */
+
+// -----------------------------------------------------------------------
+// Core Hooks
+
+// -----------------------------------------------------------------------
+// Contrib Hooks
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function render_cache_big_pipe_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'render_cache') {
+    return 'plugins/render_cache/' . $plugin_type;
+  }
+}
+
+// -----------------------------------------------------------------------
+// Public API
+
+function render_cache_page_pre_render_alter(&$build) {
+  if (!class_exists('RenderCacheRenderStrategyBigPipe')) {
+    return;
+  }
+  $placeholders = RenderCacheRenderStrategyBigPipe::getPlaceholders();
+
+  if (empty($placeholders)) {
+    return;
+  }
+
+  // Store for later usage.
+  $build['#render_cache_big_pipe_placeholders'] - $placeholders;
+
+  // Replace HTML with just the html_top part.
+  foreach ($build['#theme_wrappers'] as $key => $theme_wrapper) {
+    if ($theme_wrapper == 'html') {
+      $build['#theme_wrappers'][$key] = 'html_top';
+    }
+  }
+}
+
+function render_cache_page_post_render_alter(&$markup, $build) {
+  if (empty($build['#render_cache_big_pipe_placeholders'])) {
+    return;
+  }
+  // Replace the placeholders.
+  foreach ($build['#render_cache_big_pipe_placeholders'] as $placeholder => $ph_object) {
+    // Check if the placeholder is present at all.
+    if (strpos($markup, $placeholder) === FALSE) {
+      continue;
+    }
+    $output = 'Big Pipe Placeholder';
+    $markup = str_replace($placeholder, $output, $markup);
+  }
+  $bottom = array(
+    '#theme' => 'html_bottom',
+  );
+  $markup .= drupal_render($bottom);
+}
