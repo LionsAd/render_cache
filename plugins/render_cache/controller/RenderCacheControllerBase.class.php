@@ -141,6 +141,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
     $cid_map = array();
     $cache_info_map = array();
+    $placeholders = array();
     $object_order = array_keys($objects);
 
     // Determine if this is cacheable.
@@ -153,6 +154,12 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
       // If it is not cacheable, set the 'cid' to NULL.
       if (!$is_cacheable) {
+        $cache_info_map[$id]['cid'] = NULL;
+      }
+      // If this should be rendered as a placeholder,
+      // remove the CID as well.
+      if (!empty($cache_info_map[$id]['placeholder_id'])) {
+        $placeholders[$id] = $id;
         $cache_info_map[$id]['cid'] = NULL;
       }
       $cid_map[$id] = $cache_info_map[$id]['cid'];
@@ -171,7 +178,21 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
           unset($objects[$id]);
         }
       }
-   }
+    }
+
+    // Render placeholders.
+    // @todo Helper function.
+    $placeholder_build = array();
+    foreach ($placeholders as $id) {
+      // @todo Serialize the object.
+      $ph_object = array(
+        'id' => $id,
+        'object' => $objects[$id],
+        'cache_info' => $cache_info_map[$id],
+      );
+      unset($objects[$id]);
+      $placeholder_build[$id] = RenderCachePlaceholder::getPlaceholder(get_class($this) . '::viewPlaceholders', $ph_object, TRUE);
+    }
 
     // Render non-cached entities.
     if (!empty($objects)) {
@@ -187,6 +208,8 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
       if (isset($cached_build[$cid])) {
         // This has been already processed by the processCacheEntry() function.
         $render = $cached_build[$cid];
+      } elseif (isset($placeholder_build[$id])) {
+        $render = $placeholder_build[$id];
       } else {
         // If the object is not set, there is nothing we can do here.
         if (!isset($object_build[$id])) {
@@ -427,6 +450,8 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
        // @todo Port to Drupal 8.
        'hash' => array(),
        'validate' => array(),
+       // Allows special rendering via big pipe, esi, etc.
+       'render_strategy' => array(),
 
        // Special keys that are only related to our implementation.
        // @todo Remove and replace with something else.
@@ -522,6 +547,16 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     $this->alter('cid', $cid_parts, $cache_info, $object, $context);
 
     $cache_info['cid'] = implode(':', $cid_parts);
+
+    // Save the placeholder ID.
+    if (!empty($cache_info['render_strategy'])) {
+      $cache_info['placeholder_id'] = $cache_info['cid'];
+    }
+
+    // If the caller caches this customly still, unset cid.
+    if ($cache_info['granularity'] == DRUPAL_CACHE_CUSTOM) {
+      $cache_info['cid'] = NULL;
+    }
 
     return $cache_info;
   }
@@ -754,5 +789,14 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
       }
     }
     return implode(' ', $flat_tags);
+  }
+
+  public static function viewPlaceholders(array $args) {
+    $placeholders = array();
+    foreach ($args as $placeholder => $ph_object) {
+      $placeholders[$placeholder] = array( '#markup' => 'Placeholder' );
+    }
+
+    return $placeholders;
   }
 }
