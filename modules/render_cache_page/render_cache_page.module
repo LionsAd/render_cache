@@ -146,8 +146,16 @@ function render_cache_page_drupal_render_page($page) {
     $build['page']['#theme_wrappers'] = $element_info['#theme_wrappers'];
   }
 
+  // Allow other modules to alter the output before rendering ...
+  drupal_alter('render_cache_page_pre_render', $build);
+
   // Call drupal_render() like the original function.
-  return drupal_render($build);
+  $output = drupal_render($build);
+
+  // ... and to replace placeholders.
+  drupal_alter('render_cache_page_post_render', $output, $build);
+
+  return $output;
 }
 
 /**
