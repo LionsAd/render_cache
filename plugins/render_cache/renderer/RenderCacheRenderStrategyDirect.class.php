@@ -14,9 +14,14 @@ class RenderCacheRenderStrategyDirect extends RenderCacheRenderStrategyBase {
   public function render(array $args) {
     $placeholders = array();
     foreach ($args as $placeholder => $ph_object) {
-      $placeholders[$placeholder] = array(
-        '#markup' => 'Placeholder',
+      $rcc = render_cache_get_controller($ph_object['type']);
+      $rcc->setContext($ph_object['context']);
+      $objects = array(
+        $ph_object['id'] => $ph_object['object'],
       );
+      $build = $rcc->viewPlaceholders($objects);
+
+      $placeholders[$placeholder] = $build;
     }
 
     return $placeholders;
