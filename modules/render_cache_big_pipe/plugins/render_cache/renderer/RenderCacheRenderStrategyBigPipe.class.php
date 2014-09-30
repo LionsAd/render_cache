@@ -48,7 +48,7 @@ var newElement = document.createElement("span");
 newElement.innerHTML = $html;
 var newChild = newElement.firstChild;
 element.parentNode.replaceChild(newChild, element);
-</script>;
+</script>
 EOF;
 
     return $markup;
