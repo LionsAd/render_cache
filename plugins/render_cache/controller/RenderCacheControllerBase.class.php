@@ -284,7 +284,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
       if (isset($render['#markup'])
          && (variable_get('render_cache_debug_output', FALSE)
-           || variable_get('render_cache_debug_output_' , $this->getType(), FALSE)
+           || variable_get('render_cache_debug_output_' . $this->getType(), FALSE)
            || !empty($cache_info['render_cache_debug_output']))
          ) {
         // @todo Move to helper function.
