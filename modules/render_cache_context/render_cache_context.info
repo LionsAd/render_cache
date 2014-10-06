@@ -3,7 +3,7 @@ description = Hijacks the context block plugin to enable better caching control
 package = Performance and scalability
 core = 7.x
 
-dependencies[] = render_cache
+dependencies[] = render_cache_block
 dependencies[] = context
 
 files[] = context/plugins/render_cache_hijack_context_reaction_block.inc

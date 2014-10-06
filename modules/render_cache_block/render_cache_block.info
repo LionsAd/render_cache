@@ -1,0 +1,6 @@
+name = Render Cache - Blocks
+description = Implements render caching for blocks
+package = Performance and scalability
+core = 7.x
+
+dependencies[] = render_cache
