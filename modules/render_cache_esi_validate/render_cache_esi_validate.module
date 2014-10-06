@@ -219,7 +219,8 @@ function render_cache_esi_validate_session_deliver($page_callback_result) {
   }
   else if ($page_callback_result == MENU_NOT_FOUND) {
     drupal_add_http_header('Status', '404 Not found');
-  } else {
+  }
+  else {
     drupal_add_http_header('Status', '200 OK');
     if (isset($page_callback_result)) {
       // Print anything besides a menu constant, assuming it's not NULL or
@@ -242,7 +243,7 @@ function render_cache_esi_validate_page_access() {
     || !user_is_logged_in()
     || empty($_SERVER['HTTP_X_DRUPAL_TRY_ESI_VALIDATE'])
     || empty($_SERVER['HTTP_X_DRUPAL_REQUEST_URL'])
-    ) {
+  ) {
     return FALSE;
   }
 

@@ -121,7 +121,7 @@ function render_cache_page_deliver_html_page($page_callback_result) {
 
   // Perform end-of-request tasks.
   drupal_page_footer();
-}  
+}
 
 /**
  * Overrides drupal_render_page().

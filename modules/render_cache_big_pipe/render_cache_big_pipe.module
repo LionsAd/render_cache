@@ -86,8 +86,8 @@ function render_cache_big_pipe_render_cache_page_post_render_alter(&$markup, $bu
 
   $rcs = render_cache_get_renderer('big_pipe');
 
-    // @todo Add helper function.
-    $behaviors = <<<EOF
+  // @todo Add helper function.
+  $behaviors = <<<EOF
 <script type="text/javascript">
 // We know we are at the end of the request parsing, so start processing behaviors.
 Drupal.attachBehaviors();

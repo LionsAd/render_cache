@@ -858,6 +858,7 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
    */
   protected function setCache(&$render, $cache_info, $strategy) {
     switch ($strategy) {
+
       case RENDER_CACHE_STRATEGY_NO_RENDER:
         if (!empty($render['#cache']['cid'])) {
           // Prevent further caching.
@@ -866,7 +867,8 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
           cache_set($cache_info['cid'], $render, $cache_info['bin'], $cache_info['expire']);
         }
-      break;
+        break;
+
       case RENDER_CACHE_STRATEGY_DIRECT_RENDER:
         $storage = static::getCleanStorage($render, FALSE);
 
@@ -895,10 +897,11 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
         $render += $storage;
         $render = $this->processCacheEntry($render, $cache_info);
-      break;
+        break;
+
       case RENDER_CACHE_STRATEGY_LATE_RENDER:
         // Nothing to be done here.
-      break;
+        break;
     }
   }
 
