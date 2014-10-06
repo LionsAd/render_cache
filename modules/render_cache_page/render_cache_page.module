@@ -127,7 +127,7 @@ function render_cache_page_deliver_html_page($page_callback_result) {
 }
 
 /**
- * Overrides drupal_render_page().
+ * Called instead of drupal_render_page().
  *
  * @param array $page
  */
