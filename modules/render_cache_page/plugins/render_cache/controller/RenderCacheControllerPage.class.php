@@ -35,6 +35,11 @@ class RenderCacheControllerPage extends RenderCacheControllerBase implements Ren
     return parent::view($objects);
   }
 
+  /**
+   * @param object[] $objects
+   *
+   * @return array[]
+   */
   protected function renderRecursive(array $objects) {
     $build = parent::renderRecursive($objects);
     $page_id = current(array_keys($objects));

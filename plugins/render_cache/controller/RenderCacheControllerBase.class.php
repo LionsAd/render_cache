@@ -8,19 +8,69 @@ define('RENDER_CACHE_STRATEGY_LATE_RENDER', 2);
  * Interface to describe how RenderCache controller plugin objects are implemented.
  */
 interface RenderCacheControllerInterface {
+
+  /**
+   * @return array
+   */
   public function getContext();
+
+  /**
+   * @param array $context
+   */
   public function setContext(array $context);
 
+  /**
+   * @param array $objects
+   *
+   * @return array
+   */
   public function view(array $objects);
+
+  /**
+   * @param object[] $objects
+   *
+   * @return array
+   */
   public function viewPlaceholders(array $objects);
 
+  /**
+   * @param array $render
+   *
+   * @return mixed
+   */
   public static function drupalRender(array &$render);
+
+  /**
+   * @param array $args
+   *
+   * @return string
+   */
   public static function renderPlaceholders(array $args);
 
+  /**
+   * @return bool
+   */
   public static function isRecursive();
+
+  /**
+   * @return int
+   */
   public static function getRecursionLevel();
+
+  /**
+   * @return array
+   *   A Drupal render array.
+   */
   public static function getRecursionStorage();
+
+  /**
+   * @param array $storage
+   */
   public static function setRecursionStorage(array $storage);
+
+  /**
+   * @param array $render
+   */
   public static function addRecursionStorage(array $render);
 }
 
@@ -31,22 +81,71 @@ abstract class RenderCacheControllerAbstractBase extends RenderCachePluginBase i
   // -----------------------------------------------------------------------
   // Suggested implementation functions.
 
+  /**
+   * @param array $default_cache_info
+   * @param array $context
+   *
+   * @return bool
+   */
   abstract protected function isCacheable(array $default_cache_info, array $context);
 
   /**
    * Provides the cache info for all objects based on the context.
+   *
+   * @param array $context
+   *
+   * @return array
    */
   abstract protected function getDefaultCacheInfo($context);
 
+  /**
+   * @param object $object
+   * @param array $context
+   *
+   * @return array
+   */
   abstract protected function getCacheContext($object, array $context);
 
   /**
    * Specific cache info overrides based on the $object.
+   *
+   * @param object $object
+   * @param array $context
+   *
+   * @return array
    */
   abstract protected function getCacheInfo($object, array $context);
+
+  /**
+   * @param object $object
+   * @param array $context
+   *
+   * @return array
+   */
   abstract protected function getCacheKeys($object, array $context);
+
+  /**
+   * @param object $object
+   * @param array $context
+   *
+   * @return array
+   */
   abstract protected function getCacheHash($object, array $context);
+
+  /**
+   * @param object $object
+   * @param array $context
+   *
+   * @return array
+   */
   abstract protected function getCacheTags($object, array $context);
+
+  /**
+   * @param object $object
+   * @param array $context
+   *
+   * @return array
+   */
   abstract protected function getCacheValidate($object, array $context);
 
    /**
@@ -54,7 +153,7 @@ abstract class RenderCacheControllerAbstractBase extends RenderCachePluginBase i
    *
    * This function needs to be implemented by every child class.
    *
-   * @param $objects
+   * @param array $objects
    *   Array of $objects to be rendered keyed by id.
    *
    * @return array
@@ -63,7 +162,7 @@ abstract class RenderCacheControllerAbstractBase extends RenderCachePluginBase i
   abstract protected function render(array $objects);
 
   /**
-   * Render uncached objects in a recursion compatible way.
+   * Renders uncached objects in a recursion compatible way.
    *
    * The default implementation is dumb and expensive performance wise, as
    * it calls the render() method for each object seperately.
@@ -75,10 +174,10 @@ abstract class RenderCacheControllerAbstractBase extends RenderCachePluginBase i
    * @see RenderCacheControllerRecursionInterface
    * @see RenderCacheControllerRecursionBase
    *
-   * @param $objects
+   * @param object[] $objects
    *   Array of $objects to be rendered keyed by id.
    *
-   * @return array
+   * @return array[]
    *   Render array keyed by id.
    */
   abstract protected function renderRecursive(array $objects);
@@ -88,12 +187,32 @@ abstract class RenderCacheControllerAbstractBase extends RenderCachePluginBase i
 
   /**
    * Provides the fully pouplated cache information for a specific object.
+   *
+   * @param object $object
+   * @param array $cache_info
+   * @param array $context
+   *
+   * @return array
    */
   abstract protected function getCacheIdInfo($object, array $cache_info = array(), array $context = array());
 
+  /**
+   * Increments the recursion level by 1.
+   */
   abstract protected function increaseRecursion();
+
+  /**
+   * Decrements the recursion level by 1.
+   */
   abstract protected function decreaseRecursion();
 
+  /**
+   * @param string $type
+   * @param array $data
+   * @param mixed|null $context1
+   * @param mixed|null $context2
+   * @param mixed|null $context3
+   */
   abstract protected function alter($type, &$data, &$context1 = NULL, &$context2 = NULL, &$context3 = NULL);
 }
 
@@ -101,18 +220,25 @@ abstract class RenderCacheControllerAbstractBase extends RenderCachePluginBase i
  * Base class for RenderCacheController plugin objects.
  */
 abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBase {
+
   /**
    * An optional context provided by this controller.
+   *
+   * @var array
    */
   protected $context = array();
 
   /**
    * Recursion level of current call stack.
+   *
+   * @var int
    */
   protected static $recursionLevel = 0;
 
   /**
    * Recursion storage of current call stack.
+   *
+   * @var array
    */
   protected static $recursionStorage = array();
 
@@ -626,6 +752,11 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
 
   /**
    * Retrieves results from the cache.
+   *
+   * @param string[] $cids
+   * @param array $default_cache_info
+   *
+   * @return
    */
   protected function getCache(&$cids, $default_cache_info) {
     $objects = cache_get_multiple($cids, $default_cache_info['bin']);
@@ -641,6 +772,12 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     return $objects;
   }
 
+  /**
+   * @param array $build
+   * @param array $default_cache_info
+   *
+   * @return array
+   */
   protected function processCacheEntry(array $build, array $default_cache_info) {
     // Merge back previously saved properties.
     if (!empty($build['#attached']['render_cache'])) {
@@ -651,11 +788,23 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     return $build;
   }
 
+  /**
+   * @param array $build
+   * @param array $default_cache_info
+   *
+   * @return bool
+   */
   protected function validateCacheEntry(array $build, array $default_cache_info) {
     // @ todo revalidate objects here.
     return TRUE;
   }
 
+  /**
+   * @param array $cache_info
+   *
+   * @return int
+   *   One of the RENDER_CACHE_STRATEGY_* constants.
+   */
   protected function determineCachingStrategy($cache_info) {
     if (empty($cache_info['render_cache_render_to_markup'])) {
       return RENDER_CACHE_STRATEGY_NO_RENDER;
@@ -668,6 +817,12 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     return RENDER_CACHE_STRATEGY_DIRECT_RENDER;
   }
 
+  /**
+   * @param array $render
+   * @param bool $remove_render_cache
+   *
+   * @return array
+   */
   protected static function getCleanStorage($render, $remove_render_cache = TRUE) {
     // Ensure all properties are set.
     $render += array(
@@ -811,6 +966,11 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     return implode(' ', $flat_tags);
   }
 
+  /**
+   * @param array $args
+   *
+   * @return array|string
+   */
   public static function renderPlaceholders(array $args) {
     $all_placeholders = array();
     $strategies = array();

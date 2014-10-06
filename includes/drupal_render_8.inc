@@ -101,7 +101,7 @@ function _drupal_render_process_post_render_cache(array &$elements) {
  * @param bool $is_root_element
  *   Internal use only. Whether the element being processed is the root or not.
  *
- * @return
+ * @return array
  *   The #post_render_cache array for this element and its descendants.
  *
  * @see drupal_render()

@@ -41,6 +41,11 @@ function render_cache_esi_validate_menu() {
 
 /**
  * Implements hook_ctools_plugin_directory().
+ *
+ * @param string $owner
+ * @param string $plugin_type
+ *
+ * @return null|string
  */
 function render_cache_esi_validate_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
@@ -50,6 +55,11 @@ function render_cache_esi_validate_ctools_plugin_directory($owner, $plugin_type)
 
 /**
  * Implements hook_render_cache_page_cid_alter().
+ *
+ * @param string[] $cid_parts
+ * @param array $cache_info
+ * @param object $object
+ * @param array $context
  */
 function render_cache_esi_validate_render_cache_page_cid_alter(&$cid_parts, $cache_info, $object, $context) {
   // Unset the hash, not possible with ESI.
@@ -59,6 +69,9 @@ function render_cache_esi_validate_render_cache_page_cid_alter(&$cid_parts, $cac
 // -----------------------------------------------------------------------
 // Public API
 
+/**
+ * @return bool
+ */
 function render_cache_esi_validate_access() {
   if (empty($_REQUEST['cid'])
     || empty($_REQUEST['bin'])
@@ -79,6 +92,9 @@ function render_cache_esi_validate_access() {
   return TRUE;
 }
 
+/**
+ * @return string
+ */
 function render_cache_esi_validate_miss() {
   // A cache miss is a pretty bad situation, though it should never happen
   // as we just validated the cache.
@@ -94,6 +110,9 @@ EOF;
   return $script;
 }
 
+/**
+ * @return string
+ */
 function render_cache_esi_validate_render() {
   $cid = $_REQUEST['cid'];
   $bin = $_REQUEST['bin'];
@@ -110,7 +129,7 @@ function render_cache_esi_validate_render() {
   if (empty($cache->data)) {
     return render_cache_esi_validate_miss();
   }
-  // TODO: Calculate cache header info from 'ttl' and 'age' in #cache.
+  // @todo Calculate cache header info from 'ttl' and 'age' in #cache.
   $render = $cache->data;
 
   // Cache for 10 min, if not said otherwise.
@@ -125,6 +144,9 @@ function render_cache_esi_validate_render() {
   return drupal_render($render);
 }
 
+/**
+ * @param mixed $page_callback_result
+ */
 function render_cache_esi_validate_deliver($page_callback_result) {
   if (is_int($page_callback_result)) {
     return drupal_deliver_html_page($page_callback_result);
@@ -207,6 +229,9 @@ function render_cache_esi_validate_session_deliver($page_callback_result) {
 // -----------------------------------------------------------------------
 // Page validation function.
 
+/**
+ * @return bool
+ */
 function render_cache_esi_validate_page_access() {
   if (empty($_SERVER['HTTP_X_DRUPAL_ROLES'])
     || empty($_SERVER['HTTP_X_DRUPAL_UID'])
@@ -231,7 +256,7 @@ function render_cache_esi_validate_page_access() {
  *
  * Or whether it should be pass()'ed.
  *
- * @return int|NULL
+ * @return int|null
  *   - MENU_NOT_FOUND when the cache could not be validated
  *     and a fresh copy needs to be used.
  *   - NULL otherwise.

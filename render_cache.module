@@ -41,6 +41,11 @@ function render_cache_ctools_plugin_type() {
 
 /**
  * Implements hook_ctools_plugin_directory().
+ *
+ * @param string $owner
+ * @param string $plugin_type
+ *
+ * @return null|string
  */
 function render_cache_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
@@ -53,6 +58,10 @@ function render_cache_ctools_plugin_directory($owner, $plugin_type) {
 
 /**
  * Returns a render cache controller.
+ *
+ * @param string $type
+ *
+ * @return RenderCacheControllerInterface
  */
 function render_cache_get_controller($type) {
   return render_cache_get_plugin_handler('controller', $type);
@@ -60,6 +69,10 @@ function render_cache_get_controller($type) {
 
 /**
  * Returns a render cache validation strategy plugin.
+ *
+ * @param string $type
+ *
+ * @return RenderCacheValidationStrategyInterface
  */
 function render_cache_get_validator($type) {
   return render_cache_get_plugin_handler('validator', $type);
@@ -68,8 +81,11 @@ function render_cache_get_validator($type) {
 /**
  * Returns a render cache render strategy plugin.
  *
- * @param $type
- *   The type of the plugin, e.g. esi_validate, esi, ajax, ajax_lstorage, ...
+ * @param string $type
+ *   The type of the plugin, e.g. "esi_validate", "esi", "ajax2,
+ *   "ajax_lstorage", ...
+ *
+ * @return RenderCacheRenderStrategyInterface
  */
 function render_cache_get_renderer($type) {
   return render_cache_get_plugin_handler('renderer', $type);
@@ -122,6 +138,8 @@ function render_cache_get_plugin($plugin_type, $type) {
 /**
  * Fetch all RenderCache plugins of the given plugin type.
  *
+ * @param string $plugin_type
+ *
  * @return array
  *   An array of RenderCache plugin arrays.
  */
@@ -140,7 +158,7 @@ function render_cache_get_plugins($plugin_type) {
  * @param string $type
  *   The type of plugin to load.
  *
- * @return RenderCacheControllerInterface or RenderCacheValidationStrategyInterface
+ * @return RenderCacheControllerInterface|RenderCacheValidationStrategyInterface|false
  *   Either the instantiated handler or FALSE if one could not be had.
  */
 function render_cache_get_plugin_handler($plugin_type, $type) {
@@ -167,6 +185,10 @@ function render_cache_get_plugin_handler($plugin_type, $type) {
  * Overrides drupal_render().
  *
  * If we really need to render early, at least collect the cache tags, etc.
+ *
+ * @param array $render
+ *
+ * @return string
  */
 function render_cache_drupal_render(&$render) {
   return RenderCacheControllerBase::drupalRender($render);
@@ -177,6 +199,8 @@ function render_cache_drupal_render(&$render) {
  *
  * @deprecated
  * @todo remove when all modules are converted.
+ *
+ * @return array
  */
 function render_cache_cache_info_defaults() {
   // Setup defaults.

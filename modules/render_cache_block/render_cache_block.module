@@ -12,6 +12,10 @@
  * Implements hook_module_implements_alter().
  *
  * Overrides core's block_page_build() and replaces with our own render cached version.
+ *
+ * @param array $implementations
+ *   Format: $[$module] = string|false
+ * @param string $hook
  */
 function render_cache_block_module_implements_alter(&$implementations, $hook) {
   if ($hook === 'page_build') {
@@ -27,6 +31,8 @@ function render_cache_block_module_implements_alter(&$implementations, $hook) {
 
 /**
  * Implements hook_page_build() and overrides block_page_build().
+ *
+ * @param array $page
  */
 function render_cache_block_page_build(&$page) {
   global $theme;
@@ -64,6 +70,9 @@ function render_cache_block_page_build(&$page) {
 
 /**
  * Implements hook_block_view_alter().
+ *
+ * @param array $data
+ * @param object $block
  */
 function render_cache_block_block_view_alter(&$data, $block) {
   if (!empty($block->render_cache_controller) && !empty($data['content'])) {
@@ -82,6 +91,11 @@ function render_cache_block_block_view_alter(&$data, $block) {
 
 /**
  * Implements hook_ctools_plugin_directory().
+ *
+ * @param string $owner
+ * @param string $plugin_type
+ *
+ * @return string|null
  */
 function render_cache_block_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
@@ -94,6 +108,10 @@ function render_cache_block_ctools_plugin_directory($owner, $plugin_type) {
 
 /**
  * Overrides block_get_blocks_by_region().
+ *
+ * @param string $region
+ *
+ * @return array
  *
  * @see block_get_blocks_by_region()
  */

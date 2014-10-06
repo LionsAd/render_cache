@@ -31,6 +31,11 @@ function render_cache_big_pipe_theme() {
 
 /**
  * Implements hook_ctools_plugin_directory().
+ *
+ * @param string $owner
+ * @param string $plugin_type
+ *
+ * @return null|string
  */
 function render_cache_big_pipe_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
@@ -38,6 +43,9 @@ function render_cache_big_pipe_ctools_plugin_directory($owner, $plugin_type) {
   }
 }
 
+/**
+ * @param array $build
+ */
 function render_cache_big_pipe_render_cache_page_pre_render_alter(&$build) {
   if (!class_exists('RenderCacheRenderStrategyBigPipe')) {
     return;
@@ -59,6 +67,12 @@ function render_cache_big_pipe_render_cache_page_pre_render_alter(&$build) {
   }
 }
 
+/**
+ * @param string $markup
+ * @param array $build
+ *
+ * @throws \Exception
+ */
 function render_cache_big_pipe_render_cache_page_post_render_alter(&$markup, $build) {
   if (empty($build['#render_cache_big_pipe_placeholders'])) {
     return;
@@ -107,6 +121,8 @@ EOF;
  * Overrides template_preprocess_html().
  *
  * Moves the scripts to the bottom.
+ *
+ * @param array $variables
  */
 function template_preprocess_html_top(&$variables) {
   // @todo Call all preprocess functions for the html hook.
@@ -122,6 +138,8 @@ function template_preprocess_html_top(&$variables) {
  * Overrides template_process_html().
  *
  * Moves the scripts to the bottom.
+ *
+ * @param array $variables
  */
 function template_process_html_top(&$variables) {
   // Render page_top and page_bottom into top level variables.
@@ -138,6 +156,9 @@ function template_process_html_top(&$variables) {
   $variables['scripts'] = drupal_get_js();
 }
 
+/**
+ * @param array $variables
+ */
 function template_process_html_bottom(&$variables) {
   $variables['scripts'] = '';
 }
