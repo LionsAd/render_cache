@@ -17,6 +17,15 @@ class render_cache_hijack_views_plugin_ds_entity_view extends views_plugin_ds_en
    *
    * @todo Ask DS to provide a method to return the render function
    *       and override it here.
+   *
+   * @param string $view_mode
+   *   The view mode which is set in the Views' options.
+   * @param object $row
+   *   The current active row object being rendered.
+   * @param bool $load_comments
+   *
+   * @return string
+   *   An entity view rendered as HTML
    */
   function ds_views_row_render_entity($view_mode, $row, $load_comments) {
     // Save the original base table.
@@ -44,6 +53,15 @@ class render_cache_hijack_views_plugin_ds_entity_view extends views_plugin_ds_en
 
 /**
  * Render the node through the entity plugin.
+ *
+ * @param object $entity
+ * @param string $view_mode
+ * @param bool $load_comments
+ *
+ * @return array
+ *   A Drupal render array.
+ *
+ * @see views_plugin_ds_entity_view::ds_views_row_render_entity()
  */
 function ds_views_row_render_render_cache_node($entity, $view_mode, $load_comments) {
   $node_display = render_cache_entity_view_single('node', $entity, $view_mode);
@@ -55,6 +73,15 @@ function ds_views_row_render_render_cache_node($entity, $view_mode, $load_commen
 
 /**
  * Render the comment through the entity plugin.
+ *
+ * @param object $entity
+ * @param string $view_mode
+ * @param bool $load_comments
+ *
+ * @return array
+ *   A Drupal render array.
+ *
+ * @see views_plugin_ds_entity_view::ds_views_row_render_entity()
  */
 function ds_views_row_render_render_cache_comment($entity, $view_mode, $load_comments) {
   $element = render_cache_entity_view_single('comment', $entity, $view_mode);
@@ -63,6 +90,15 @@ function ds_views_row_render_render_cache_comment($entity, $view_mode, $load_com
 
 /**
  * Render the user through the entity plugin.
+ *
+ * @param object $entity
+ * @param string $view_mode
+ * @param bool $load_comments
+ *
+ * @return array
+ *   A Drupal render array.
+ *
+ * @see views_plugin_ds_entity_view::ds_views_row_render_entity()
  */
 function ds_views_row_render_render_cache_users($entity, $view_mode, $load_comments) {
   $element = render_cache_entity_view_single('user', $entity, $view_mode);
@@ -71,6 +107,15 @@ function ds_views_row_render_render_cache_users($entity, $view_mode, $load_comme
 
 /**
  * Render the taxonomy term through the entity plugin.
+ *
+ * @param object $entity
+ * @param string $view_mode
+ * @param bool $load_comments
+ *
+ * @return array
+ *   A Drupal render array.
+ *
+ * @see views_plugin_ds_entity_view::ds_views_row_render_entity()
  */
 function ds_views_row_render_render_cache_taxonomy_term_data($entity, $view_mode, $load_comments) {
   $element = render_cache_entity_view_single('taxonomy_term', $entity, $view_mode);
@@ -79,6 +124,15 @@ function ds_views_row_render_render_cache_taxonomy_term_data($entity, $view_mode
 
 /**
  * Render the file through the entity plugin.
+ *
+ * @param object $entity
+ * @param string $view_mode
+ * @param bool $load_comments
+ *
+ * @return array
+ *   A Drupal render array.
+ *
+ * @see views_plugin_ds_entity_view::ds_views_row_render_entity()
  */
 function ds_views_row_render_render_cache_file_managed($entity, $view_mode, $load_comments) {
   $element = render_cache_entity_view_single('file', $entity, $view_mode);
@@ -87,6 +141,15 @@ function ds_views_row_render_render_cache_file_managed($entity, $view_mode, $loa
 
 /**
  * Render the micro through the entity plugin.
+ *
+ * @param object $entity
+ * @param string $view_mode
+ * @param bool $load_comments
+ *
+ * @return array
+ *   A Drupal render array.
+ *
+ * @see views_plugin_ds_entity_view::ds_views_row_render_entity()
  */
 function ds_views_row_render_render_cache_micro($entity, $view_mode, $load_comments) {
   $element = render_cache_entity_view_single('micro', $entity, $view_mode);

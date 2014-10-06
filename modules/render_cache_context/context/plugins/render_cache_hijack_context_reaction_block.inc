@@ -20,6 +20,12 @@ class render_cache_hijack_context_reaction_block extends context_reaction_block 
    *
    * Otherwise system_cron() clears context cache and parent::get_blocks()
    * runs _block_rehash(), which is slow, every 30 minutes.
+   *
+   * @param string|null $region
+   * @param object|null $context
+   * @param bool $reset
+   *
+   * @return array|bool
    */
   function get_blocks($region = NULL, $context = NULL, $reset = FALSE) {
     static $cid = FALSE;
@@ -48,10 +54,10 @@ class render_cache_hijack_context_reaction_block extends context_reaction_block 
   /**
    * A caching version of block_list() .
    *
-   * @param $region
+   * @param string $region
    *   The region to get blocks from.
    *
-   * @return
+   * @return array
    *   A render array for this region. This render array will only contain
    *   #markup elements.
    */
@@ -145,11 +151,11 @@ class render_cache_hijack_context_reaction_block extends context_reaction_block 
   /**
    * Build the cache ID and cache information array.
    *
-   * @param $block
+   * @param object $block
    *   The block object
-   * @param $cache_info
+   * @param array $cache_info
    *   The cache information array.
-   * @param $context
+   * @param array $context
    *   The context.
    *
    * @return string
@@ -178,7 +184,7 @@ class render_cache_hijack_context_reaction_block extends context_reaction_block 
     $hash['module'] = $context['module'];
     $hash['delta'] = $context['delta'];
     $hash['context'] = $context['context']->name;
-    // @TODO: relevant for blocks?
+    // @todo relevant for blocks?
     $hash['render_method'] = !empty($cache_info['render_cache_render_to_markup']);
     if ($hash['render_method']) {
       $hash['render_options'] = serialize($cache_info['render_cache_render_to_markup']);
@@ -234,11 +240,11 @@ class render_cache_hijack_context_reaction_block extends context_reaction_block 
    *
    * @param stdClass $block
    *   A block object.
-   * @param $bid
+   * @param string $bid
    *   The block id in $module-$delta format.
-   * @param $cid
+   * @param string $cid
    *   The cache id.
-   * @param $cache_info
+   * @param array $cache_info
    *   The cache information array.
    *
    * @return string
