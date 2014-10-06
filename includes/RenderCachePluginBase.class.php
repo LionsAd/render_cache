@@ -4,7 +4,7 @@ interface RenderCachePluginInterface {
   /**
    * Public constructor.
    *
-   * @param $plugin
+   * @param array $plugin
    *   The plugin associated with this class.
    */
   public function __construct($plugin);
@@ -32,14 +32,14 @@ class RenderCachePluginBase implements RenderCachePluginInterface {
    *
    * @var array
    */
-  protected $plugin = array();
+  protected $plugin;
 
   /**
    * The type this plugin implements.
    *
    * @var string
    */
-  protected $type = array();
+  protected $type;
 
   /**
    * {@inheritdoc}
