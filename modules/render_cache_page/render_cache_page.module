@@ -175,6 +175,7 @@ function render_cache_page_drupal_render_page($page) {
   print $output;
 
   // ... and to replace placeholders via Javascript.
+  // @todo This seems pointless, if the $output was already printed..
   drupal_alter('render_cache_page_post_render', $output, $build);
 }
 
