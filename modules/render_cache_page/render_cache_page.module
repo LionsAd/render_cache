@@ -76,6 +76,8 @@ function render_cache_page_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
     return 'plugins/render_cache/' . $plugin_type;
   }
+
+  return NULL;
 }
 
 // -----------------------------------------------------------------------
@@ -92,7 +94,8 @@ function render_cache_page_deliver_html_page($page_callback_result) {
     // Never cache 403 or 404 pages.
     render_cache_call_is_cacheable(FALSE);
     // Early return for status codes.
-    return drupal_deliver_html_page($page_callback_result);
+    drupal_deliver_html_page($page_callback_result);
+    return;
   }
 
   // Copied code from drupal_deliver_html_page:

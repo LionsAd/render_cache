@@ -51,6 +51,8 @@ function render_cache_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
     return 'plugins/render_cache/' . $plugin_type;
   }
+
+  return NULL;
 }
 
 // -----------------------------------------------------------------------

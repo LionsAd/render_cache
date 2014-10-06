@@ -51,6 +51,8 @@ function render_cache_esi_validate_ctools_plugin_directory($owner, $plugin_type)
   if ($owner == 'render_cache') {
     return 'plugins/render_cache/' . $plugin_type;
   }
+
+  return NULL;
 }
 
 /**
@@ -149,7 +151,8 @@ function render_cache_esi_validate_render() {
  */
 function render_cache_esi_validate_deliver($page_callback_result) {
   if (is_int($page_callback_result)) {
-    return drupal_deliver_html_page($page_callback_result);
+    drupal_deliver_html_page($page_callback_result);
+    return;
   }
 
   // Copied code from drupal_deliver_html_page:

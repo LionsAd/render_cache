@@ -43,7 +43,8 @@ function render_cache_block_page_build(&$page) {
   // Early return with original function if demo is requested.
   $item = menu_get_item();
   if ($item['path'] == 'admin/structure/block/demo/' . $theme) {
-    return block_page_build($page);
+    block_page_build($page);
+    return;
   }
 
   // Fetch a list of regions for the current theme.
@@ -101,6 +102,8 @@ function render_cache_block_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
     return 'plugins/render_cache/' . $plugin_type;
   }
+
+  return NULL;
 }
 
 // -----------------------------------------------------------------------
