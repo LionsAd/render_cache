@@ -35,5 +35,7 @@ class render_cache_hijack_views_plugin_row_node_view extends views_plugin_row_no
 
       return drupal_render($build);
     }
+
+    return NULL;
   }
 }
