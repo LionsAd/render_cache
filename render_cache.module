@@ -228,8 +228,9 @@ function render_cache_entity_info_alter(&$entity_info) {
       /* @see render_cache_entity_view_callback() */
       $entity_info[$type]['view callback'] = 'render_cache_entity_view_callback';
     }
-    elseif (isset($info['controller class']) &&
-        in_array('EntityAPIControllerInterface', class_implements($info['controller class']))) {
+    elseif (isset($info['controller class'])
+      && in_array('EntityAPIControllerInterface', class_implements($info['controller class']))
+    ) {
       // We do not set the render cache callback, when it is missing we will
       // render using the controller class.
       /* @see render_cache_entity_view_callback() */
