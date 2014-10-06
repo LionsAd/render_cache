@@ -850,6 +850,12 @@ abstract class RenderCacheControllerBase extends RenderCacheControllerAbstractBa
     return $storage;
   }
 
+  /**
+   * @param array $render
+   * @param array $cache_info
+   * @param int $strategy
+   *   One of the RENDER_CACHE_STRATEGY_* constants.
+   */
   protected function setCache(&$render, $cache_info, $strategy) {
     switch ($strategy) {
       case RENDER_CACHE_STRATEGY_NO_RENDER:
