@@ -14,6 +14,7 @@
  */
 function render_cache_big_pipe_theme() {
   return array(
+    // @todo Probably a bad idea to pollute the global namespace with this?
     'html_top' => array(
       'render element' => 'page',
       'template' => 'html-top',
@@ -76,6 +77,7 @@ function render_cache_big_pipe_render_cache_page_post_render_alter(&$markup, $bu
 Drupal.attachBehaviors();
 </script>
 EOF;
+  // @todo It seems that $behaviors is printed twice..
   print $behaviors;
 
   // Replace the placeholders.

@@ -132,6 +132,7 @@ function drupal_render_collect_post_render_cache(array &$elements, array $callba
   // children) from the render cache.
   if (!$retrieved_from_cache && $children = element_children($elements)) {
     foreach ($children as $child) {
+      // @todo This will overwrite the variable. Maybe not intended?
       $callbacks = drupal_render_collect_post_render_cache($elements[$child], $callbacks, FALSE);
     }
   }

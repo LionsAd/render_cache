@@ -160,6 +160,8 @@ function render_cache_esi_validate_session_render() {
   if (!user_is_logged_in()) {
     return MENU_ACCESS_DENIED;
   }
+
+  // @todo Unused variable $roles (overwritten few lines below)
   $roles = implode(',', $user->roles);
 
   // No ESI for admins, etc.
@@ -276,7 +278,11 @@ function render_cache_esi_validate_page_render() {
     }
     $cids[$placeholder['cache_info']['bin']][] = $placeholder['cache_info']['cid'];
   }
+
+  // @todo Undefined variable $cid_bins
   foreach ($cid_bins as $bin => $cids) {
+
+    // @todo Unused variable $objects
     $objects = cache_get_multiple($cids, $bin);
 
     // If we get a cache miss, $cids will be populated and we return 404.
