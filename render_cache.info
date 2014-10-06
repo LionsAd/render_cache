@@ -6,3 +6,4 @@ core = 7.x
 configure = admin/config/development/render-cache
 
 dependencies[] = entity_modified
+dependencies[] = entity
