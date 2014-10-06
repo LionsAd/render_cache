@@ -14,6 +14,16 @@ interface RenderCacheControllerPageInterface {
  * RenderCacheController Entity - Provides render caching for entity objects.
  */
 class RenderCacheControllerPage extends RenderCacheControllerBase implements RenderCacheControllerPageInterface {
+
+  /**
+   * The page storage.
+   * @todo What is this, really?
+   *
+   * @var array
+   *   A Drupal render array.
+   */
+  private $pageStorage;
+
   /**
    * {@inheritdoc}
    */
