@@ -16,6 +16,9 @@
  */
 function render_cache_page_init() {
   $rcc = render_cache_get_controller('page');
+  if (!$rcc instanceof RenderCacheControllerPageInterface) {
+    return;
+  }
   // Delegate hook_init() to the render cache controller.
   $rcc->hook_init();
 }

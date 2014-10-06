@@ -85,6 +85,9 @@ function render_cache_big_pipe_render_cache_page_post_render_alter(&$markup, $bu
   ob_end_flush();
 
   $rcs = render_cache_get_renderer('big_pipe');
+  if (!$rcs instanceof RenderCacheRenderStrategyBigPipe) {
+    throw new \Exception("Invalid big pipe renderer.");
+  }
 
   // @todo Add helper function.
   $behaviors = <<<EOF
