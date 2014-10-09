@@ -18,8 +18,8 @@ class RenderCacheRenderStrategyEsiValidate extends RenderCacheRenderStrategyBase
 
     foreach ($args as $placeholder => $ph_object) {
       // If there is no cache ID, we can't ESI validate this.
-      if (empty($ph_object['cache_info']['cid']) {
-	continue;
+      if (empty($ph_object['cache_info']['cid'])) {
+	      continue;
       }
 
       $base_esi = 'render-cache/esi-validate-render';

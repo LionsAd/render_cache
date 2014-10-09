@@ -22,6 +22,12 @@ class render_cache_hijack_context_reaction_block extends context_reaction_block 
    *
    * Otherwise system_cron() clears context cache and parent::get_blocks()
    * runs _block_rehash(), which is slow, every 30 minutes.
+   *
+   * @param string|null $region
+   * @param object|null $context
+   * @param bool $reset
+   *
+   * @return array|bool
    */
   function get_blocks($region = NULL, $context = NULL, $reset = FALSE) {
     static $cid = FALSE;
@@ -56,10 +62,10 @@ class render_cache_hijack_context_reaction_block extends context_reaction_block 
    *
    * @see context_reaction_block::block_list().
    *
-   * @param $region
+   * @param string $region
    *   The region to get blocks from.
    *
-   * @return
+   * @return array
    *   A render array for this region. This render array will only contain
    *   #markup elements.
    */

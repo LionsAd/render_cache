@@ -14,6 +14,7 @@
  */
 function render_cache_big_pipe_theme() {
   return array(
+    // @todo Probably a bad idea to pollute the global namespace with this?
     'html_top' => array(
       'render element' => 'page',
       'template' => 'html-top',
@@ -30,13 +31,23 @@ function render_cache_big_pipe_theme() {
 
 /**
  * Implements hook_ctools_plugin_directory().
+ *
+ * @param string $owner
+ * @param string $plugin_type
+ *
+ * @return null|string
  */
 function render_cache_big_pipe_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
     return 'plugins/render_cache/' . $plugin_type;
   }
+
+  return NULL;
 }
 
+/**
+ * @param array $build
+ */
 function render_cache_big_pipe_render_cache_page_pre_render_alter(&$build) {
   if (!class_exists('RenderCacheRenderStrategyBigPipe')) {
     return;
@@ -58,6 +69,12 @@ function render_cache_big_pipe_render_cache_page_pre_render_alter(&$build) {
   }
 }
 
+/**
+ * @param string $markup
+ * @param array $build
+ *
+ * @throws \Exception
+ */
 function render_cache_big_pipe_render_cache_page_post_render_alter(&$markup, $build) {
   if (empty($build['#render_cache_big_pipe_placeholders'])) {
     return;
@@ -68,14 +85,18 @@ function render_cache_big_pipe_render_cache_page_post_render_alter(&$markup, $bu
   ob_end_flush();
 
   $rcs = render_cache_get_renderer('big_pipe');
+  if (!$rcs instanceof RenderCacheRenderStrategyBigPipe) {
+    throw new \Exception("Invalid big pipe renderer.");
+  }
 
-    // @todo Add helper function.
-    $behaviors = <<<EOF
+  // @todo Add helper function.
+  $behaviors = <<<EOF
 <script type="text/javascript">
 // We know we are at the end of the request parsing, so start processing behaviors.
 Drupal.attachBehaviors();
 </script>
 EOF;
+  // @todo It seems that $behaviors is printed twice..
   print $behaviors;
 
   // Replace the placeholders.
@@ -105,6 +126,8 @@ EOF;
  * Overrides template_preprocess_html().
  *
  * Moves the scripts to the bottom.
+ *
+ * @param array $variables
  */
 function template_preprocess_html_top(&$variables) {
   // @todo Call all preprocess functions for the html hook.
@@ -120,6 +143,8 @@ function template_preprocess_html_top(&$variables) {
  * Overrides template_process_html().
  *
  * Moves the scripts to the bottom.
+ *
+ * @param array $variables
  */
 function template_process_html_top(&$variables) {
   // Render page_top and page_bottom into top level variables.
@@ -136,6 +161,9 @@ function template_process_html_top(&$variables) {
   $variables['scripts'] = drupal_get_js();
 }
 
+/**
+ * @param array $variables
+ */
 function template_process_html_bottom(&$variables) {
   $variables['scripts'] = '';
 }

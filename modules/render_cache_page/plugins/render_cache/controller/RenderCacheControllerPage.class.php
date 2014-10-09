@@ -14,6 +14,16 @@ interface RenderCacheControllerPageInterface {
  * RenderCacheController Entity - Provides render caching for entity objects.
  */
 class RenderCacheControllerPage extends RenderCacheControllerBase implements RenderCacheControllerPageInterface {
+
+  /**
+   * The page storage.
+   * @todo What is this, really?
+   *
+   * @var array
+   *   A Drupal render array.
+   */
+  private $pageStorage;
+
   /**
    * {@inheritdoc}
    */
@@ -35,6 +45,11 @@ class RenderCacheControllerPage extends RenderCacheControllerBase implements Ren
     return parent::view($objects);
   }
 
+  /**
+   * @param object[] $objects
+   *
+   * @return array[]
+   */
   protected function renderRecursive(array $objects) {
     $build = parent::renderRecursive($objects);
     $page_id = current(array_keys($objects));

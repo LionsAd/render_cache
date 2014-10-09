@@ -21,7 +21,7 @@ interface RenderCachePlaceholderInterface {
    *   @endcode
    *   Given %node the function node_load() will be called with the argument, the resulting
    *   function will just be given the $node as argument.
-   * @param bool $multi
+   * @param bool $multiple
    *   Whether the function accepts multiple contexts. This is useful to group similar objects
    *   together.
    *

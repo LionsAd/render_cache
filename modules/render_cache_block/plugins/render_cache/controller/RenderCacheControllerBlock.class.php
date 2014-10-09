@@ -64,6 +64,7 @@ class RenderCacheControllerBlock extends RenderCacheControllerRecursionBase {
    */
   protected function getCacheKeys($object, array $context) {
     // Helper variables.
+    // @todo Unused variable $block
     $block = $object;
 
     return array_merge(parent::getCacheKeys($object, $context), array(

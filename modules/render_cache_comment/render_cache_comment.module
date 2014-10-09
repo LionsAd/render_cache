@@ -4,9 +4,12 @@
  * Hijacks comment.module's implementation of hook_node_view() to enable entity caching.
  */
 
-
 /**
  * Implements hook_module_implements_alter().
+ *
+ * @param array $implementations
+ *   Format: $[$module] = string|false
+ * @param string $hook
  */
 function render_cache_comment_module_implements_alter(&$implementations, $hook) {
   if ($hook == 'node_view') {
@@ -15,7 +18,13 @@ function render_cache_comment_module_implements_alter(&$implementations, $hook) 
 }
 
 /**
- * Implements hook_node_view() and overrides comment_node_view().
+ * Implements hook_node_view()
+ *
+ * Runs instead of comment_node_view(), but not necessarily in the same position
+ * in the order of hook_node_view() implementations.
+ *
+ * @param object $node
+ * @param string $view_mode
  */
 function render_cache_comment_node_view($node, $view_mode) {
   // Save original preview state.
@@ -44,10 +53,14 @@ function render_cache_comment_node_view($node, $view_mode) {
 }
 
 /**
- * Implements comment_node_page_additions() but with entity caching.
+ * Replaces comment_node_page_additions(), with added entity caching.
  *
- * This uses entity_view() instead of comment_view_multiple() to enable
- * entity_view() render caching.
+ * This uses @see entity_view() instead of @see comment_view_multiple(), to
+ * enable entity_view() render caching.
+ *
+ * @param object $node
+ *
+ * @return array
  */
 function render_cache_comment_node_page_additions($node) {
   $additions = array();

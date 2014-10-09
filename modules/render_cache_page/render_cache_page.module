@@ -16,6 +16,9 @@
  */
 function render_cache_page_init() {
   $rcc = render_cache_get_controller('page');
+  if (!$rcc instanceof RenderCacheControllerPageInterface) {
+    return;
+  }
   // Delegate hook_init() to the render cache controller.
   $rcc->hook_init();
 }
@@ -27,6 +30,8 @@ function render_cache_page_init() {
  *
  * This also allows to call the #post_render_cache callbacks at the
  * latest possible point.
+ *
+ * @param callback $callback
  */
 function render_cache_page_page_delivery_callback_alter(&$callback) {
   if ($callback != 'drupal_deliver_html_page') {
@@ -44,7 +49,11 @@ function render_cache_page_page_delivery_callback_alter(&$callback) {
  * Implements hook_module_implements_alter().
  *
  * Moves our hook_page_page_delivery_callback_alte() implementation to occur
- * last so that we can consistently hijack the delivery callback. 
+ * last so that we can consistently hijack the delivery callback.
+ *
+ * @param array $implementations
+ *   Format: $[$module] = string|false
+ * @param string $hook
  */
 function render_cache_page_module_implements_alter(&$implementations, $hook) {
   if ($hook === 'page_delivery_callback_alter') {
@@ -60,19 +69,27 @@ function render_cache_page_module_implements_alter(&$implementations, $hook) {
 
 /**
  * Implements hook_ctools_plugin_directory().
+ *
+ * @param string $owner
+ * @param string $plugin_type
+ *
+ * @return null|string
  */
 function render_cache_page_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
     return 'plugins/render_cache/' . $plugin_type;
   }
+
+  return NULL;
 }
 
 // -----------------------------------------------------------------------
 // Public API
 
-
 /**
  * Overrides drupal_deliver_html_page().
+ *
+ * @param mixed $page_callback_result
  */
 function render_cache_page_deliver_html_page($page_callback_result) {
   // Menu status constants are integers; page content is a string or array.
@@ -80,7 +97,8 @@ function render_cache_page_deliver_html_page($page_callback_result) {
     // Never cache 403 or 404 pages.
     render_cache_call_is_cacheable(FALSE);
     // Early return for status codes.
-    return drupal_deliver_html_page($page_callback_result);
+    drupal_deliver_html_page($page_callback_result);
+    return;
   }
 
   // Copied code from drupal_deliver_html_page:
@@ -106,10 +124,12 @@ function render_cache_page_deliver_html_page($page_callback_result) {
 
   // Perform end-of-request tasks.
   drupal_page_footer();
-}  
+}
 
 /**
- * Overrides drupal_render_page().
+ * Called instead of drupal_render_page().
+ *
+ * @param array $page
  */
 function render_cache_page_drupal_render_page($page) {
 
@@ -155,6 +175,7 @@ function render_cache_page_drupal_render_page($page) {
   print $output;
 
   // ... and to replace placeholders via Javascript.
+  // @todo This seems pointless, if the $output was already printed..
   drupal_alter('render_cache_page_post_render', $output, $build);
 }
 
@@ -163,6 +184,10 @@ function render_cache_page_drupal_render_page($page) {
  *
  * This function is identical to drupal_render_page(), but does not drupal_render()
  * at the end to allow render caching.
+ *
+ * @param array $page
+ *
+ * @return array
  */
 function render_cache_page_drupal_render_page_helper($page) {
   $main_content_display = &drupal_static('system_main_content_added', FALSE);

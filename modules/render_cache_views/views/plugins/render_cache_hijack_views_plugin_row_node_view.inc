@@ -13,8 +13,17 @@
  * @ingroup views_row_plugins
  */
 class render_cache_hijack_views_plugin_row_node_view extends views_plugin_row_node_view {
+
   /**
-   * Override parent::render() to add caching.
+   * Overrides parent::render() to add caching.
+   *
+   * @param stdClass $row
+   *   A single row of the query result, so an element of $view->result.
+   *
+   * @return string|null
+   *   The rendered output of a single row, used by the style plugin.
+   *
+   * @see views_plugin_row_node_view::render()
    */
   function render($row) {
     if (isset($this->nodes[$row->{$this->field_alias}])) {
@@ -26,5 +35,7 @@ class render_cache_hijack_views_plugin_row_node_view extends views_plugin_row_no
 
       return drupal_render($build);
     }
+
+    return NULL;
   }
 }
