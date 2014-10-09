@@ -2,6 +2,8 @@
 
 /**
  * Implements hook_context_registry_alter().
+ *
+ * @param array[] $registry
  */
 function render_cache_context_context_registry_alter(&$registry) {
   $registry['reactions']['block']['plugin'] = 'render_cache_hijack_context_reaction_block';
@@ -11,6 +13,8 @@ function render_cache_context_context_registry_alter(&$registry) {
  * Implementation of hook_context_plugins().
  *
  * This is a ctools plugins hook.
+ *
+ * @return array[]
  */
 function render_cache_context_context_plugins() {
   $plugins['render_cache_hijack_context_reaction_block'] = array(
