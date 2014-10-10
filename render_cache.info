@@ -9,6 +9,7 @@ configure = admin/config/development/render-cache
 ; Dependencies
 dependencies[] = ctools
 dependencies[] = entity_modified
+dependencies[] = entity
 
 ; Included files
 files[] = includes/RenderCachePluginBase.class.php
