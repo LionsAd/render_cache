@@ -4,6 +4,6 @@ package = Performance and scalability
 core = 7.x
 
 dependencies[] = render_cache_block
-dependencies[] = context
+dependencies[] = context (>=7.x-3.3)
 
 files[] = context/plugins/render_cache_hijack_context_reaction_block.inc
