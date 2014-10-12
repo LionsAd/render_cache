@@ -114,12 +114,16 @@ class RenderCacheControllerEntity extends RenderCacheControllerRecursionBase {
     $page = NULL;
 
     // We need the $page variable from entity_view() that it does not pass us.
-    if (version_compare(PHP_VERSION, '5.4.0') < 0) {
+    if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+      // Get only the stack frames we need (PHP 5.4 only).
+      $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2);
+    }
+    elseif (version_compare(PHP_VERSION, '5.3.6', '>=')) {
       $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT);
     }
     else {
-      // Get only the stack frames we need (PHP 5.4 only).
-      $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2);
+      // @see http://php.net/manual/en/function.debug-backtrace.php#refsect1-function.debug-backtrace-parameters
+      $backtrace = debug_backtrace(TRUE);
     }
 
     // As a safety, do not grab an unexpected arg for $page, check that this
