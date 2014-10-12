@@ -28,16 +28,12 @@ class render_cache_hijack_context_reaction_block extends context_reaction_block 
    * @return array|bool
    */
   function get_blocks($region = NULL, $context = NULL, $reset = FALSE) {
-    static $cid = FALSE;
-
     if (!variable_get('render_cache_cache_block_list', TRUE)) {
       return parent::get_blocks($region, $context, $reset);
     }
 
-    if (!$cid) {
-      $hash = md5(serialize(array($region, $context)));
-      $cid = "render_cache:context_reaction_block:block_list:$hash";
-    }
+    $hash = md5(serialize(array($region, $context)));
+    $cid = "render_cache:context_reaction_block:block_list:$hash";
 
     if (!$reset) {
       $cache = cache_get($cid);
