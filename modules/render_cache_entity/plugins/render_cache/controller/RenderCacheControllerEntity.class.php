@@ -128,7 +128,7 @@ class RenderCacheControllerEntity extends RenderCacheControllerRecursionBase {
 
     // As a safety, do not grab an unexpected arg for $page, check that this
     // was called from entity_view().
-    if ($backtrace[2]['function'] === 'entity_view' && isset($backtrace[2]['args'][4])) {
+    if (isset($backtrace[2]['function']) && $backtrace[2]['function'] === 'entity_view' && isset($backtrace[2]['args'][4])) {
       $page = $backtrace[2]['args'][4];
     }
 
