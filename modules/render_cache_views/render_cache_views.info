@@ -7,4 +7,5 @@ dependencies[] = render_cache
 dependencies[] = views
 dependencies[] = entity
 
+files[] = views/plugins/render_cache_hijack_views_handler_field_field.inc
 files[] = views/plugins/render_cache_hijack_views_plugin_row_node_view.inc

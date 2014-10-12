@@ -45,7 +45,7 @@ function render_cache_entity_view_callback($entities, $view_mode, $langcode = NU
   // Setup drupal_render style cache array.
   $cache_info = render_cache_cache_info_defaults();
   $cache_info['keys'] = array(
-    'render_cache',
+    'entity',
     $entity_type,
     $view_mode,
   );
@@ -116,40 +116,7 @@ function render_cache_entity_view_callback($entities, $view_mode, $langcode = NU
       $cid = $cid_map[$id];
       $render = $rendered[$id];
 
-      if (isset($cache_info['granularity']) && $cache_info['granularity'] != DRUPAL_NO_CACHE) {
-        if (empty($cache_info['render_cache_render_to_markup'])) {
-          cache_set($cid, $render, 'cache_render');
-        }
-        else {
-          // Process markup with drupal_render() caching.
-          $render['#cache'] = $cache_info;
-
-          // Explicitly set cache id.
-          $render['#cache']['cid'] = $cid;
-
-          $render_cache_attached = array();
-          // Preserve some properties in #attached?
-          if (!empty($cache_info['render_cache_render_to_markup']['preserve properties']) &&
-              is_array($cache_info['render_cache_render_to_markup']['preserve properties'])) {
-            foreach ($cache_info['render_cache_render_to_markup']['preserve properties'] as $key) {
-              if (isset($render[$key])) {
-                $render_cache_attached[$key] = $render[$key];
-              }
-            }
-          }
-          if (!empty($render_cache_attached)) {
-            $render['#attached']['render_cache'] = $render_cache_attached;
-          }
-
-          // Do we want to render now?
-          if (empty($cache_info['render_cache_render_to_markup']['cache late'])) {
-            // And save things. Also add our preserved properties back.
-            $render = array(
-              '#markup' => drupal_render($render),
-            ) + $render_cache_attached;
-          }
-        }
-      }
+      _render_cache_pre_render($render, $cid, $cache_info);
 
       $cached_entities[$cid] = (object) array(
         'data' => $render,
@@ -173,16 +140,7 @@ function render_cache_entity_view_callback($entities, $view_mode, $langcode = NU
     $cid = $cid_map[$id];
     if (!empty($cached_entities[$cid]->data)) {
       $render = $cached_entities[$cid]->data;
-
-      // Potentially merge back previously saved properties.
-      if (!empty($render['#attached']['render_cache'])) {
-        $render += $render['#attached']['render_cache'];
-        unset($render['#attached']['render_cache']);
-      }
-
-      // Run any post-render callbacks.
-      render_cache_process_attached_callbacks($render, $id);
-
+      _render_cache_post_render($render, $id);
       $return[$id] = $render;
       $return[$id]['#weight'] = $weight;
     }
@@ -190,6 +148,56 @@ function render_cache_entity_view_callback($entities, $view_mode, $langcode = NU
   // Return $return, wrap with entity type key in array to match
   // entity_view()'s functionality.
   return array($entity_type => $return);
+}
+
+function _render_cache_pre_render(array &$render, $cid, $cache_info) {
+  if (isset($cache_info['granularity']) && $cache_info['granularity'] != DRUPAL_NO_CACHE) {
+    if (empty($cache_info['render_cache_render_to_markup'])) {
+      cache_set($cid, $render, 'cache_render');
+    }
+    else {
+      // Process markup with drupal_render() caching.
+      $render['#cache'] = $cache_info;
+
+      // Explicitly set cache id.
+      $render['#cache']['cid'] = $cid;
+
+      $render_cache_attached = array();
+      // Preserve some properties in #attached?
+      if (!empty($cache_info['render_cache_render_to_markup']['preserve properties']) &&
+        is_array($cache_info['render_cache_render_to_markup']['preserve properties'])) {
+        foreach ($cache_info['render_cache_render_to_markup']['preserve properties'] as $key) {
+          if (isset($render[$key])) {
+            $render_cache_attached[$key] = $render[$key];
+          }
+        }
+      }
+      if (!empty($render_cache_attached)) {
+        $render['#attached']['render_cache'] = $render_cache_attached;
+      }
+
+      // Do we want to render now?
+      if (empty($cache_info['render_cache_render_to_markup']['cache late'])) {
+        // And save things. Also add our preserved properties back.
+        $render = array(
+            '#markup' => drupal_render($render),
+          ) + $render_cache_attached;
+      }
+    }
+  }
+
+  return $render;
+}
+
+function _render_cache_post_render(array &$render, $id) {
+  // Potentially merge back previously saved properties.
+  if (!empty($render['#attached']['render_cache'])) {
+    $render += $render['#attached']['render_cache'];
+    unset($render['#attached']['render_cache']);
+  }
+
+  // Run any post-render callbacks.
+  render_cache_process_attached_callbacks($render, $id);
 }
 
 /**
@@ -261,7 +269,7 @@ function render_cache_cache_info_defaults() {
 }
 
 /**
- * Retrieve cache ID to use for render caching.
+ * Retrieve cache ID to use for entity render caching.
  *
  * @param object $entity
  *   The entity object being rendered.
@@ -269,13 +277,16 @@ function render_cache_cache_info_defaults() {
  *   A drupal_render style cache array().
  * @param array $context
  *   The context of the entity, with the following keys:
- *
  *   - entity_type
  *   - entity_id
  *   - entity_revision_id
  *   - bundle
  *   - langcode
  *   - view_mode
+ *   If a field is being rendered, the following additional keys are required:
+ *   - field_name
+ *   - deltas
+ *   - display
  *
  * @return string
  */
@@ -303,14 +314,21 @@ function render_cache_get_entity_cid($entity, &$cache_info, $context) {
   // Calculate hash to expire cached items automatically.
   $hash['id'] = !empty($context['entity_revision_id']) ? $context['entity_revision_id'] : $context['entity_id'];
   $hash['bundle'] = !empty($context['bundle']) ? $context['bundle'] : $context['entity_type'];
+  $hash['langcode'] = !empty($context['langcode']) ? $context['langcode'] : $GLOBALS['language_content']->language;
   $hash['modified'] = entity_modified_last($context['entity_type'], $entity);
   $hash['render_method'] = !empty($cache_info['render_cache_render_to_markup']);
   if ($hash['render_method']) {
     $hash['render_options'] = serialize($cache_info['render_cache_render_to_markup']);
   }
 
-  // Generally hash per view_mode - its unlikely they are the same.
-  $hash['view_mode'] = !empty($context['view_mode']) ? $context['view_mode'] : 'default';
+  if (!empty($context['field_name'])) {
+    $hash['deltas'] = implode(',', $context['deltas']);
+    $hash['display'] = serialize(array_intersect_key($context['display'], array('type' => '', 'settings' => '')));
+  }
+  else {
+    // Generally hash per view_mode - its unlikely they are the same.
+    $hash['view_mode'] = !empty($context['view_mode']) ? $context['view_mode'] : 'default';
+  }
 
   // Allow modules to modify $hash for custom invalidating.
   /* @see hook_render_cache_entity_hash_alter() */
@@ -391,4 +409,99 @@ function node_render_cache_entity_hash_alter(&$hash, $entity, $cache_info, $cont
     //       needs to support multiple get and caching for that first.
     $hash['node_comment_count'] = $entity->comment_count;
   }
+}
+
+/**
+ * Helper function to view a single entity field.
+ *
+ * This can be used to replace field_view_field().
+ *
+ * @param string $entity_type
+ *   The type of $entity; e.g., 'node' or 'user'.
+ * @param object $entity
+ *   The entity containing the field to display. Must at least contain the id
+ *   key and the field data to display.
+ * @param string $field_name
+ *   The name of the field to display.
+ * @param string|array $display
+ *   Can be either:
+ *   - The name of a view mode. The field will be displayed according to the
+ *     display settings specified for this view mode in the $instance
+ *     definition for the field in the entity's bundle.
+ *     If no display settings are found for the view mode, the settings for
+ *     the 'default' view mode will be used.
+ *   - An array of display settings, as found in the 'display' entry of
+ *     $instance definitions. The following key/value pairs are allowed:
+ *     - label: (string) Position of the label. The default 'field' theme
+ *       implementation supports the values 'inline', 'above' and 'hidden'.
+ *       Defaults to 'above'.
+ *     - type: (string) The formatter to use. Defaults to the
+ *       'default_formatter' for the field type, specified in
+ *       hook_field_info(). The default formatter will also be used if the
+ *       requested formatter is not available.
+ *     - settings: (array) Settings specific to the formatter. Defaults to the
+ *       formatter's default settings, specified in
+ *       hook_field_formatter_info().
+ *     - weight: (float) The weight to assign to the renderable element.
+ *       Defaults to 0.
+ * @param string $langcode
+ *   (Optional) The language the field values are to be shown in. The site's
+ *   current language fallback logic will be applied no values are available
+ *   for the language. If no language is provided the current language will be
+ *   used.
+ *
+ * @return
+ *   A renderable array for the field value.
+ */
+function render_cache_view_field($entity_type, $entity, $field_name, $display = array(), $langcode = NULL) {
+  // If the entity has no field value, just return nothing.
+  $items = field_get_items($entity_type, $entity, $field_name);
+  if (empty($items)) {
+    return array();
+  }
+
+  // Prepare context
+  $context = array(
+    'entity_type' => $entity_type,
+    'field_name' => $field_name,
+    'display' => $display,
+    'langcode' => field_language($entity_type, $entity, $field_name, $langcode),
+    'deltas' => array_keys($items),
+  );
+
+  // Setup drupal_render style cache array.
+  $cache_info = render_cache_cache_info_defaults();
+  $cache_info['keys'] = array(
+    'field',
+    $entity_type,
+    $field_name,
+  );
+
+  drupal_alter('render_cache_field_default_cache_info', $cache_info, $context);
+
+  list($entity_id, $entity_revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
+  $entity_context = $context + array(
+    'entity_id' => $entity_id,
+    'entity_revision_id' => $entity_revision_id,
+    'bundle' => $bundle,
+  );
+  $cid = render_cache_get_entity_cid($entity, $cache_info, $entity_context);
+  $cache = cache_get($cid, 'cache_render');
+
+  if (!$cache) {
+    $field_render = field_view_field($entity_type, $entity, $field_name, $display, $langcode);
+
+    _render_cache_pre_render($field_render, $cid, $cache_info);
+
+    $cache = (object) array(
+      'data' => $field_render,
+    );
+  }
+
+  $render = $cache->data;
+
+  // @todo Not sure what should be used for the second parameter here?
+  _render_cache_post_render($render, $cid);
+
+  return $render;
 }
