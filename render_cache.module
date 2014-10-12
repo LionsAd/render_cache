@@ -99,7 +99,7 @@ function render_cache_entity_view_callback($entities, $view_mode, $langcode = NU
       $page = NULL;
       // As a safety, do not grab an unexpected arg for $page, check that this
       // was called from entity_view().
-      if ($backtrace[1]['function'] === 'entity_view' && isset($backtrace[1]['args'][4])) {
+      if (isset($backtrace[1]['function']) && $backtrace[1]['function'] === 'entity_view' && isset($backtrace[1]['args'][4])) {
         $page = $backtrace[1]['args'][4];
       }
       $rendered = entity_get_controller($entity_type)->view($entities, $view_mode, $langcode, $page);
