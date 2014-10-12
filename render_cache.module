@@ -486,7 +486,11 @@ function render_cache_view_field($entity_type, $entity, $field_name, $display = 
     'bundle' => $bundle,
   );
   $cid = render_cache_get_entity_cid($entity, $cache_info, $entity_context);
-  $cache = cache_get($cid, 'cache_render');
+
+  $cache = NULL;
+  if (isset($cache_info['granularity']) && $cache_info['granularity'] != DRUPAL_NO_CACHE) {
+    $cache = cache_get($cid, 'cache_render');
+  }
 
   if (!$cache) {
     $field_render = field_view_field($entity_type, $entity, $field_name, $display, $langcode);
