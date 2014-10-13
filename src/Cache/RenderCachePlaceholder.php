@@ -18,6 +18,8 @@ class RenderCachePlaceholder implements RenderCachePlaceholderInterface {
    */
   public static function getPlaceholder($function, array $args = array(), $multiple = FALSE) {
     $callback = $multiple ? 'RenderCachePlaceholder::postRenderCacheMultiCallback' : 'RenderCachePlaceholder::postRenderCacheCallback';
+    // Add namespace to the front.
+    $callback = "\\Drupal\\render_cache\\Cache\\" . $callback;
 
     $context = array(
       'function' => $function,
