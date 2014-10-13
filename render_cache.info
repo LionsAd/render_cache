@@ -10,10 +10,5 @@ configure = admin/config/development/render-cache
 dependencies[] = ctools
 dependencies[] = entity_modified
 
-; Included files
-files[] = includes/RenderCachePluginBase.class.php
-files[] = includes/RenderCachePlaceholder.class.php
-files[] = plugins/render_cache/controller/RenderCacheControllerBase.class.php
-files[] = plugins/render_cache/controller/RenderCacheControllerRecursionBase.class.php
-files[] = plugins/render_cache/validator/RenderCacheValidationStrategyBase.class.php
-files[] = plugins/render_cache/renderer/RenderCacheRenderStrategyBase.class.php
+; Download from https://www.drupal.org/sandbox/fabianx/2354855 until it is a full project.
+dependencies[] = registry_autoload
