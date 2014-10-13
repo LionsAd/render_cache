@@ -167,16 +167,17 @@ function render_cache_page_drupal_render_page($page) {
     $build['page']['#theme_wrappers'] = $element_info['#theme_wrappers'];
   }
 
-  // Allow other modules to alter the output before rendering ...
+  // Call drupal_render() like the original function, but allow other modules
+  // to alter the output before and after rendering.
   drupal_alter('render_cache_page_pre_render', $build);
-
-  // Call drupal_render() like the original function.
   $output = drupal_render($build);
-  print $output;
-
-  // ... and to replace placeholders via Javascript.
-  // @todo This seems pointless, if the $output was already printed..
   drupal_alter('render_cache_page_post_render', $output, $build);
+
+  // Allow other modules to alter the output before and after sending, to
+  // enable them to e.g. replace placeholders via Javascript.
+  drupal_alter('render_cache_page_pre_send', $output, $build);
+  print $output;
+  drupal_alter('render_cache_page_post_send', $output, $build);
 }
 
 /**
