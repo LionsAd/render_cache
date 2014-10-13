@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\render_cache\Cache\RenderCachePlaceholder;
+
 define('RENDER_CACHE_STRATEGY_NO_RENDER', 0);
 define('RENDER_CACHE_STRATEGY_DIRECT_RENDER', 1);
 define('RENDER_CACHE_STRATEGY_LATE_RENDER', 2);

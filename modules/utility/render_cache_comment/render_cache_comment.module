@@ -4,6 +4,8 @@
  * Hijacks comment.module's implementation of hook_node_view() to enable entity caching.
  */
 
+use Drupal\render_cache\Cache\RenderCachePlaceholder;
+
 /**
  * Implements hook_module_implements_alter().
  *
