@@ -24,15 +24,15 @@ function render_cache_flush_caches() {
  * Implements hook_ctools_plugin_type().
  */
 function render_cache_ctools_plugin_type() {
-  $items['controller'] = array(
+  $items['Controller'] = array(
     'cache' => FALSE,
     'classes' => array('class'),
   );
-  $items['validator'] = array(
+  $items['ValidationStrategy'] = array(
     'cache' => FALSE,
     'classes' => array('class'),
   );
-  $items['renderer'] = array(
+  $items['RenderStrategy'] = array(
     'cache' => FALSE,
     'classes' => array('class'),
   );
@@ -66,7 +66,7 @@ function render_cache_ctools_plugin_directory($owner, $plugin_type) {
  * @return RenderCacheControllerInterface
  */
 function render_cache_get_controller($type) {
-  return render_cache_get_plugin_handler('controller', $type);
+  return render_cache_get_plugin_handler('Controller', $type);
 }
 
 /**
@@ -77,7 +77,7 @@ function render_cache_get_controller($type) {
  * @return RenderCacheValidationStrategyInterface
  */
 function render_cache_get_validator($type) {
-  return render_cache_get_plugin_handler('validator', $type);
+  return render_cache_get_plugin_handler('ValidationStrategy', $type);
 }
 
 /**
@@ -90,7 +90,7 @@ function render_cache_get_validator($type) {
  * @return RenderCacheRenderStrategyInterface
  */
 function render_cache_get_renderer($type) {
-  return render_cache_get_plugin_handler('renderer', $type);
+  return render_cache_get_plugin_handler('RenderStrategy', $type);
 }
 
 /**
@@ -156,7 +156,7 @@ function render_cache_get_plugins($plugin_type) {
  * If a plugin does not define a class at all, then the default class.
  *
  * @param string $plugin_type
- *   The plugin type to load, 'controller' or 'validator' are valid.
+ *   The plugin type to load, 'Controller' or 'Validator' are valid.
  * @param string $type
  *   The type of plugin to load.
  *
