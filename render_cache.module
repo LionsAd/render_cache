@@ -63,7 +63,7 @@ function render_cache_ctools_plugin_directory($owner, $plugin_type) {
  *
  * @param string $type
  *
- * @return RenderCacheControllerInterface
+ * @return \Drupal\render_cache\RenderCache\Controller\ControllerInterface
  */
 function render_cache_get_controller($type) {
   return render_cache_get_plugin_handler('Controller', $type);
@@ -74,7 +74,7 @@ function render_cache_get_controller($type) {
  *
  * @param string $type
  *
- * @return RenderCacheValidationStrategyInterface
+ * @return \Drupal\render_cache\RenderCache\ValidationStrategy\ValidationStrategyInterface
  */
 function render_cache_get_validator($type) {
   return render_cache_get_plugin_handler('ValidationStrategy', $type);
@@ -87,7 +87,7 @@ function render_cache_get_validator($type) {
  *   The type of the plugin, e.g. "esi_validate", "esi", "ajax2,
  *   "ajax_lstorage", ...
  *
- * @return RenderCacheRenderStrategyInterface
+ * @return \Drupal\render_cache\RenderCache\RenderStrategy\RenderStrategyInterface
  */
 function render_cache_get_renderer($type) {
   return render_cache_get_plugin_handler('RenderStrategy', $type);
@@ -160,7 +160,7 @@ function render_cache_get_plugins($plugin_type) {
  * @param string $type
  *   The type of plugin to load.
  *
- * @return RenderCacheControllerInterface|RenderCacheValidationStrategyInterface|false
+ * @return \Drupal\render_cache\Plugin\PluginInterface|FALSE
  *   Either the instantiated handler or FALSE if one could not be had.
  */
 function render_cache_get_plugin_handler($plugin_type, $type) {

@@ -104,11 +104,11 @@ abstract class AbstractBaseController extends BasePlugin implements ControllerIn
    * it calls the render() method for each object seperately.
    *
    * Controllers that support recursions should implement the
-   * RenderCacheControllerRecursionInterface and subclass from
-   * RenderCacheControllerRecursionBase.
+   * RecursionControllerInterface and subclass from
+   * BaseRecursionController.
    *
-   * @see RenderCacheControllerRecursionInterface
-   * @see RenderCacheControllerRecursionBase
+   * @see \Drupal\render_cache\RenderCache\Controller\RecursionControllerInterface
+   * @see \Drupal\render_cache\RenderCache\Controller\BaseRecursionController
    *
    * @param object[] $objects
    *   Array of $objects to be rendered keyed by id.
