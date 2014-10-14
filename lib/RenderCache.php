@@ -30,4 +30,17 @@ class RenderCache {
   public static function drupalRender(&$render) {
     return BaseController::drupalRender($render);
   }
+
+  /**
+   * Returns if we are within a recursive rendering context.
+   *
+   * This is useful to determine if its safe to output a placeholder, so that
+   * #post_render_cache will work.
+   *
+   * @return bool
+   *   TRUE if we are within a recursive context, FALSE otherwise.
+   */
+  public static function isRecursive() {
+    return BaseController::isRecursive();
+  }
 }
