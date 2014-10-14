@@ -1,5 +1,5 @@
 <?php
 
 $plugin = array(
-  'class' => 'RenderCacheRenderStrategyEsiValidate',
+  'class' => "\\Drupal\\render_cache_esi_validate\\RenderCache\\RenderStrategy\\EsiValidateRenderStrategy",
 );

@@ -1,9 +1,19 @@
 <?php
+/**
+ * @file
+ * Contains \Drupal\render_cache_esi_validate\RenderCache\RenderStrategy\EsiValidateRenderStrategy
+ */
+
+namespace Drupal\render_cache_esi_validate\RenderCache\RenderStrategy;
+
+use Drupal\render_cache\RenderCache\RenderStrategy\BaseRenderStrategy;
 
 /**
- * RenderCacheController ESI Validate - Provides esi processing for placeholders.
+ * ESI Validate RenderStrategy - Provides esi processing for placeholders.
+ *
+ * @ingroup rendercache
  */
-class RenderCacheRenderStrategyEsiValidate extends RenderCacheRenderStrategyBase {
+class EsiValidateRenderStrategy extends BaseRenderStrategy {
 
   /**
    * {@inheritdoc}
