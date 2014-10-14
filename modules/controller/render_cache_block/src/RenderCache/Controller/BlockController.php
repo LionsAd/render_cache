@@ -1,11 +1,19 @@
 <?php
+/**
+ * @file
+ * Contains \Drupal\render_cache_block\RenderCache\Controller\BlockController
+ */
+
+namespace Drupal\render_cache_block\RenderCache\Controller;
 
 use Drupal\render_cache\RenderCache\Controller\BaseRecursionController;
 
 /**
- * RenderCacheController Block - Provides render caching for block objects.
+ * BlockController - Provides render caching for block objects.
+ *
+ * @ingroup rendercache
  */
-class RenderCacheControllerBlock extends BaseRecursionController {
+class BlockController extends BaseRecursionController {
 
   /**
    * {@inheritdoc}
