@@ -1,0 +1,171 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations and frequently used functions for render cache page module.
+ */
+
+// -----------------------------------------------------------------------
+// Core Hooks
+
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * Overrides core's block_page_build() and replaces with our own render cached version.
+ *
+ * @param array $implementations
+ *   Format: $[$module] = string|false
+ * @param string $hook
+ */
+function render_cache_block_module_implements_alter(&$implementations, $hook) {
+  if ($hook === 'page_build') {
+    unset($implementations['block']);
+  }
+  if ($hook === 'block_view_alter') {
+    // Move our hook implementation to the bottom.
+    $group = $implementations['render_cache_block'];
+    unset($implementations['render_cache_block']);
+    $implementations['render_cache_block'] = $group;
+  }
+}
+
+/**
+ * Implements hook_page_build() and overrides block_page_build().
+ *
+ * @param array $page
+ */
+function render_cache_block_page_build(&$page) {
+  global $theme;
+
+  // The theme system might not yet be initialized. We need $theme.
+  drupal_theme_initialize();
+
+  // Early return with original function if demo is requested.
+  $item = menu_get_item();
+  if ($item['path'] == 'admin/structure/block/demo/' . $theme) {
+    block_page_build($page);
+    return;
+  }
+
+  // Fetch a list of regions for the current theme.
+  $all_regions = system_region_list($theme);
+
+  // Load all region content assigned via blocks.
+  foreach (array_keys($all_regions) as $region) {
+    // Assign blocks to region.
+    if ($blocks = render_cache_block_get_blocks_by_region($region)) {
+      $page[$region] = $blocks;
+    }
+  }
+
+  // Once we've finished attaching all blocks to the page, clear the static
+  // cache to allow modules to alter the block list differently in different
+  // contexts. For example, any code that triggers hook_page_build() more
+  // than once in the same page request may need to alter the block list
+  // differently each time, so that only certain parts of the page are
+  // actually built. We do not clear the cache any earlier than this, though,
+  // because it is used each time block_get_blocks_by_region() gets called
+  // above.
+  drupal_static_reset('block_list');
+}
+
+/**
+ * Implements hook_block_view_alter().
+ *
+ * @param array $data
+ * @param object $block
+ */
+function render_cache_block_block_view_alter(&$data, $block) {
+  if (!empty($block->render_cache_controller) && !empty($data['content'])) {
+    // Normalize to the drupal_render() structure so we can add something.
+    if (is_string($data['content'])) {
+      $data['content'] = array(
+        '#markup' => $data['content'],
+      );
+    }
+    $block->render_cache_controller->recursionStep($data['content']);
+  }
+}
+
+// -----------------------------------------------------------------------
+// Contrib Hooks
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ *
+ * @param string $owner
+ * @param string $plugin_type
+ *
+ * @return string|null
+ */
+function render_cache_block_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'render_cache') {
+    return 'src/RenderCache/' . $plugin_type;
+  }
+
+  return NULL;
+}
+
+// -----------------------------------------------------------------------
+// Public API
+
+/**
+ * Overrides block_get_blocks_by_region().
+ *
+ * @param string $region
+ *
+ * @return array
+ *
+ * @see block_get_blocks_by_region()
+ */
+function render_cache_block_get_blocks_by_region($region) {
+  // Save the region to the $context.
+  $context = array(
+    'region' => $region,
+  );
+
+  // Load the blocks for this region.
+  $blocks = render_cache_block_block_list($region);
+
+  // Delegate to render cache controller.
+  $rcc = render_cache_get_controller('block');
+  $rcc->setContext($context);
+  $build = $rcc->view($blocks);
+
+  return $build;
+}
+
+/**
+ * Load the list of blocks for a region, but do not render them.
+ *
+ * @see block_list()
+ *
+ * @param $region
+ *   The name of the region.
+ *
+ * @return
+ *   An array of block objects, indexed with the module name and block delta
+ *   concatenated with an underscore, thus: MODULE_DELTA.
+ */
+function render_cache_block_block_list($region) {
+  $blocks = &drupal_static(__FUNCTION__);
+
+  if (!isset($blocks)) {
+    $blocks = _block_load_blocks();
+  }
+
+  // Create an empty array if there are no entries.
+  if (!isset($blocks[$region])) {
+    $blocks[$region] = array();
+  }
+  else {
+    // Convert the blocks array into the right format.
+    $region_blocks = array();
+    foreach ($blocks[$region] as $key => $block) {
+      $region_blocks["{$block->module}_{$block->delta}"] = $block;
+    }
+    $blocks[$region] = $region_blocks;
+  }
+
+  return $blocks[$region];
+}

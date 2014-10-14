@@ -1,6 +1,0 @@
-name = Render Cache - ESI Validate Strategy - ENABLE ONLY BEHIND VARNISH
-description = Implements esi_validate processing for placeholders - ENABLE ONLY BEHIND VARNISH.
-package = Performance and scalability
-core = 7.x
-
-dependencies[] = render_cache_page

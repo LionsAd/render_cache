@@ -1,6 +1,0 @@
-name = Render Cache - Entity
-description = Overrides entity_view() to provide generic render caching for entities.
-package = Performance and scalability
-core = 7.x
-
-dependencies[] = render_cache

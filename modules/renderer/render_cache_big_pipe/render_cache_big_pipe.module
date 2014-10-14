@@ -1,0 +1,112 @@
+<?php
+/**
+ * @file
+ * Hook implementations and frequently used functions for render cache big pipe module.
+ */
+
+use Drupal\render_cache_big_pipe\RenderCache\RenderStrategy\BigPipeRenderStrategy;
+
+// -----------------------------------------------------------------------
+// Contrib Hooks
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ *
+ * @param string $owner
+ * @param string $plugin_type
+ *
+ * @return null|string
+ */
+function render_cache_big_pipe_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'render_cache') {
+    return 'src/RenderCache/' . $plugin_type;
+  }
+
+  return NULL;
+}
+
+/**
+ * Implements hook_render_cache_page_pre_send_alter().
+ *
+ * @param array $build
+ */
+function render_cache_big_pipe_render_cache_page_pre_send_alter(&$markup, &$build) {
+  if (!class_exists("\\Drupal\\render_cache_big_pipe\\RenderCache\\RenderStrategy\\BigPipeRenderStrategy")) {
+    return;
+  }
+  $placeholders = BigPipeRenderStrategy::getPlaceholders();
+
+  if (empty($placeholders)) {
+    return;
+  }
+  $split = '<!-- X-RENDER-CACHE-BIG-PIPE-SPLIT -->';
+  if (strpos($markup, $split) === FALSE) {
+    $split = '</body>';
+  }
+
+  $page_parts = explode($split, $markup);
+
+  if (count($page_parts) !== 2) {
+    // Something went wrong, we can't big pipe this page.
+    return;
+  }
+
+  // Store for later usage.
+  $build['#render_cache_big_pipe_placeholders'] = $placeholders;
+  $build['#render_cache_bottom'] = $split . $page_parts[1];
+
+  // And replace markup with just the upper part.
+  $markup = $page_parts[0];
+}
+
+/**
+ * Implements hook_render_cache_page_post_send_alter().
+ *
+ * @param string $markup
+ * @param array $build
+ *
+ * @throws \Exception
+ */
+function render_cache_big_pipe_render_cache_page_post_send_alter(&$markup, $build) {
+  if (empty($build['#render_cache_big_pipe_placeholders'])) {
+    return;
+  }
+
+  // Immediately output things so far.
+  ob_implicit_flush(TRUE);
+  ob_end_flush();
+
+  $rcs = render_cache_get_renderer('big_pipe');
+  if (!$rcs instanceof BigPipeRenderStrategy) {
+    throw new \Exception("Invalid big pipe renderer.");
+  }
+
+  // @todo Add helper function.
+  $behaviors = <<<EOF
+<script type="text/javascript">
+// We know we are at the end of the request parsing, so start processing behaviors.
+Drupal.attachBehaviors();
+</script>
+EOF;
+  // @todo It seems that $behaviors is printed twice..
+  print $behaviors;
+
+  // Replace the placeholders.
+  foreach ($build['#render_cache_big_pipe_placeholders'] as $placeholder => $ph_object) {
+    // Check if the placeholder is present at all.
+    if (strpos($markup, $placeholder) === FALSE) {
+      continue;
+    }
+
+    print $rcs->renderPlaceholder($placeholder, $ph_object);
+  }
+  // Now that we have processed all the placeholders, attach the behaviors
+  // on the page again.
+  print $behaviors;
+
+  // Now render the scripts and closing body tag.
+  print $build['#render_cache_bottom'];
+}
+
+// -----------------------------------------------------------------------
+// Public API
