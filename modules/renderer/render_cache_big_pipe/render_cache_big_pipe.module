@@ -1,9 +1,10 @@
 <?php
-
 /**
  * @file
  * Hook implementations and frequently used functions for render cache big pipe module.
  */
+
+use Drupal\render_cache_big_pipe\RenderCache\RenderStrategy\BigPipeRenderStrategy;
 
 // -----------------------------------------------------------------------
 // Contrib Hooks
@@ -30,10 +31,10 @@ function render_cache_big_pipe_ctools_plugin_directory($owner, $plugin_type) {
  * @param array $build
  */
 function render_cache_big_pipe_render_cache_page_pre_send_alter(&$markup, &$build) {
-  if (!class_exists('RenderCacheRenderStrategyBigPipe')) {
+  if (!class_exists("\\Drupal\\render_cache_big_pipe\\RenderCache\\RenderStrategy\\BigPipeRenderStrategy")) {
     return;
   }
-  $placeholders = RenderCacheRenderStrategyBigPipe::getPlaceholders();
+  $placeholders = BigPipeRenderStrategy::getPlaceholders();
 
   if (empty($placeholders)) {
     return;
@@ -76,7 +77,7 @@ function render_cache_big_pipe_render_cache_page_post_send_alter(&$markup, $buil
   ob_end_flush();
 
   $rcs = render_cache_get_renderer('big_pipe');
-  if (!$rcs instanceof RenderCacheRenderStrategyBigPipe) {
+  if (!$rcs instanceof BigPipeRenderStrategy) {
     throw new \Exception("Invalid big pipe renderer.");
   }
 
