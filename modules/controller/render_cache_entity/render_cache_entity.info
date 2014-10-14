@@ -4,3 +4,6 @@ package = Performance and scalability
 core = 7.x
 
 dependencies[] = render_cache
+dependencies[] = entity
+
+registry_autoload[] = PSR-4

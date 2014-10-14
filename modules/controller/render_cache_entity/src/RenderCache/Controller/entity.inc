@@ -1,5 +1,5 @@
 <?php
 
 $plugin = array(
-  'class' => 'RenderCacheControllerEntity',
+  'class' => "\\Drupal\\render_cache_entity\\RenderCache\\Controller\\EntityController",
 );

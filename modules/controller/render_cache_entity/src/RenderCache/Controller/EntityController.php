@@ -1,9 +1,19 @@
 <?php
+/**
+ * @file
+ * Contains \Drupal\render_cache_entity\RenderCache\Controller\EntityController
+ */
+
+namespace Drupal\render_cache_entity\RenderCache\Controller;
+
+use Drupal\render_cache\RenderCache\Controller\BaseRecursionController;
 
 /**
- * RenderCacheController Entity - Provides render caching for entity objects.
+ * EntityController - Provides render caching for entity objects.
+ *
+ * @ingroup rendercache
  */
-class RenderCacheControllerEntity extends RenderCacheControllerRecursionBase {
+class EntityController extends BaseRecursionController {
   /**
    * {@inheritdoc}
    */
