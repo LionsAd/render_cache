@@ -6,7 +6,7 @@
 
 namespace Drupal\render_cache\Cache;
 
-use \Drupal\render_cache\Plugin\RenderCache\Controller\BaseController;
+use \Drupal\render_cache\RenderCache\Controller\BaseController;
 
 /**
  * Provides placeholder utility functions.
@@ -19,9 +19,9 @@ class RenderCachePlaceholder implements RenderCachePlaceholderInterface {
    * {@inheritdoc}
    */
   public static function getPlaceholder($function, array $args = array(), $multiple = FALSE) {
-    $callback = $multiple ? 'RenderCachePlaceholder::postRenderCacheMultiCallback' : 'RenderCachePlaceholder::postRenderCacheCallback';
     // Add namespace to the front.
-    $callback = "\\Drupal\\render_cache\\Cache\\" . $callback;
+    $callback = "\\Drupal\\render_cache\\Cache\\";
+    $callback .= $multiple ? 'RenderCachePlaceholder::postRenderCacheMultiCallback' : 'RenderCachePlaceholder::postRenderCacheCallback';
 
     $context = array(
       'function' => $function,
