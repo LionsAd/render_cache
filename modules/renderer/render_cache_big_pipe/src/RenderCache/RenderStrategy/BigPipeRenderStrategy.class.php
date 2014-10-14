@@ -1,9 +1,19 @@
 <?php
+/**
+ * @file
+ * Contains \Drupal\render_cache_big_pipe\RenderCache\RenderStrategy\BigPipeRenderStrategy
+ */
+
+namespace Drupal\render_cache_big_pipe\RenderCache\RenderStrategy;
+
+use Drupal\render_cache\RenderCache\RenderStrategy\BaseRenderStrategy;
 
 /**
- * RenderCacheController Big Pipe - Provides big pipe processing for placeholders.
+ * Big Pipe RenderStrategy - Provides big pipe processing for placeholders.
+ *
+ * @ingroup rendercache
  */
-class RenderCacheRenderStrategyBigPipe extends RenderCacheRenderStrategyBase {
+class BigPipeRenderStrategy extends BaseRenderStrategy {
 
   protected static $placeholders = array();
 

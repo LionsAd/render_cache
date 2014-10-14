@@ -74,7 +74,7 @@ function render_cache_entity_module_implements_alter(&$implementations, $hook) {
  */
 function render_cache_entity_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
-    return 'src/Plugin/RenderCache/' . $plugin_type;
+    return 'src/RenderCache/' . $plugin_type;
   }
 
   return NULL;

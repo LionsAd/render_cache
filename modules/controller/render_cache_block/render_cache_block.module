@@ -100,7 +100,7 @@ function render_cache_block_block_view_alter(&$data, $block) {
  */
 function render_cache_block_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
-    return 'src/Plugin/RenderCache/' . $plugin_type;
+    return 'src/RenderCache/' . $plugin_type;
   }
 
   return NULL;

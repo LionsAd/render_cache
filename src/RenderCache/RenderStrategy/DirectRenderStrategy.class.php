@@ -1,13 +1,17 @@
 <?php
 /**
  * @file
- * Contains implementation of Render Cache Render Strategy direct class.
+ * Contains \Drupal\render_cache\RenderCache\RenderStrategy\DirectRenderStrategy
  */
+
+namespace Drupal\render_cache\RenderCache\RenderStrategy;
 
 /**
  * Direct fallback to render placeholders.
+ *
+ * @ingroup rendercache
  */
-class RenderCacheRenderStrategyDirect extends RenderCacheRenderStrategyBase {
+class DirectRenderStrategy extends BaseRenderStrategy {
   /**
    * {@inheritdoc}
    */

@@ -18,7 +18,7 @@
  */
 function render_cache_big_pipe_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
-    return 'src/Plugin/RenderCache/' . $plugin_type;
+    return 'src/RenderCache/' . $plugin_type;
   }
 
   return NULL;

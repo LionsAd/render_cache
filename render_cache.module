@@ -4,6 +4,8 @@
  * Main module file for the Render Cache caching system.
  */
 
+use Drupal\render_cache\Controller\BaseController;
+
 // Include Drupal 8 render helper functions.
 require_once __DIR__ . '/includes/drupal_render_8.inc';
 
@@ -193,7 +195,7 @@ function render_cache_get_plugin_handler($plugin_type, $type) {
  * @return string
  */
 function render_cache_drupal_render(&$render) {
-  return RenderCacheControllerBase::drupalRender($render);
+  return BaseController::drupalRender($render);
 }
 
 /**

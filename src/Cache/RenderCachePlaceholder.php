@@ -6,6 +6,8 @@
 
 namespace Drupal\render_cache\Cache;
 
+use \Drupal\render_cache\Plugin\RenderCache\Controller\BaseController;
+
 /**
  * Provides placeholder utility functions.
  *
@@ -92,7 +94,8 @@ class RenderCachePlaceholder implements RenderCachePlaceholderInterface {
     $args = static::loadPlaceholderFunctionArgs($context);
     $new_element = call_user_func_array($function, $args);
 
-    $markup = RenderCacheControllerBase::drupalRender($new_element);
+    // @todo Move to RenderCache global class space.
+    $markup = BaseController::drupalRender($new_element);
     $element['#markup'] = str_replace($placeholder, $markup, $element['#markup']);
 
     return $element;

@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\render_cache\RenderCache\Controller\BaseController;
+
 /**
  * Special interface for the render cache page controller.
  */
@@ -13,7 +15,7 @@ interface RenderCacheControllerPageInterface {
 /**
  * RenderCacheController Entity - Provides render caching for entity objects.
  */
-class RenderCacheControllerPage extends RenderCacheControllerBase implements RenderCacheControllerPageInterface {
+class RenderCacheControllerPage extends BaseController implements RenderCacheControllerPageInterface {
 
   /**
    * The page storage.

@@ -49,7 +49,7 @@ function render_cache_esi_validate_menu() {
  */
 function render_cache_esi_validate_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
-    return 'src/Plugin/RenderCache/' . $plugin_type;
+    return 'src/RenderCache/' . $plugin_type;
   }
 
   return NULL;
