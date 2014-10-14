@@ -1,21 +1,19 @@
 <?php
+/**
+ * @file
+ * Contains \Drupal\render_cache_page\RenderCache\Controller\PageController
+ */
+
+namespace Drupal\render_cache_page\RenderCache\Controller;
 
 use Drupal\render_cache\RenderCache\Controller\BaseController;
 
 /**
- * Special interface for the render cache page controller.
+ * PageController - Provides render caching for page objects.
+ *
+ * @ingroup rendercache
  */
-interface RenderCacheControllerPageInterface {
-  /**
-   * Implements delegated hook_init().
-   */
-  public function hook_init();
-}
-
-/**
- * RenderCacheController Entity - Provides render caching for entity objects.
- */
-class RenderCacheControllerPage extends BaseController implements RenderCacheControllerPageInterface {
+class PageController extends BaseController implements PageControllerInterface {
 
   /**
    * The page storage.

@@ -1,5 +1,5 @@
 <?php
 
 $plugin = array(
-  'class' => 'RenderCacheControllerPage',
+  'class' => "\\Drupal\\render_cache_page\\RenderCache\\Controller\\PageController",
 );

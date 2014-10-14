@@ -1,9 +1,10 @@
 <?php
-
 /**
  * @file
  * Hook implementations and frequently used functions for render cache page module.
  */
+
+use Drupal\render_cache_page\RenderCache\Controller\PageControllerInterface;
 
 // -----------------------------------------------------------------------
 // Core Hooks
@@ -16,7 +17,7 @@
  */
 function render_cache_page_init() {
   $rcc = render_cache_get_controller('page');
-  if (!$rcc instanceof RenderCacheControllerPageInterface) {
+  if (!$rcc instanceof PageControllerInterface) {
     return;
   }
   // Delegate hook_init() to the render cache controller.
