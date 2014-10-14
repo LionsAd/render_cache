@@ -7,8 +7,9 @@
 namespace Drupal\render_cache\RenderCache\Controller;
 
 /**
- * RenderCacheController recursion base class.
- * Used for render cache controllers that supports recursion.
+ * Base class for RecursionController plugin objects.
+ *
+ * Used for render cache controllers that support recursion.
  *
  * @ingroup rendercache
  */
