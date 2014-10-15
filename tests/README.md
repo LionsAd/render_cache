@@ -1,9 +1,7 @@
 ### How to run the tests
 
 ````
-cd tests
-composer install
-./vendor/bin/phpunit
+./tests/run-tests.sh
 ````
 
 The tests are in a subdirectory to not clutter the main module space with composer, etc.
