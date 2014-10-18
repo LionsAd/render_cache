@@ -36,6 +36,11 @@ function render_cache_ctools_plugin_type() {
     'cache' => FALSE,
     'classes' => array('class'),
   );
+  $items['ServiceProvider'] = array(
+    'cache' => FALSE,
+    'classes' => array('class'),
+  );
+
   return $items;
 }
 
@@ -49,7 +54,7 @@ function render_cache_ctools_plugin_type() {
  */
 function render_cache_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
-    return 'plugins/render_cache/' . $plugin_type;
+    return 'src/RenderCache/' . $plugin_type;
   }
 
   return NULL;
@@ -91,6 +96,18 @@ function render_cache_get_validator($type) {
  */
 function render_cache_get_renderer($type) {
   return render_cache_get_plugin_handler('RenderStrategy', $type);
+}
+
+/**
+ * Returns a render cache service plugin.
+ *
+ * @param string $type
+ *   The type of the service
+ *
+ * @return \Drupal\render_cache\RenderCache\ServiceProvider\ServiceProviderInterface
+ */
+function render_cache_get_service_provider($type) {
+  return render_cache_get_plugin_handler('ServiceProvider', $type);
 }
 
 /**
