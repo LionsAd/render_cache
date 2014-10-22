@@ -4,14 +4,17 @@
     "mockery/mockery": "0.9.*"
   },
   "autoload": {
-    "classmap": [
-      "../lib",
-      "../src",
-      "../modules/controller/render_cache_block/src",
-      "../modules/controller/render_cache_entity/src",
-      "../modules/controller/render_cache_page/src",
-      "../modules/renderer/render_cache_big_pipe/src",
-      "src/"
-    ]
+    "psr-0": {
+      "Drupal\\Component\\": "../lib/",
+      "Drupal\\Core\\": "../lib/"
+    },
+    "psr-4": {
+      "Drupal\\render_cache\\": "../src/",
+      "Drupal\\render_cache_block\\": "../modules/controller/render_cache_block/src/",
+      "Drupal\\render_cache_entity\\": "../modules/controller/render_cache_entity/src/",
+      "Drupal\\render_cache_page\\": "../modules/controller/render_cache_page/src/",
+      "Drupal\\render_cache_big_pipe\\": "../modules/renderer/render_cache_big_pipe/src/",
+      "Drupal\\render_cache\\Tests\\": "src/"
+    }
   }
 }
