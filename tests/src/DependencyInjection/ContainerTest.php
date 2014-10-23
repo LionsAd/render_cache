@@ -28,7 +28,7 @@ class ContainerBuilder extends \PHPUnit_Framework_TestCase {
    * Tests that Container::hasDefinition() works properly.
    */
   public function test_hasDefinition() {
-    $this->assertEquals($this->container->hasDefinition('container'), TRUE, 'Container has definition of itself.');
+    $this->assertEquals($this->container->hasDefinition('service_container'), TRUE, 'Container has definition of itself.');
     $this->assertEquals($this->container->hasDefinition('service.does_not_exist'), FALSE, 'Container does not have non-existent service.');
     $this->assertEquals($this->container->hasDefinition('service.provider'), TRUE, 'Container has service.provider service.');
   }
@@ -37,7 +37,7 @@ class ContainerBuilder extends \PHPUnit_Framework_TestCase {
    * Tests that Container::getDefinition() works properly.
    */
   public function test_getDefinition() {
-    $this->assertEquals( $this->containerDefinition['services']['container'], $this->container->getDefinition('container'), 'Container definition matches for container service.');
+    $this->assertEquals( $this->containerDefinition['services']['service_container'], $this->container->getDefinition('service_container'), 'Container definition matches for container service.');
     $this->assertEquals( $this->containerDefinition['services']['service.provider'], $this->container->getDefinition('service.provider'), 'Container definition matches for service.provider service.');
   }
 
@@ -68,7 +68,7 @@ class ContainerBuilder extends \PHPUnit_Framework_TestCase {
    * Tests that Container::get() works properly.
    */
   public function test_get() {
-    $container = $this->container->get('container');
+    $container = $this->container->get('service_container');
     $this->assertEquals($this->container, $container, 'Container can be retrieved from itself.');
 
     // Retrieve services of the container.
@@ -122,7 +122,7 @@ class ContainerBuilder extends \PHPUnit_Framework_TestCase {
     $parameters['factory_service_class'] = get_class($fake_service);
 
     $services = array();
-    $services['container'] = array(
+    $services['service_container'] = array(
       'class' => '\Drupal\render_cache\DependencyInjection\Container',
     );
     $services['other.service'] = array(
@@ -133,7 +133,7 @@ class ContainerBuilder extends \PHPUnit_Framework_TestCase {
       'class' => '\Drupal\render_cache\Tests\DependencyInjection\MockService',
       'arguments' => array('@other.service', '%some_config%'),
       'calls' => array(
-        array('setContainer', array('@container')),
+        array('setContainer', array('@service_container')),
         array('setOtherConfigParameter', array('%some_other_config%')),
        ),
       'priority' => 0,
@@ -153,7 +153,7 @@ class ContainerBuilder extends \PHPUnit_Framework_TestCase {
         array(NULL, 'bar'),
       ),
       'calls' => array(
-        array('setContainer', array('@container')),
+        array('setContainer', array('@service_container')),
       ),
     );
 

@@ -105,8 +105,8 @@ class ContainerBuilder implements ContainerBuilderInterface {
   public function compile() {
     $definition = $this->getContainerDefinition();
 
-    if (!empty($definition['services']['container']['class'])) {
-      $this->containerClass = $definition['services']['container']['class'];
+    if (!empty($definition['services']['service_container']['class'])) {
+      $this->containerClass = $definition['services']['service_container']['class'];
     }
 
     return new $this->containerClass($definition);

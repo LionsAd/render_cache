@@ -47,7 +47,7 @@ class Container implements ContainerInterface {
   public function __construct(array $container_definition) {
     $this->parameters = $container_definition['parameters'];
     $this->serviceDefinitions = $container_definition['services'];
-    $this->services['container'] = $this;
+    $this->services['service_container'] = $this;
   }
 
   /**

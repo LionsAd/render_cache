@@ -144,7 +144,7 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $container_builder->shouldReceive('moduleAlter')
       ->with(
         Mockery::on(function(&$container_definition) use ($fake_container_class) {
-          $container_definition['services']['container']['class'] = $fake_container_class;
+          $container_definition['services']['service_container']['class'] = $fake_container_class;
           return TRUE;
         })
       );
@@ -177,9 +177,9 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     );
     $services['some_service'] = array(
       'class' => '\Drupal\render_cache\Service\SomeService',
-      'arguments' => array('@container', '%some_config%'),
+      'arguments' => array('@service_container', '%some_config%'),
       'calls' => array(
-        array('setContainer', array('@container')),
+        array('setContainer', array('@service_container')),
       ),
       'tags' => array(
         array('tagged-service'),
