@@ -75,7 +75,7 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
   /**
    * Tests that the controller interface has a view method.
    */
-  public function testGetContainerDefinition() {
+  public function test_getContainerDefinition() {
     // We need to use a partial mock as the alter method calls procedural code.
     $container_builder = Mockery::mock('\Drupal\render_cache\DependencyInjection\ContainerBuilder[moduleAlter]', array($this->serviceProviderManager));
     $container_builder->shouldAllowMockingProtectedMethods();
@@ -86,7 +86,7 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $this->assertEquals($definition, $this->alteredDefinition, 'Definition of the container matches.');
   }
 
-  public function testAlter() {
+  public function test_alter() {
     $container_builder = Mockery::mock('\Drupal\render_cache\DependencyInjection\ContainerBuilder[moduleAlter]', array($this->serviceProviderManager));
     $container_builder->shouldAllowMockingProtectedMethods();
 
@@ -104,7 +104,37 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $this->assertEquals($definition, $altered_definition, 'Definition of the container when altered matches.');
   }
  
-  public function testCompile() {
+  public function test_alterWithTags() {
+    $container_builder = Mockery::mock('\Drupal\render_cache\DependencyInjection\ContainerBuilder[moduleAlter]', array($this->serviceProviderManager));
+    $container_builder->shouldAllowMockingProtectedMethods();
+
+    $container_builder->shouldReceive('moduleAlter')
+      ->with(
+        Mockery::on(function(&$container_definition) {
+          $container_definition['parameters']['services_tagged'] = implode(',', array_keys($container_definition['tags']['tagged-service']));
+          $container_definition['parameters']['services_tagged_another'] = '';
+          foreach ($container_definition['tags']['another-tag'] as $service => $tags) {
+            $container_definition['parameters']['services_tagged_another'] .= $service . '|';
+            foreach ($tags as $tag_values) {
+              $values = array();
+              foreach ($tag_values as $key => $value) {
+                $values[] = $key . ':' . $value;
+              }
+              $container_definition['parameters']['services_tagged_another'] .= implode(',', $values);
+            }
+          }
+          return TRUE;
+        })
+      );
+    $altered_definition = $this->alteredDefinition;
+    $altered_definition['parameters']['services_tagged'] = 'container,some_service';
+    $altered_definition['parameters']['services_tagged_another'] = 'some_service|tag-value:42,tag-value2:23';
+
+    $definition = $container_builder->getContainerDefinition();
+    $this->assertEquals($definition, $altered_definition, 'Definition of the container matches altered definition when checking tags.');
+  }
+
+  public function test_compile() {
     // Create a fake container class implementing the interface.
     $fake_container = Mockery::mock('\Drupal\render_cache\DependencyInjection\ContainerInterface');
     $fake_container_class = get_class($fake_container);
@@ -127,6 +157,12 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $this->assertEquals(TRUE, $container instanceof $fake_container_class, 'Container has instanceof dynamic fake container class.');
   }
 
+  /**
+   * Returns a fake container definition used for testing.
+   *
+   * @return array
+   *   The fake container definition with services and parameters.
+   */
   protected function getFakeContainerDefinition() {
     $parameters = array();
     $parameters['some_config'] = 'foo';
@@ -135,13 +171,19 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $services = array();
     $services['container'] = array(
       'class' => '\Drupal\render_cache\DependencyInjection\Container',
+      'tags' => array(
+        array('tagged-service'),
+      ),
     );
     $services['some_service'] = array(
       'class' => '\Drupal\render_cache\Service\SomeService',
       'arguments' => array('@container', '%some_config'),
-      'calls' => array('setContainer', array('@container')),
+      'calls' => array(
+        array('setContainer', array('@container')),
+      ),
       'tags' => array(
-        array('service' => array()),
+        array('tagged-service'),
+        array('another-tag', array('tag-value' => 42, 'tag-value2' => 23)),
       ),
       'priority' => 0,
     );

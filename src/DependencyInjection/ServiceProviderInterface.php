@@ -33,6 +33,8 @@ interface ServiceProviderInterface {
    *   An associative array with the following keys:
    *     - parameters: Simple key-value store of container parameters.
    *     - services: Services like defined in services.yml
+   *     - tags: Associative array keyed by tag names with
+   *             array('service_name' => $tag_args) as values.
    *
    * @see ServiceProviderInterface::getContainerDefinition()
    */

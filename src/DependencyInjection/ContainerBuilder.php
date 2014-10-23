@@ -62,6 +62,28 @@ class ContainerBuilder implements ContainerBuilderInterface {
       $container_definition = NestedArray::mergeDeep($container_definition, $service_provider->getContainerDefinition());
     }
 
+    $container_definition += array(
+      'services' => array(),
+      'parameters' => array(),
+    );
+
+    // Find and setup tags for container altering.
+    $container_definition['tags'] = array();
+
+    // Setup the tags structure.
+    foreach ($container_definition['services'] as $service => $definition) {
+      if (isset($definition['tags'])) {
+        foreach ($definition['tags'] as $tag) {
+          $tag_name = $tag[0];
+          $tag_arguments = array();
+          if (!empty($tag[1])) {
+            $tag_arguments = $tag[1];
+          }
+          $container_definition['tags'][$tag_name][$service][] = $tag_arguments;
+        }
+      }
+    }
+
     // Ensure container definition can be altered.
     foreach ($definitions as $plugin_id => $definition) {
       $service_provider = $service_providers[$plugin_id];
@@ -70,6 +92,9 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
     // Last give a chance for traditional modules to alter this.
     $this->moduleAlter($container_definition);
+
+    // Remove the tags again, not needed for the final build of the container.
+    unset($container_definition['tags']);
 
     return $container_definition;
   }

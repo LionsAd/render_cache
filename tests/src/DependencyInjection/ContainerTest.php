@@ -136,9 +136,6 @@ class ContainerBuilder extends \PHPUnit_Framework_TestCase {
         array('setContainer', array('@container')),
         array('setOtherConfigParameter', array('%some_other_config')),
        ),
-      'tags' => array(
-        array('service' => array()),
-      ),
       'priority' => 0,
     );
     $services['factory_service'] = array(
