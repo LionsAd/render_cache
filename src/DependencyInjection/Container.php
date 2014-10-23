@@ -205,7 +205,7 @@ class Container implements ContainerInterface {
       }
 
       if (strpos($argument, '%') === 0) {
-        $name = substr($argument, 1);
+        $name = substr($argument, 1, -1);
         if (!isset($this->parameters[$name])) {
           if ($invalidBehavior === ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE) {
             throw new RuntimeException("Could not find parameter: $name");

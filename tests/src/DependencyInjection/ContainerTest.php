@@ -52,16 +52,16 @@ class ContainerBuilder extends \PHPUnit_Framework_TestCase {
    * Tests that Container::getParameter() works properly.
    */
   public function test_getParameter() {
-    $this->assertEquals($this->containerDefinition['parameters']['some_config'], $this->container->getParameter('some_config'), 'Container parameter matches for %some_config.');
-    $this->assertEquals($this->containerDefinition['parameters']['some_other_config'], $this->container->getParameter('some_other_config'), 'Container parameter matches for %some_other_config.');
+    $this->assertEquals($this->containerDefinition['parameters']['some_config'], $this->container->getParameter('some_config'), 'Container parameter matches for %some_config%.');
+    $this->assertEquals($this->containerDefinition['parameters']['some_other_config'], $this->container->getParameter('some_other_config'), 'Container parameter matches for %some_other_config%.');
   }
 
   /**
    * Tests that Container::hasParameter() works properly.
    */
   public function test_hasParameter() {
-    $this->assertTrue($this->container->hasParameter('some_config'), 'Container parameters include %some_config.');
-    $this->assertFalse($this->container->hasParameter('some_config_not_exists'), 'Container parameters do not include %some_config_not_exists.');
+    $this->assertTrue($this->container->hasParameter('some_config'), 'Container parameters include %some_config%.');
+    $this->assertFalse($this->container->hasParameter('some_config_not_exists'), 'Container parameters do not include %some_config_not_exists%.');
   }
 
   /**
@@ -82,9 +82,9 @@ class ContainerBuilder extends \PHPUnit_Framework_TestCase {
     $service = $this->container->get('service.provider');
 
     $this->assertEquals($other_service, $service->getSomeOtherService(), '@other.service was injected via constructor.');
-    $this->assertEquals($some_parameter, $service->getSomeParameter(), '%some_config was injected via constructor.');
+    $this->assertEquals($some_parameter, $service->getSomeParameter(), '%some_config% was injected via constructor.');
     $this->assertEquals($this->container, $service->getContainer(), 'Container was injected via setter injection.');
-    $this->assertEquals($some_other_parameter, $service->getSomeOtherParameter(), '%some_other_config was injected via setter injection.');
+    $this->assertEquals($some_other_parameter, $service->getSomeOtherParameter(), '%some_other_config% was injected via setter injection.');
   }
 
   /**
@@ -131,10 +131,10 @@ class ContainerBuilder extends \PHPUnit_Framework_TestCase {
     );
     $services['service.provider'] = array(
       'class' => '\Drupal\render_cache\Tests\DependencyInjection\MockService',
-      'arguments' => array('@other.service', '%some_config'),
+      'arguments' => array('@other.service', '%some_config%'),
       'calls' => array(
         array('setContainer', array('@container')),
-        array('setOtherConfigParameter', array('%some_other_config')),
+        array('setOtherConfigParameter', array('%some_other_config%')),
        ),
       'priority' => 0,
     );
@@ -142,7 +142,7 @@ class ContainerBuilder extends \PHPUnit_Framework_TestCase {
       'class' => '\Drupal\render_cache\RenderCache\ControllerInterface',
       'factory_method' => 'getFactoryMethod',
       'factory_service' => 'service.provider',
-      'arguments' => array('%factory_service_class'),
+      'arguments' => array('%factory_service_class%'),
     );
     $services['factory_class'] = array(
       'class' => '\Drupal\render_cache\RenderCache\ControllerInterface',

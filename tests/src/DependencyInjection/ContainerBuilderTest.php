@@ -177,7 +177,7 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     );
     $services['some_service'] = array(
       'class' => '\Drupal\render_cache\Service\SomeService',
-      'arguments' => array('@container', '%some_config'),
+      'arguments' => array('@container', '%some_config%'),
       'calls' => array(
         array('setContainer', array('@container')),
       ),
