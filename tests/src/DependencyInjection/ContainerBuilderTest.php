@@ -83,7 +83,7 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
       ->once();
 
     $definition = $container_builder->getContainerDefinition();
-    $this->assertEquals($this->alteredDefinition, $definition);
+    $this->assertEquals($definition, $this->alteredDefinition, 'Definition of the container matches.');
   }
 
   public function testAlter() {
@@ -101,7 +101,7 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $altered_definition['services']['foo'] = array('class' => 'FooService');
 
     $definition = $container_builder->getContainerDefinition();
-    $this->assertEquals($altered_definition, $definition);
+    $this->assertEquals($definition, $altered_definition, 'Definition of the container when altered matches.');
   }
  
   public function testCompile() {
@@ -122,9 +122,9 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $container = $container_builder->compile();
 
     // Check this returns the right expected class and interfaces.
-    $this->assertEquals($container instanceof ContainerInterface, TRUE);
-    $this->assertEquals($container instanceof MockInterface, TRUE);
-    $this->assertEquals($container instanceof $fake_container_class, TRUE);
+    $this->assertEquals(TRUE, $container instanceof ContainerInterface, 'Container has instanceof ContainerInterface.');
+    $this->assertEquals(TRUE, $container instanceof MockInterface, 'Container has instanceof MockInterface.');
+    $this->assertEquals(TRUE, $container instanceof $fake_container_class, 'Container has instanceof dynamic fake container class.');
   }
 
   protected function getFakeContainerDefinition() {
