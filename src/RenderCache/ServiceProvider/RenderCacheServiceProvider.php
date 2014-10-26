@@ -19,18 +19,56 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
    */
   public function getContainerDefinition() {
     $parameters = array();
-    $parameters['some_config'] = 'foo';
-    $parameters['some_other_config'] = 'kitten';
+    $parameters['cache_contexts'] = array();
 
     $services = array();
-    $services['some_service'] = array(
-      'class' => '\Drupal\render_cache\Service\SomeService',
-      'arguments' => array('@container', '%some_config'),
-      'calls' => array('setContainer', array('@container')),
-      'tags' => array(
-        array('service' => array()),
+    $services['service_container'] = array(
+      'class' => '\Drupal\render_cache\DependencyInjection\Container',
+    );
+    $services['cache_contexts'] = array(
+      'class' => '\Drupal\render_cache\Cache\CacheContexts',
+      'arguments' => array(
+        '@service_container',
+        '%cache_contexts%',
       ),
-      'priority' => 0,
+    );
+    $services['cache_context.url'] = array(
+      'class' => '\Drupal\render_cache\Cache\UrlCacheContext',
+      'tags' => array(
+        array('cache.context'),
+      ),
+    );
+    $services['cache_context.language'] = array(
+      'class' => '\Drupal\render_cache\Cache\LanguageCacheContext',
+      'tags' => array(
+        array('cache.context'),
+      ),
+    );
+    $services['cache_context.theme'] = array(
+      'class' => '\Drupal\render_cache\Cache\ThemeCacheContext',
+      'tags' => array(
+        array('cache.context'),
+      ),
+    );
+    $services['cache_context.theme'] = array(
+      'class' => '\Drupal\render_cache\Cache\TimezoneCacheContext',
+      'tags' => array(
+        array('cache.context'),
+      ),
+    );
+
+    // Services provided normally by user.module.
+    $services['cache_context.user'] = array(
+      'class' => '\Drupal\render_cache\Cache\UserCacheContext',
+      'tags' => array(
+        array('cache.context'),
+      ),
+    );
+    $services['cache_context.user.roles'] = array(
+      'class' => '\Drupal\render_cache\Cache\UserRolesCacheContext',
+      'tags' => array(
+        array('cache.context'),
+      ),
     );
 
     return array(
@@ -43,8 +81,7 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
    * {@inheritdoc}
    */
   public function alterContainerDefinition(&$container_definition) {
-    $container_definition['services']['some_service']['tags'][] = array('bar' => array());
-    $container_definition['services']['some_service']['tags'][] = array('baz' => array());
-    $container_definition['parameters']['some_other_config'] = 'lama';
+    // Register cache contexts parameter in the container.
+    $container_definition['parameters']['cache_contexts'] = array_keys($container_definition['tags']['cache.context']);
   }
 }
