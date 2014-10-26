@@ -38,7 +38,6 @@ class CacheContextsTest extends \PHPUnit_Framework_TestCase {
     // Setup a mock container.
     $container = Mockery::mock('\Drupal\render_cache\DependencyInjection\Container');
     $container->shouldReceive('get')
-      ->once()
       ->with('cache_context.foo')
       ->andReturn($foo_cache_context);
 
