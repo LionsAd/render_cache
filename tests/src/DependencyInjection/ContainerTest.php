@@ -17,7 +17,7 @@ use Mockery\MockInterface;
  * @coversDefaultClass \Drupal\render_cache\DependencyInjection\Container
  * @group dic
  */
-class ContainerBuilder extends \PHPUnit_Framework_TestCase {
+class ContainerTest extends \PHPUnit_Framework_TestCase {
 
   public function setUp() {
     $this->containerDefinition = $this->getMockContainerDefinition();
