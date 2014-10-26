@@ -55,7 +55,7 @@ class RenderCache {
     }
 
     // If we have not yet fully bootstrapped, we can't build the container.
-    if (drupal_bootstrap_full(NULL, FALSE) != DRUPAL_BOOTSTRAP_FULL) {
+    if (drupal_bootstrap(NULL, FALSE) != DRUPAL_BOOTSTRAP_FULL) {
       return FALSE;
     }
 
