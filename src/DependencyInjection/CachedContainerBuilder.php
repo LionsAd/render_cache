@@ -7,7 +7,7 @@
 
 namespace Drupal\render_cache\DependencyInjection;
 
-use Drupal\render_cache\Plugin\PluginManagerInterface;
+use Drupal\Component\Plugin\PluginManagerInterface;
 use DrupalCacheInterface;
 
 /**

@@ -10,7 +10,7 @@ namespace Drupal\render_cache\Tests\DependencyInjection;
 use Drupal\render_cache\DependencyInjection\ContainerBuilder;
 use Drupal\render_cache\DependencyInjection\ContainerInterface;
 use Drupal\render_cache\DependencyInjection\ServiceProviderInterface;
-use Drupal\render_cache\Plugin\PluginManagerInterface;
+use Drupal\Component\Plugin\PluginManagerInterface;
 
 use Mockery;
 use Mockery\MockInterface;
@@ -62,7 +62,7 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     );
 
     // And create a static plugin manager mock.
-    $service_provider_manager = Mockery::mock('\Drupal\render_cache\Plugin\PluginManagerInterface', array(
+    $service_provider_manager = Mockery::mock('\Drupal\Component\Plugin\PluginManagerInterface', array(
       'getDefinitions' => $definitions,
       'getDefinition' => $definitions['fake_provider'],
       'hasDefinition' => TRUE,

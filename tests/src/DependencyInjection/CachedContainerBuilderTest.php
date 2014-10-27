@@ -10,7 +10,7 @@ namespace Drupal\render_cache\Tests\DependencyInjection;
 use Drupal\render_cache\DependencyInjection\ContainerBuilder;
 use Drupal\render_cache\DependencyInjection\ContainerInterface;
 use Drupal\render_cache\DependencyInjection\ServiceProviderInterface;
-use Drupal\render_cache\Plugin\PluginManagerInterface;
+use Drupal\Component\Plugin\PluginManagerInterface;
 
 use Mockery;
 
@@ -26,7 +26,7 @@ class CachedContainerBuilderTest extends \PHPUnit_Framework_TestCase {
   protected $cache;
 
   /**
-   * @var \Drupal\render_cache\Plugin\PluginManagerInterface
+   * @var \Drupal\Component\Plugin\PluginManagerInterface
    */
   protected $serviceProviderManager;
 
@@ -37,7 +37,7 @@ class CachedContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $fake_definition = $this->getFakeContainerDefinition();
 
     // Setup the serviceProviderManager that returns no services.
-    $service_provider_manager = Mockery::mock('\Drupal\render_cache\Plugin\PluginManagerInterface', array(
+    $service_provider_manager = Mockery::mock('\Drupal\Component\Plugin\PluginManagerInterface', array(
       'getDefinitions' => array(),
       'getDefinition' => array(),
       'hasDefinition' => FALSE,
