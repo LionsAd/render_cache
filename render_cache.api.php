@@ -40,3 +40,24 @@ function hook_render_cache_block_cache_info_alter(&$cache_info, $block, $context
 function hook_render_cache_block_default_cache_info_alter(&$cache_info_default, $default_alter_context) {
   // @todo Add example implementation.
 }
+
+/**
+ * Allows to alter the container definition.
+ *
+ * @param array $container_definition
+ *   An associative array with the following keys:
+ *     - parameters: Simple key-value store of container parameters.
+ *     - services: Services like defined in services.yml
+ *     - tags: Associative array keyed by tag names with
+ *             array('service_name' => $tag_args) as values.
+ *
+ * @see ServiceProviderInterface::getContainerDefinition()
+ * @see ServiceProviderInterface::alterContainerDefinition()
+ */
+function hook_render_cache_container_build_alter(&$container_definition) {
+  $tagged_services = array();
+  foreach ($container_definition['tags']['some-tag'] as $service => $tags) {
+    $tagged_services[] = $service;
+  }
+  $container_definition['parameters']['some_service_tagged_services'] = implode(',', $tagged_services);
+}

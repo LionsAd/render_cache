@@ -17,6 +17,34 @@ function render_cache_flush_caches() {
   return array('cache_render');
 }
 
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * Moves our hook_init() implementation to occur first so that we
+ * can initialize the container.
+ *
+ * @param mixed[] $implementations
+ *   Format: $[$module] = string|false
+ * @param string $hook
+ */
+function render_cache_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'init') {
+    $group = $implementations['render_cache'];
+    unset($implementations['render_cache']);
+    $implementations = array('render_cache' => $group) + $implementations;
+  }
+}
+
+/**
+ * Implements hook_init().
+ */
+function render_cache_init() {
+  // Initalize the container, now that Drupal is booted.
+  // Note: If this turns out to be not early enough, move to
+  //       hook_stream_wrappers_alter().
+  RenderCache::init();
+}
+
 // -----------------------------------------------------------------------
 // Contrib Hooks
 
@@ -36,6 +64,11 @@ function render_cache_ctools_plugin_type() {
     'cache' => FALSE,
     'classes' => array('class'),
   );
+  $items['ServiceProvider'] = array(
+    'cache' => FALSE,
+    'classes' => array('class'),
+  );
+
   return $items;
 }
 
@@ -49,7 +82,7 @@ function render_cache_ctools_plugin_type() {
  */
 function render_cache_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'render_cache') {
-    return 'plugins/render_cache/' . $plugin_type;
+    return 'src/RenderCache/' . $plugin_type;
   }
 
   return NULL;
@@ -66,7 +99,7 @@ function render_cache_ctools_plugin_directory($owner, $plugin_type) {
  * @return \Drupal\render_cache\RenderCache\Controller\ControllerInterface
  */
 function render_cache_get_controller($type) {
-  return render_cache_get_plugin_handler('Controller', $type);
+  return RenderCache::getController($type);
 }
 
 /**
@@ -77,7 +110,7 @@ function render_cache_get_controller($type) {
  * @return \Drupal\render_cache\RenderCache\ValidationStrategy\ValidationStrategyInterface
  */
 function render_cache_get_validator($type) {
-  return render_cache_get_plugin_handler('ValidationStrategy', $type);
+  return RenderCache::getValidationStrategy($type);
 }
 
 /**
@@ -90,7 +123,7 @@ function render_cache_get_validator($type) {
  * @return \Drupal\render_cache\RenderCache\RenderStrategy\RenderStrategyInterface
  */
 function render_cache_get_renderer($type) {
-  return render_cache_get_plugin_handler('RenderStrategy', $type);
+  return RenderCache::getRenderStrategy($type);
 }
 
 /**
@@ -123,65 +156,6 @@ function render_cache_call_is_cacheable($allow_caching = NULL, $ignore_request_m
 
 // -----------------------------------------------------------------------
 // Helper functions
-
-/**
- * Fetch the correct plugin for type with the given plugin_type.
- *
- * @param string $type
- * @param string $plugin_type
- * @return array
- *   A CTools plugin array.
- */
-function render_cache_get_plugin($plugin_type, $type) {
-  ctools_include('plugins');
-  return ctools_get_plugins('render_cache', $plugin_type, $type);
-}
-
-/**
- * Fetch all RenderCache plugins of the given plugin type.
- *
- * @param string $plugin_type
- *
- * @return array
- *   An array of RenderCache plugin arrays.
- */
-function render_cache_get_plugins($plugin_type) {
-  ctools_include('plugins');
-  return ctools_get_plugins('render_cache', $plugin_type);
-}
-
-/**
- * Returns a render cache plugin for the given type and plugin_type.
- *
- * If a plugin does not define a class at all, then the default class.
- *
- * @param string $plugin_type
- *   The plugin type to load, 'Controller' or 'Validator' are valid.
- * @param string $type
- *   The type of plugin to load.
- *
- * @return \Drupal\render_cache\Plugin\PluginInterface|FALSE
- *   Either the instantiated handler or FALSE if one could not be had.
- */
-function render_cache_get_plugin_handler($plugin_type, $type) {
-  $full_cache = &drupal_static(__FUNCTION__, array());
-  $full_cache += array(
-    $plugin_type => array(),
-  );
-  $cache = &$full_cache[$plugin_type];
-
-  $plugin = render_cache_get_plugin($plugin_type, $type);
-  if (!$plugin) {
-    return FALSE;
-  }
-
-  // Get the class name from the 'class' property if we have not already
-  // cached a handler.
-  if (empty($cache[$plugin['name']]) && ($class = ctools_plugin_get_class($plugin, 'class'))) {
-    $cache[$plugin['name']] = new $class($plugin);
-  }
-  return !empty($cache[$plugin['name']]) ? $cache[$plugin['name']] : FALSE;
-}
 
 /**
  * Overrides drupal_render().
