@@ -8,6 +8,7 @@
 namespace Drupal\render_cache\RenderCache\ServiceProvider;
 
 use Drupal\render_cache\DependencyInjection\ServiceProviderInterface;
+use Drupal\render_cache\Plugin\Discovery\CToolsPluginDiscovery;
 
 /**
  * Provides render cache service definitions.
