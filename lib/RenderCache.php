@@ -116,7 +116,7 @@ class RenderCache {
    *   The instantiated controller with the given type or NULL.
    */
   public static function getController($type) {
-    return static::$container && static::$container->get('render_cache.controller')->get($type, FALSE);
+    return static::$container && static::$container->get('render_cache.controller')->createInstance($type);
   }
 
   /**
@@ -129,7 +129,7 @@ class RenderCache {
    *   The instantiated render strategy with the given type or NULL.
    */
   public static function getRenderStrategy($type) {
-    return static::$container && static::$container->get('render_cache.render_strategy')->get($type, FALSE);
+    return static::$container && static::$container->get('render_cache.render_strategy')->createInstance($type);
   }
 
   /**
@@ -142,7 +142,7 @@ class RenderCache {
    *   The instantiated validation strategy with the given type or NULL.
    */
   public static function getValidationStrategy($type) {
-    return static::$container && static::$container->get('render_cache.validation_strategy')->get($type, FALSE);
+    return static::$container && static::$container->get('render_cache.validation_strategy')->createInstance($type);
   }
 
   /**
