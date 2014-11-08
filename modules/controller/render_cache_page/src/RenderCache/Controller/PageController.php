@@ -30,7 +30,7 @@ class PageController extends BaseController implements PageControllerInterface {
   public function hook_init() {
     // We need to increase the recursion level before entering here to avoid
     // early rendering of #post_render_cache data.
-    $this->increaseRecursion();
+    $this->renderStack->increaseRecursion();
   }
 
   /**
@@ -39,8 +39,8 @@ class PageController extends BaseController implements PageControllerInterface {
   public function view(array $objects) {
     // We need to decrease recursion again.
     // Because this only adds to the recursion storage, it is safe to call.
-    $this->pageStorage = static::getRecursionStorage();
-    $this->decreaseRecursion();
+    $this->pageStorage = $this->renderStack->getRecursionStorage();
+    $this->renderStack->decreaseRecursion();
 
     return parent::view($objects);
   }
