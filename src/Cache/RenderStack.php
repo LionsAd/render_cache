@@ -224,4 +224,40 @@ class RenderStack extends SplStack implements CacheableInterface {
     return $render;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function convertRenderArrayToD7($render) {
+    if (!empty($render['#cache']['tags'])) {
+      $render['#attached']['render_cache']['#cache']['tags'] = $render['#cache']['tags'];
+      unset($render['#cache']['tags']);
+    }
+    if (!empty($render['#cache']['max-age'])) {
+      $render['#attached']['render_cache']['#cache']['max-age'] = $render['#cache']['max-age'];
+      unset($render['#cache']['max-age']);
+    }
+    // Ensure the cache property is empty.
+    if (empty($render['#cache'])) {
+      unset($render['#cache']);
+    }
+
+    if (!empty($render['#post_render_cache'])) {
+      $render['#attached']['render_cache']['#post_render_cache'] = $render['#post_render_cache'];
+      unset($render['#post_render_cache']);
+    }
+
+    return $render;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function convertRenderArrayFromD7($render) {
+    if (!empty($render['#attached']['render_cache'])) {
+      $render += $render['#attached']['render_cache'];
+      unset($render['#attached']['render_cache']);
+    }
+
+    return $render;
+  }
 }

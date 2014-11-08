@@ -44,4 +44,31 @@ interface RenderStackInterface {
    * @param array $render
    */
   public function addRecursionStorage(array $render);
+
+  // Render Cache specific functions.
+  // --------------------------------
+
+  /**
+   * Converts a render array to be compatible with Drupal 7.
+   *
+   * This moves Drupal 8 properties into ['#attached']['render_cache'].
+   *
+   * @param array $render
+   *   The render array to convert.
+   * @return array
+   *   The converted render array.
+   */
+  public function convertRenderArrayToD7($render);
+
+  /**
+   * Converts a render array back to be compatible with Drupal 8.
+   *
+   * This moves properties from ['#attached']['render_cache'] back to the root.
+   *
+   * @param array $render
+   *   The render array to convert.
+   * @return array
+   *   The converted render array.
+   */
+  public function convertRenderArrayFromD7($render);
 }

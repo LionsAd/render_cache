@@ -31,13 +31,6 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
   }
   
   /**
-   * Tests that RenderStack::theStack() is working properly.
-   */
-  public function test_theStack() {
-    $this->renderStack->push(10);
-  }
-
-  /**
    * Tests that RenderStack::getCacheKeys() is working properly.
    */
   public function test_getCacheKeys() {
@@ -63,5 +56,83 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
    */
   public function test_isCacheable() {
     $this->assertEquals(TRUE, $this->renderStack->isCacheable());
+  }
+
+  /**
+   * Tests that RenderStack::convertRenderArrayToD7() is working properly.
+   */
+  public function test_convertRenderArrayToD7() {
+    $render = array(
+      '#cache' => array(
+        'tags' => array(
+          array('node' => 1),
+        ),
+        'max-age' => 600,
+      ),
+      '#attached' => array(
+        'css' => 'test.css',
+      ),
+      '#post_render_cache' => array(
+        'test_post_render_cache' => array(),
+      ),
+    );
+    $render_result = array(
+      '#attached' => array(
+        'css' => 'test.css',
+      ),
+    );
+    $render_result['#attached']['render_cache'] = array(
+      '#cache' => array(
+        'tags' => array(
+          array('node' => 1),
+        ),
+        'max-age' => 600,
+      ),
+
+      '#post_render_cache' => array(
+        'test_post_render_cache' => array(),
+      ),
+    );
+
+    $this->assertEquals($render_result, $this->renderStack->convertRenderArrayToD7($render));
+  }
+
+  /**
+   * Tests that RenderStack::convertRenderArrayFromD7() is working properly.
+   */
+  public function test_convertRenderArrayFromD7() {
+    $render = array(
+      '#cache' => array(
+        'tags' => array(
+          array('node' => 1),
+        ),
+        'max-age' => 600,
+      ),
+      '#attached' => array(
+        'css' => 'test.css',
+      ),
+      '#post_render_cache' => array(
+        'test_post_render_cache' => array(),
+      ),
+    );
+    $render_result = array(
+      '#attached' => array(
+        'css' => 'test.css',
+      ),
+    );
+    $render_result['#attached']['render_cache'] = array(
+      '#cache' => array(
+        'tags' => array(
+          array('node' => 1),
+        ),
+        'max-age' => 600,
+      ),
+
+      '#post_render_cache' => array(
+        'test_post_render_cache' => array(),
+      ),
+    );
+
+    $this->assertEquals($render, $this->renderStack->convertRenderArrayFromD7($render_result));
   }
 }
