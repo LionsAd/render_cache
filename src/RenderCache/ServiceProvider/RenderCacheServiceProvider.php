@@ -59,6 +59,10 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
         array('cache.context'),
       ),
     );
+    // Render Stack
+    $services['render_stack'] = array(
+      'class' => '\Drupal\render_cache\Cache\RenderStack',
+    );
 
     // Plugin Managers
     $services['render_cache.controller'] = array(
