@@ -155,7 +155,7 @@ class RenderCache {
    * @return string
    */
   public static function drupalRender(&$render) {
-    return BaseController::drupalRender($render);
+    return static::$container->get('render_stack')->drupalRender($render);
   }
 
   /**
@@ -168,6 +168,6 @@ class RenderCache {
    *   TRUE if we are within a recursive context, FALSE otherwise.
    */
   public static function isRecursive() {
-    return BaseController::isRecursive();
+    return static::$container->get('render_stack')->isRecursive();
   }
 }
