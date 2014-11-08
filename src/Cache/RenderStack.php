@@ -7,6 +7,8 @@
 namespace Drupal\render_cache\Cache;
 
 use Drupal\Core\Cache\CacheableInterface;
+use Drupal\render_cache\Cache\Cache;
+
 use SplStack;
 
 /**
@@ -224,27 +226,54 @@ class RenderStack extends SplStack implements CacheableInterface {
     return $render;
   }
 
+  public function mergeAssets($assets1, $assets2) {
+    // @todo next
+  }
+
+  public function collectAndRemoveAssets(&$element) {
+    $assets = $this->collectAndRemoveD8Properties($element);
+    // Get the children of the element, sorted by weight.
+    $children = Element::children($element, TRUE);
+
+    $new_assets = array();
+    foreach ($children as $key) {
+      $new_assets = $this->collectAndRemoveAssets($element[$key]);
+      $assets = $this->mergeAssets($new_assets, $assets);
+    }
+
+    return $assets;
+  }
+
+  public function collectAndRemoveD8Properties(&$element) {
+    $render = array();
+
+    if (!empty($element['#cache']['tags'])) {
+      $render['#cache']['tags'] = $element['#cache']['tags'];
+      unset($element['#cache']['tags']);
+    }
+    if (!empty($element['#cache']['max-age'])) {
+      $render['#cache']['max-age'] = $element['#cache']['max-age'];
+      unset($element['#cache']['max-age']);
+    }
+    // Ensure the cache property is empty.
+    if (empty($element['#cache'])) {
+      unset($element['#cache']);
+    }
+
+    if (!empty($element['#post_render_cache'])) {
+      $render['#post_render_cache'] = $element['#post_render_cache'];
+      unset($element['#post_render_cache']);
+    }
+
+    return $render;
+  }
+
+
   /**
    * {@inheritdoc}
    */
   public function convertRenderArrayToD7($render) {
-    if (!empty($render['#cache']['tags'])) {
-      $render['#attached']['render_cache']['#cache']['tags'] = $render['#cache']['tags'];
-      unset($render['#cache']['tags']);
-    }
-    if (!empty($render['#cache']['max-age'])) {
-      $render['#attached']['render_cache']['#cache']['max-age'] = $render['#cache']['max-age'];
-      unset($render['#cache']['max-age']);
-    }
-    // Ensure the cache property is empty.
-    if (empty($render['#cache'])) {
-      unset($render['#cache']);
-    }
-
-    if (!empty($render['#post_render_cache'])) {
-      $render['#attached']['render_cache']['#post_render_cache'] = $render['#post_render_cache'];
-      unset($render['#post_render_cache']);
-    }
+    $render['#attached']['render_cache'] = $this->collectAndRemoveD8Properties($render);
 
     return $render;
   }
