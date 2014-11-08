@@ -38,42 +38,9 @@ interface ControllerInterface {
   public function viewPlaceholders(array $objects);
 
   /**
-   * @param array $render
-   *
-   * @return mixed
-   */
-  public static function drupalRender(array &$render);
-
-  /**
    * @param array $args
    *
    * @return string
    */
   public static function renderPlaceholders(array $args);
-
-  /**
-   * @return bool
-   */
-  public static function isRecursive();
-
-  /**
-   * @return int
-   */
-  public static function getRecursionLevel();
-
-  /**
-   * @return array
-   *   A Drupal render array.
-   */
-  public static function getRecursionStorage();
-
-  /**
-   * @param array $storage
-   */
-  public static function setRecursionStorage(array $storage);
-
-  /**
-   * @param array $render
-   */
-  public static function addRecursionStorage(array $render);
 }

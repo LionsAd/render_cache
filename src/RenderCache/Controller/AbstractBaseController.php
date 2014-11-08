@@ -133,16 +133,6 @@ abstract class AbstractBaseController extends BasePlugin implements ControllerIn
   abstract protected function getCacheIdInfo($object, array $cache_info = array(), array $context = array());
 
   /**
-   * Increments the recursion level by 1.
-   */
-  abstract protected function increaseRecursion();
-
-  /**
-   * Decrements the recursion level by 1.
-   */
-  abstract protected function decreaseRecursion();
-
-  /**
    * @param string $type
    * @param array $data
    * @param mixed|null $context1
