@@ -63,7 +63,7 @@ class ContainerAwarePluginManagerTest extends \PHPUnit_Framework_TestCase {
   protected function getContainerDefinition() {
     $parameters = array();
 
-    $mock_render_stack = Mockery::mock('\Drupal\render_cache\Cache\RenderStack');
+    $mock_render_stack = Mockery::mock('\Drupal\render_cache\Cache\RenderStackInterface');
     $services = array();
     $services['service_container'] = array(
       'class' => '\Drupal\render_cache\DependencyInjection\Container',
