@@ -141,10 +141,11 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
         $discovery = new CToolsPluginDiscovery($tag['owner'], $tag['type']);
         $definitions = $discovery->getDefinitions();
         foreach ($definitions as $key => $definition) {
-          // If arguments are not set, pass the definition as plugin argument.
-          if (!isset($definition['arguments'])) {
-            $definition['arguments'] = array($definition);
-          }
+          // Always pass the definition as the first argument.
+          $definition += array(
+            'arguments' => array(),
+          );
+          array_unshift($definition['arguments'], $definition);
           $container_definition['services'][$tag['prefix'] . $key] = $definition + array('public' => FALSE);
         }
       }
