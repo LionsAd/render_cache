@@ -27,7 +27,10 @@ class BasePlugin implements PluginInterface {
   protected $type;
 
   /**
-   * {@inheritdoc}
+   * Public constructor.
+   *
+   * @param array $plugin
+   *   The plugin associated with this class.
    */
   public function __construct($plugin) {
     $this->plugin = $plugin;

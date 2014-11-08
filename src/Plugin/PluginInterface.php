@@ -13,14 +13,6 @@ namespace Drupal\render_cache\Plugin;
  */
 interface PluginInterface {
   /**
-   * Public constructor.
-   *
-   * @param array $plugin
-   *   The plugin associated with this class.
-   */
-  public function __construct($plugin);
-
-  /**
    * Returns the plugin associated with this class.
    *
    * @return array
