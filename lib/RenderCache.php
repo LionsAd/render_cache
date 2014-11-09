@@ -22,6 +22,41 @@ use Drupal\render_cache\DependencyInjection\ServiceProviderPluginManager;
 class RenderCache {
 
   /**
+   * Indicates that the item should not be rendered before it is cached.
+   *
+   * This is useful if the unrendered output is changed dynamically, before
+   * it is cached.
+   *
+   * This is also the slowest option and should be regarded as a 'last-resort'
+   * option.
+   */
+  const RENDER_CACHE_STRATEGY_NO_RENDER = 0;
+
+  /**
+   * Indicates that the item should be rendered before it is cached.
+   *
+   * If there is code that needs to change some properties,
+   * the 'render_cache_preserve_properties' can be used.
+   *
+   * This is used for example to preserve page_footer / page_top properties
+   * for #theme => html.
+   */
+  const RENDER_CACHE_STRATEGY_DIRECT_RENDER = 1;
+
+  /**
+   * Indicates that the item should not be rendered and it should be cached via
+   * drupal_render() and drupal_render_cache_set().
+   *
+   * This is useful for e.g display suite when you want to change the markup
+   * after entity_view(), but before calling drupal_render().
+   *
+   * This is most useful in combination with 'render_cache_preserve_properties',
+   * because the entries retrieved from cache will only have #markup
+   * and #attached keys by default.
+   */
+  const RENDER_CACHE_STRATEGY_LATE_RENDER = 2;
+
+  /**
    * The currently active container object.
    *
    * @var \Drupal\RenderCache\DependencyInjection\ContainerInterface
