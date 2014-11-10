@@ -13,7 +13,6 @@
     </blacklist>
     <whitelist>
       <directory>../src</directory>
-      <directory>../modules/</directory>
     </whitelist>
   </filter>
   <listeners>
