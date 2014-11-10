@@ -21,6 +21,9 @@ use Mockery\MockInterface;
  */
 class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     // Setup the base container definition.
     $this->containerDefinition = $this->getFakeContainerDefinition();
@@ -73,7 +76,8 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
-   * Tests that the controller interface has a view method.
+   * @covers ::__construct()
+   * @covers ::getContainerDefinition()
    */
   public function test_getContainerDefinition() {
     // We need to use a partial mock as the alter method calls procedural code.
@@ -86,6 +90,10 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $this->assertEquals($definition, $this->alteredDefinition, 'Definition of the container matches.');
   }
 
+  /**
+   * @covers ::getContainerDefinition()
+   * @covers ::moduleAlter()
+   */
   public function test_alter() {
     $container_builder = Mockery::mock('\Drupal\render_cache\DependencyInjection\ContainerBuilder[moduleAlter]', array($this->serviceProviderManager));
     $container_builder->shouldAllowMockingProtectedMethods();
@@ -104,6 +112,10 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $this->assertEquals($definition, $altered_definition, 'Definition of the container when altered matches.');
   }
  
+  /**
+   * @covers ::getContainerDefinition()
+   * @covers ::moduleAlter()
+   */
   public function test_alterWithTags() {
     $container_builder = Mockery::mock('\Drupal\render_cache\DependencyInjection\ContainerBuilder[moduleAlter]', array($this->serviceProviderManager));
     $container_builder->shouldAllowMockingProtectedMethods();
@@ -134,6 +146,9 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $this->assertEquals($definition, $altered_definition, 'Definition of the container matches altered definition when checking tags.');
   }
 
+  /**
+   * @covers ::compile()
+   */
   public function test_compile() {
     // Create a fake container class implementing the interface.
     $fake_container = Mockery::mock('\Drupal\render_cache\DependencyInjection\ContainerInterface');

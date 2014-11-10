@@ -32,6 +32,7 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
   
   /**
    * Tests that RenderStack::getCacheKeys() is working properly.
+   * @covers ::getCacheKeys()
    */
   public function test_getCacheKeys() {
     $this->assertEquals(array('render_cache', 'foo'), $this->renderStack->getCacheKeys());
@@ -39,6 +40,7 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that RenderStack::getCacheTags() is working properly.
+   * @covers ::getCacheTags()
    */
   public function test_getCacheTags() {
     $this->assertEquals(array(array('node' => 1)), $this->renderStack->getCacheTags());
@@ -46,6 +48,7 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that RenderStack::getCacheMaxAge() is working properly.
+   * @covers ::getCacheMaxAge()
    */
   public function test_getCacheMaxAge() {
     $this->assertEquals(600, $this->renderStack->getCacheMaxAge());
@@ -53,6 +56,7 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
   
   /**
    * Tests that RenderStack::isCacheable() is working properly.
+   * @covers ::isCacheable()
    */
   public function test_isCacheable() {
     $this->assertEquals(TRUE, $this->renderStack->isCacheable());
@@ -60,6 +64,7 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that RenderStack::convertRenderArrayToD7() is working properly.
+   * @covers ::convertRenderArrayToD7()
    */
   public function test_convertRenderArrayToD7() {
     $render = array(
@@ -99,6 +104,7 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that RenderStack::convertRenderArrayFromD7() is working properly.
+   * @covers ::convertRenderArrayFromD7()
    */
   public function test_convertRenderArrayFromD7() {
     $render = array(

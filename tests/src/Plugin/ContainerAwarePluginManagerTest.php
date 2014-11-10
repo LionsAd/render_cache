@@ -29,12 +29,16 @@ class ContainerAwarePluginManagerTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
-   * Tests that CachedContainerBuilder::isCached() works properly.
+   * @covers ::__construct()
+   * @covers ::getDefinition()
    */
   public function test_getDefinition() {
     $this->assertEquals($this->containerDefinition['services']['render_cache.controller.internal.block'], $this->controllerPluginManager->getDefinition('block'), 'render_cache.controller.internal.block definition matches.');
   }
 
+  /**
+   * @covers ::getDefinitions()
+   */
   public function test_getDefinitions() {
     $filtered_definitions = array(
       'render_cache.controller.internal.block' => $this->containerDefinition['services']['render_cache.controller.internal.block'],
@@ -47,6 +51,9 @@ class ContainerAwarePluginManagerTest extends \PHPUnit_Framework_TestCase {
     $this->assertFalse($this->controllerPluginManager->hasDefinition('not_exists'), 'render_cache.controller.internal.not_exists definition exists not.');
   }
 
+  /**
+   * @covers ::createInstance()
+   */
   public function test_createInstance() {
     $block_controller = $this->controllerPluginManager->createInstance('block');
     $this->assertInstanceof('\Drupal\render_cache_block\RenderCache\Controller\BlockController', $block_controller, 'createInstance() returns the right class.');
@@ -54,6 +61,9 @@ class ContainerAwarePluginManagerTest extends \PHPUnit_Framework_TestCase {
     $this->assertNotSame($block_controller, $block_controller2, 'createInstance() returns not the same instance when called twice.');
   }
 
+  /**
+   * @covers ::getInstance()
+   */
   public function test_getInstance() {
     $block_controller = $this->controllerPluginManager->getInstance(array('id' => 'block'));
     $this->assertInstanceof('\Drupal\render_cache_block\RenderCache\Controller\BlockController', $block_controller, 'getInstance() returns the right class.');

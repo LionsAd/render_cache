@@ -12,6 +12,8 @@ use Drupal\render_cache\Plugin\Discovery\CToolsPluginDiscovery;
 
 /**
  * Provides render cache service definitions.
+ *
+ * @codeCoverageIgnore
  */
 class RenderCacheServiceProvider implements ServiceProviderInterface {
 

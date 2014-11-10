@@ -64,6 +64,9 @@ class CachedContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that CachedContainerBuilder::isCached() works properly.
+   * @covers ::__construct()
+   * @covers ::isCached()
+   * @covers ::getCache()
    */
   public function test_isCached() {
     // It is cached.
@@ -78,6 +81,9 @@ class CachedContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that CachedContainerBuilder::getContainerDefinition() works properly.
+   * @covers ::getContainerDefinition()
+   * @covers ::getCache()
+   * @covers ::setCache()
    */
   public function test_getContainerDefinition() {
     $fake_definition = $this->getFakeContainerDefinition();
@@ -91,6 +97,12 @@ class CachedContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $this->assertEquals($fake_definition, $uncached_container_builder->getContainerDefinition(), 'CachedContainerBuilder definition matches when not cached.');
   }
 
+  /**
+   * @covers ::isCached()
+   * @covers ::getContainerDefinition()
+   * @covers ::getCache()
+   * @covers ::setCache()
+   */
   public function test_isCached_getContainerDefinition() {
     $fake_definition = $this->getFakeContainerDefinition();
 
