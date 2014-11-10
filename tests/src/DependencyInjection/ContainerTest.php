@@ -42,6 +42,15 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Tests that Container::getDefinition() works properly.
+   * @expectedException \RuntimeException
+   */
+  public function test_getDefinition_exception() {
+    $this->container->getDefinition('service_not_exist');
+  }
+
+
+  /**
    * Tests that Container::getDefinitions() works properly.
    */
   public function test_getDefinitions() {
@@ -88,6 +97,63 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Tests that Container::get() for circular dependencies works properly.
+   * @expectedException \RuntimeException
+   */
+  public function test_get_circular() {
+    $this->container->get('circular_dependency');
+  }
+
+  /**
+   * Tests that Container::get() for non-existant dependencies works properly.
+   * @expectedException \RuntimeException
+   */
+  public function test_get_exception() {
+    $this->container->get('service_not_exists');
+  }
+
+  /**
+   * Tests that Container::get() for non-existant parameters works properly.
+   */
+  public function test_get_notFound_parameter() {
+    $service = $this->container->get('service_parameter_not_exists', ContainerInterface::NULL_ON_INVALID_REFERENCE);
+    $this->assertFalse($service->getSomeParameter(), 'Some parameter is FALSE.');
+  }
+
+  /**
+   * Tests that Container::get() for non-existant parameters works properly.
+   * @expectedException \RuntimeException
+   */
+  public function test_get_notFound_parameter_exception() {
+    $this->container->get('service_parameter_not_exists');
+  }
+
+  /**
+   * Tests that Container::get() for non-existant dependencies works properly.
+   */
+  public function test_get_notFound_dependency() {
+    $service = $this->container->get('service_dependency_not_exists', ContainerInterface::NULL_ON_INVALID_REFERENCE);
+    $this->assertFalse($service->getSomeOtherService(), 'Some other service is FALSE.');
+  }
+
+  /**
+   * Tests that Container::get() for non-existant dependencies works properly.
+   * @expectedException \RuntimeException
+   */
+  public function test_get_notFound_dependency_exception() {
+    $this->container->get('service_dependency_not_exists');
+  }
+
+
+  /**
+   * Tests that Container::get() for non-existant dependencies works properly.
+   */
+  public function test_get_notFound() {
+    // @todo This should be assertNull, but internally implemented as FALSE for not found.
+    $this->assertFalse($this->container->get('service_not_exists', ContainerInterface::NULL_ON_INVALID_REFERENCE), 'Not found service does not throw exception.');
+  }
+
+  /**
    * Tests that Container::get() for factories via services works properly.
    */
   public function test_get_factoryService() {
@@ -106,6 +172,14 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
     $this->assertInstanceOf(get_class($service), $factory_service);
     $this->assertEquals('bar', $factory_service->getSomeParameter(), 'Correct parameter was passed via the factory class instantiation.');
     $this->assertEquals($this->container, $factory_service->getContainer(), 'Container was injected via setter injection.');
+  }
+
+  /**
+   * Tests that Container::get() for circular dependencies works properly.
+   * @expectedException \RuntimeException
+   */
+  public function test_get_factoryWrong() {
+    $this->container->get('wrong_factory');
   }
 
   /**
@@ -155,6 +229,22 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
       'calls' => array(
         array('setContainer', array('@service_container')),
       ),
+    );
+    $services['wrong_factory'] = array(
+      'class' => '\Drupal\render_cache\RenderCache\ControllerInterface',
+      'factory_method' => 'getFactoryMethod',
+    );
+    $services['circular_dependency'] = array(
+      'class' => '\Drupal\render_cache\Tests\DependencyInjection\MockService',
+      'arguments' => array('@circular_dependency'),
+    );
+    $services['service_parameter_not_exists'] = array(
+      'class' => '\Drupal\render_cache\Tests\DependencyInjection\MockService',
+      'arguments' => array('@service.provider', '%not_exists'),
+    );
+    $services['service_dependency_not_exists'] = array(
+      'class' => '\Drupal\render_cache\Tests\DependencyInjection\MockService',
+      'arguments' => array('@service_not_exists', '%some_config'),
     );
 
     return array(
