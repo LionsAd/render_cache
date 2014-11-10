@@ -164,10 +164,13 @@ class Cache {
    * @return string
    *   A hash of the query arguments.
    */
+/*
+// Commented out due to SelectInterface not available in D7.
   public static function keyFromQuery(SelectInterface $query) {
     $query->preExecute();
     $keys = array((string) $query, $query->getArguments());
     return hash('sha256', serialize($keys));
   }
+*/
 
 }
