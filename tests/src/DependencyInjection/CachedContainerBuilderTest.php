@@ -48,7 +48,7 @@ class CachedContainerBuilderTest extends \PHPUnit_Framework_TestCase {
     $this->serviceProviderManager = $service_provider_manager;
 
     // Setup the 'cache' bin.
-    $cache = Mockery::mock('alias:DrupalCacheInterface');
+    $cache = Mockery::mock('\DrupalCacheInterface');
     $cache->shouldReceive('get')
       ->with('render_cache:container_definition')
       ->once()
