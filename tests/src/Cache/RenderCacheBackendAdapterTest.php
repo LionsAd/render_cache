@@ -33,39 +33,68 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
    * {@inheritdoc}
    */
   public function setUp() {
-    $this->cacheHitData = (object)array(
-      'data' => array(
-        'foo' => array(
-          '#markup' => 'foo',
-          '#cache' => array(
-            'tags' => array('foo:1')
-           ),
-        ),
-        'bar' => array(
-          '#markup' => 'bar',
-        ),
-        '#cache' => array(
-          'tags' => array('bar:1')
-        ),
-        'baz' => array(
-          'lama' => array(
-             '#cache' => array(
-               'tags' => array('lama:1')
-             ),
-             '#markup' => 'baz',
-           ),
-        ),
+    $data_raw = array(
+      'foo' => array(
+        '#markup' => 'foo',
+      ),
+      'bar' => array(
+        '#markup' => 'bar',
+      ),
+      'baz' => array(
+        'lama' => array(
+           '#markup' => 'baz',
+         ),
       ),
     );
-    $this->cacheHitRendered = 'foobarbaz';
+    $data = $data_raw;
+    $data['#cache'] = array(
+      'tags' => array('bar:1')
+    );
+    $data['foo']['#cache'] = array(
+      'tags' => array('foo:1')
+    );
+    $data['baz']['lama']['#cache'] = array(
+      'tags' => array('lama:1')
+    );
 
+    $this->cacheHitData = (object) array(
+      'data' => $data,
+    );
+
+    $properties = array(
+      '#cache' => array(
+        'tags' => array(
+          'bar:1',
+          'foo:1',
+          'lama:1',
+        ),
+      )
+    );
+    $preserved = array( 'baz' => $data['baz'] );
+
+    $this->cacheHitRendered = 'foobarbaz';
+    $this->cacheHitNoRender = $data_raw + $properties;
+
+    $this->cacheHitLateRender = $data_raw + $properties + array(
+     '#attached' => array(
+       'render_cache' => $properties + $preserved,
+     ),
+   );
+    $this->cacheHitLateRender['#cache']['cid'] = 'render:foo:late';
+
+    $this->cacheHitRenderDirect = array(
+      '#markup' => $this->cacheHitRendered,
+      '#attached' => array(),
+    ) + $properties + $preserved;
+
+    // @todo This should use more mocked methods.
     $stack = Mockery::mock('\Drupal\render_cache\Cache\RenderStack[render]');
 
     // @todo Still need to implement those.
     $stack->shouldReceive('render')
       ->andReturn($this->cacheHitRendered);
     $stack->shouldReceive('collectAttached')
-      ->andReturn(array());
+      ->andReturn($this->cacheHitLateRender['#attached']);
 
     $cache_bin = Mockery::mock('\DrupalCacheInterface');
     // Cache hit
@@ -142,8 +171,9 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
     $cache_info = $this->getCacheInfo('render:foo:bar', RenderCache::RENDER_CACHE_STRATEGY_NO_RENDER);
     // Also test that there are no properties to preserve.
     $cache_info['render_cache_preserve_properties'] = array();
-    $render = array();
+    $render = $this->cacheHitData->data;
     $this->cache->set($render, $cache_info);
+    $this->assertEquals($this->cacheHitNoRender, $render, 'Data is the same for no render strategy');
   }
 
   /**
@@ -186,6 +216,8 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
       $build[$id] = $this->cacheHitData->data;
     }
     $this->cache->setMultiple($build, $cache_info_map);
+    $this->assertEquals($this->cacheHitNoRender, $build['no'], 'Data is the same for no render strategy');
+    $this->assertEquals($this->cacheHitLateRender, $build['late'], 'Data is the same for late render strategy');
   }
 
   /**
@@ -203,6 +235,8 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
       $build[$id] = $this->cacheHitData->data;
     }
     $this->cache->setMultiple($build, $cache_info_map);
+    $this->assertEquals($this->cacheHitRenderDirect, $build['direct'], 'Data is the same for direct render strategy');
+    $this->assertEquals($this->cacheHitLateRender, $build['late'], 'Data is the same for late render strategy');
   }
 
   protected function getCacheInfo($cid, $strategy) {
