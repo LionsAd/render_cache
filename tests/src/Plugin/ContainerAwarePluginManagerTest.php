@@ -64,12 +64,17 @@ class ContainerAwarePluginManagerTest extends \PHPUnit_Framework_TestCase {
     $parameters = array();
 
     $mock_render_stack = Mockery::mock('\Drupal\render_cache\Cache\RenderStackInterface');
+    $mock_cache_adapter = Mockery::mock('\Drupal\render_cache\Cache\RenderCacheBackendAdapterInterface');
     $services = array();
     $services['service_container'] = array(
       'class' => '\Drupal\render_cache\DependencyInjection\Container',
     );
     $services['render_stack'] = array(
       'class' => get_class($mock_render_stack),
+    );
+    $services['render_cache.cache'] = array(
+      'class' => get_class($mock_cache_adapter),
+      'arguments' => array('@render_stack'),
     );
     $services['render_cache.controller'] = array(
       'class' => '\Drupal\render_cache\Plugin\ContainerAwarePluginManager',
@@ -92,9 +97,10 @@ class ContainerAwarePluginManagerTest extends \PHPUnit_Framework_TestCase {
          array(
           'class' => '\Drupal\render_cache_block\RenderCache\Controller\BlockController',
           'name' => 'Block',
-          'arguments' => array('@render_stack'),
+          'arguments' => array('@render_stack', '@render_cache.cache'),
         ),
         '@render_stack',
+        '@render_cache.cache',
       ),
       'public' => FALSE,
     );
