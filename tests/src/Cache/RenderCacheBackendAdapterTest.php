@@ -152,12 +152,19 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
   
   /**
    * Tests that RenderCacheBackendAdapter::get() is working properly.
+   * @covers ::__construct()
+   * @covers ::get()
+   * @covers ::getCacheId()
    */
   public function test_get_hit() {
     $cache_info = $this->getCacheInfo('render:foo:exists', RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER);
     $this->assertEquals($this->cacheHitData->data, $this->cache->get($cache_info), 'Cache Hit Data matches for ::get()');
   }
 
+  /**
+   * @covers ::get()
+   * @covers ::getMultiple()
+   */
   public function test_get_miss() {
     $cache_info = $this->getCacheInfo('render:foo:not_exists', RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER);
     $this->assertEquals(array(), $this->cache->get($cache_info), 'Cache Miss data matches for ::get()');
@@ -166,6 +173,8 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that RenderCacheBackendAdapter::set() is working properly.
+   * @covers ::set()
+   * @covers ::preserveProperties()
    */
   public function test_set() {
     $cache_info = $this->getCacheInfo('render:foo:bar', RenderCache::RENDER_CACHE_STRATEGY_NO_RENDER);
@@ -179,6 +188,7 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
   /**
    * Tests that RenderCacheBackendAdapter::set() throwing an exception.
    * @expectedException \RunTimeException
+   * @covers ::set()
    */
   public function test_set_exception() {
     $cache_info = $this->getCacheInfo('render:foo:bar', -1);
@@ -192,6 +202,7 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that RenderCacheBackendAdapter::getMultiple() is working properly.
+   * @covers ::getMultiple()
    */
   public function test_getMultiple() {
     $cache_info_map = array(
@@ -203,6 +214,8 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
   
   /**
    * Tests that RenderCacheBackendAdapter::setMultiple() is working properly.
+   * @covers ::setMultiple()
+   * @covers ::set()
    */
   public function test_setMultiple() {
     // @todo consider using a data provider instead.
@@ -222,6 +235,9 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that RenderCacheBackendAdapter::setMultiple() for direct strategy.
+   * @covers ::setMultiple()
+   * @covers ::set()
+   * @covers ::preserveProperties()
    */
   public function test_setMultiple_direct() {
     // @todo consider using a data provider instead.
