@@ -13,37 +13,60 @@ namespace Drupal\render_cache\Cache;
  */
 interface RenderStackInterface {
   /**
-   * @param array $render
+   * Renders the given render array, but preserves properties
+   * in the stack.
    *
-   * @return mixed
+   * @param array $render
+   *   The render array to render.
+   *
+   * @return string
+   *   The rendered render array.
    */
   public function drupalRender(array &$render);
 
   /**
+   * Whether we are in a recursive context.
+   *
+   * This is useful to determine e.g. if its safe to output a placeholder.
+   *
    * @return bool
+   *   TRUE if its recursive, FALSE otherwise.
    */
   public function isRecursive();
 
   /**
+   * Returns the current recursion level.
+   *
    * @return int
+   *   The current recursion level.
    */
   public function getRecursionLevel();
 
   /**
+   * Returns the current recursion storage.
+   *
    * @return array
-   *   A Drupal render array.
+   *   The stored assets.
    */
   public function getRecursionStorage();
 
   /**
+   * Sets the current recursion storage, overwriting everything that is
+   * already stored in the current stack frame.
+   *
    * @param array $storage
+   *   The assets to store in the current stack frame.
    */
   public function setRecursionStorage(array $storage);
 
   /**
+   * Adds assets to the current stack frame and removes them from the
+   * render array.
+   *
    * @param array $render
+   *   The render array to retrieve and remove the assets from.
    */
-  public function addRecursionStorage(array $render);
+  public function addRecursionStorage(array &$render);
 
   // Render Cache specific functions.
   // --------------------------------
