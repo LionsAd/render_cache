@@ -37,6 +37,7 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
     $this->renderStack = $render_stack;
   }
 
+  // @codeCoverageIgnoreStart
   /**
    * {@inheritdoc}
    */
@@ -44,6 +45,7 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
     // This is an internal API, but we need the cache object.
     return _cache_get_object($bin);
   }
+  // @codeCoverageIgnoreEnd
 
   /**
    * {@inheritdoc}
@@ -84,6 +86,7 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
           }
           $id = $cid_map[$cid];
           $render = $this->renderStack->convertRenderArrayFromD7($cache->data);
+          // @codeCoverageIgnoreStart
           if (!$this->validate($render)) {
             $cache_strategy = $cache_info_map[$id]['render_cache_cache_strategy'];
 
@@ -95,6 +98,7 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
             }
             continue;
           }
+          // @codeCoverageIgnoreEnd
           $build[$id] = $render;
         }
       }
@@ -114,7 +118,7 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
     $cache_strategy = $cache_info['render_cache_cache_strategy'];
 
     // Preserve some properties.
-    $properties = $this->preserveProperties($cache_info, $render);
+    $properties = $this->preserveProperties($render, $cache_info);
 
     // Need to first render to markup, else we would need to collect and remove
     // assets twice. This saves a lot performance.
@@ -142,7 +146,7 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
       $data['#attached'] = $attached;
       $this->cache($bin)->set($cid, $data, $expire);
 
-      $render = $this->convertRenderArrayFromD7($data);
+      $render = $this->renderStack->convertRenderArrayFromD7($data);
     }
     elseif ($cache_strategy == RenderCache::RENDER_CACHE_STRATEGY_LATE_RENDER) {
       // This cache id was invalidated via cache clear if it was not valid
@@ -152,7 +156,10 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
       $render['#attached']['render_cache'] = $data['#attached']['render_cache'];
     }
     else {
+      // This is actually covered, but not seen by xdebug.
+      // @codeCoverageIgnoreStart
       throw new \RunTimeException('Unknown caching strategy passed.');
+      // @codeCoverageIgnoreEnd
     }
   }
 
@@ -178,6 +185,7 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
     return $cache_info['cid'];
   }
 
+  // @codeCoverageIgnoreStart
   /**
    * Checks that a cache entry is still valid.
    *
@@ -191,6 +199,7 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
     // @todo implement.
     return TRUE;
   }
+  // @codeCoverageIgnoreEnd
 
   /**
    * Preserves some properties based on the cache info struct.
