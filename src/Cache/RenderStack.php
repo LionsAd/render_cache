@@ -173,9 +173,9 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
 
     foreach ($children as $key) {
       $new_assets = $this->collectAndRemoveAssets($element[$key], TRUE);
-      $assets['#cache']['tags'] = Cache::mergeTags($new_assets['#cache']['tags'], $assets['#cache']['tags']);
-      $assets['#cache']['max-age'] = NestedArray::mergeDeep($new_assets['#cache']['max-age'], $assets['#cache']['max-age']);
-      $assets['#post_render_cache'] = NestedArray::mergeDeep($new_assets['#post_render_cache'], $assets['#post_render_cache']);
+      $assets['#cache']['tags'] = Cache::mergeTags($assets['#cache']['tags'], $new_assets['#cache']['tags']);
+      $assets['#cache']['max-age'] = NestedArray::mergeDeep($assets['#cache']['max-age'], $new_assets['#cache']['max-age']);
+      $assets['#post_render_cache'] = NestedArray::mergeDeep($assets['#post_render_cache'], $new_assets['#post_render_cache']);
     }
 
     if (!$recursive) {
