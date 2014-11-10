@@ -104,13 +104,9 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
     $storage = $this->recursionStorage[$this->recursionLevel];
     $render = array();
 
-    // pseudo-collect the new storage.
+    // Collect the new storage.
     if (!empty($storage)) {
-      $render['#cache']['tags'] = drupal_render_collect_cache_tags($storage);
-      ksort($render['#cache']['tags']);
-
-      $post_render_cache = drupal_render_collect_post_render_cache($storage);
-      $render['#post_render_cache'] = $post_render_cache;
+      $render = $this->collectAndRemoveAssets($storage);
       $render['#attached'] = drupal_render_collect_attached($storage, TRUE);
     }
 
@@ -144,6 +140,25 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
     $this->addRecursionStorage($render);
 
     return drupal_render($render);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function collectAttached(array $render) {
+    return drupal_render_collect_attached($render, TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function render(array &$render) {
+    $this->increaseRecursion();
+    $markup = drupal_render($render);
+    $storage = $this->decreaseRecursion();
+    $render['x_render_cache_render_storage'][] = $storage;
+
+    return $markup;
   }
 
   public function collectAndRemoveAssets(&$element, $recursive = FALSE) {
@@ -229,7 +244,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
     return $render;
   }
 
-  public function processPostRenderCache($render, $cache_info) {
+  public function processPostRenderCache(&$render, $cache_info) {
     $strategy = $cache_info['render_cache_cache_strategy'];
 
     // Only when we have #markup we can post process.
