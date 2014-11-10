@@ -40,7 +40,7 @@ class Cache {
    */
   public static function mergeTags() {
     $cache_tag_arrays = func_get_args();
-    $cache_tags = [];
+    $cache_tags = array();
     foreach ($cache_tag_arrays as $tags) {
       static::validateTags($tags);
       $cache_tags = array_merge($cache_tags, $tags);
@@ -86,7 +86,7 @@ class Cache {
    *   An array of cache tags.
    */
   public static function buildTags($prefix, array $suffixes) {
-    $tags = [];
+    $tags = array();
     foreach ($suffixes as $suffix) {
       $tags[] = $prefix . ':' . $suffix;
     }
