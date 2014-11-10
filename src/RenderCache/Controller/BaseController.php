@@ -6,11 +6,12 @@
 
 namespace Drupal\render_cache\RenderCache\Controller;
 
+use Drupal\render_cache\Cache\RenderCacheBackendAdapterInterface;
 use Drupal\render_cache\Cache\RenderCachePlaceholder;
+use Drupal\render_cache\Cache\RenderStack;
+use Drupal\render_cache\Cache\RenderStackInterface;
 
-define('RENDER_CACHE_STRATEGY_NO_RENDER', 0);
-define('RENDER_CACHE_STRATEGY_DIRECT_RENDER', 1);
-define('RENDER_CACHE_STRATEGY_LATE_RENDER', 2);
+use RenderCache;
 
 /**
  * Base class for Controller plugin objects.
@@ -34,16 +35,26 @@ abstract class BaseController extends AbstractBaseController {
   protected $renderStack;
 
   /**
+   * The injected cache backend adapter.
+   *
+   * @var \Drupal\render_cache\Cache\RenderCacheBackendAdapter
+   */
+  protected $cache;
+
+  /**
    * Constructs a controller plugin object.
    *
    * @param array $plugin
    *   The plugin definition.
-   * @param \Drupal\render_cache\Cache\RenderStackInterface $render_stack
+   * @param \Drupal\render_cache\Cache\RenderStack $render_stack
    *   The render stack.
+   * @param \Drupal\render_cache\Cache\RenderCacheBackendAdapter $cache
+   *   The cache backend adapter.
    */
-  public function __construct($plugin, $render_stack) {
+  public function __construct(array $plugin, RenderStackInterface $render_stack, RenderCacheBackendAdapterInterface $cache) {
     parent::__construct($plugin);
     $this->renderStack = $render_stack;
+    $this->cache = $cache;
   }
 
   /**
@@ -72,11 +83,12 @@ abstract class BaseController extends AbstractBaseController {
 
     return $object_build;
   }
-
   /**
    * {@inheritdoc}
    */
   public function view(array $objects) {
+    $object_order = array_keys($objects);
+
     // Retrieve controller context.
     $context = $this->getContext();
 
@@ -84,134 +96,48 @@ abstract class BaseController extends AbstractBaseController {
     $default_cache_info = $this->getDefaultCacheInfo($context);
     $this->alter('default_cache_info', $default_cache_info, $context);
 
-    $cid_map = array();
-    $cache_info_map = array();
-    $placeholders = array();
-    $object_order = array_keys($objects);
+    // Calculate cache info map.
+    $cache_info_map = $this->getCacheInfoMap($objects, $context, $default_cache_info);
+    $build = $this->cache->getMultiple($cache_info_map);
+    $build += $this->getPlaceholders($objects, $cache_info_map, $context);
 
-    // Determine if this is cacheable.
-    $is_cacheable = $this->isCacheable($default_cache_info, $context);
-
-    // Retrieve a list of cache_info structures.
-    foreach ($objects as $id => $object) {
-      $object_context = $context;
-      $object_context['id'] = $id;
-      $cache_info_map[$id] = $this->getCacheIdInfo($object, $default_cache_info, $object_context);
-
-      // If it is not cacheable, set the 'cid' to NULL.
-      if (!$is_cacheable) {
-        $cache_info_map[$id]['cid'] = NULL;
-      }
-      // If this should be rendered as a placeholder,
-      // remove the CID as well.
-      if (!empty($cache_info_map[$id]['placeholder_id'])) {
-        $placeholders[$id] = $id;
-        $cache_info_map[$id]['cid'] = NULL;
-      }
-      $cid_map[$id] = $cache_info_map[$id]['cid'];
-    }
-
-    // Retrieve data from the cache.
-    $cids = array_filter(array_values($cid_map));
-
-    if (!empty($cids)) {
-      $cached_build = $this->getCache($cids, $default_cache_info);
-
-      // Calculate remaining entities
-      foreach ($object_order as $id) {
-        $cid = $cid_map[$id];
-        if ($cid && isset($cached_build[$cid])) {
-          unset($objects[$id]);
-        }
-      }
-    }
-
-    // Render placeholders.
-    // @todo Helper function.
-    $placeholder_build = array();
-    foreach ($placeholders as $id) {
-      // @todo Serialize the object.
-      $ph_object = array(
-        'id' => $id,
-        'type' => $this->getType(),
-        'context' => $context,
-        'object' => $objects[$id],
-        'cache_info' => $cache_info_map[$id],
-        // Put this for easy access here.
-        'render_strategy' => $cache_info_map[$id]['render_strategy'],
-      );
-      unset($objects[$id]);
-      $placeholder_build[$id] = RenderCachePlaceholder::getPlaceholder(get_class($this) . '::renderPlaceholders', $ph_object, TRUE);
-    }
+    $remaining = array_diff_key($objects, $build);
 
     // Render non-cached entities.
-    if (!empty($objects)) {
-      $object_build = $this->renderRecursive($objects);
+    if (!empty($remaining)) {
+      $object_build = $this->renderRecursive($remaining);
+
+      // @todo It is possible for modules to set the request to not cacheable, so
+      // check this again.
+      // @todo This conflicts with memcache stampede protection, will need to
+      //       set empty cache entries instead.
+      //if ($this->isCacheable($default_cache_info, $context)) {
+      $this->cache->setMultiple($object_build, $cache_info_map);
+      //}
+      $build += $object_build;
     }
 
-    $build = array();
+    $return = array();
     foreach ($object_order as $id) {
-      $cid = $cid_map[$id];
-      $cache_info = $cache_info_map[$id];
-      $strategy = $this->determineCachingStrategy($cache_info);
-
-      if (isset($cached_build[$cid])) {
-        // This has been already processed by the processCacheEntry() function.
-        $render = $cached_build[$cid];
-      } elseif (isset($placeholder_build[$id])) {
-        $render = $placeholder_build[$id];
-      } else {
-        // If the object is not set, there is nothing we can do here.
-        if (!isset($object_build[$id])) {
-          continue;
-        }
-        $render = $object_build[$id];
-        $render = $this->renderStack->cacheRenderArray($render, $cache_info);
-
-        // If this should not be cached, unset the cache info properties.
-        if (!$cid) {
-          unset($render['#cache']['cid']);
-          unset($render['#cache']['keys']);
-        }
-
-        $this->setCache($render, $cache_info, $strategy);
+      // This can happen when a block, e.g. is empty.
+      if (!isset($build[$id])) {
+        continue;
       }
-
-      // Store recursive storage.
-      $this->renderStack->addRecursionStorage($render);
+      $render = $build[$id];
 
       // Unset any remaining weight properties.
       unset($render['#weight']);
 
-      $post_render_cache = array();
+      // Store recursive storage and remove from render array.
+      $storage = $this->renderStack->addRecursionStorage($render);
 
-      if ($strategy == RENDER_CACHE_STRATEGY_DIRECT_RENDER) {
-        unset($render['#attached']);
-        unset($render['#cache']);
-        if (!empty($render['#post_render_cache'])) {
-          $post_render_cache = $render['#post_render_cache'];
-        }
-        unset($render['#post_render_cache']);
+      $cache_info = $cache_info_map[$id];
+      if (!$this->renderStack->isRecursive()) {
+        $render += $storage;
+        $this->renderStack->processPostRenderCache($render, $cache_info);
       }
 
-      // Only when we have #markup we can post process.
-      if ($strategy == RENDER_CACHE_STRATEGY_DIRECT_RENDER
-         && !empty($post_render_cache)
-         && !$this->renderStack->isRecursive()) {
-
-        $render['#post_render_cache'] = $post_render_cache;
-
-        // @todo add back recursive post render cache.
-        $this->renderStack->increaseRecursion();
-        _drupal_render_process_post_render_cache($render);
-        $storage = $this->renderStack->decreaseRecursion();
-        $this->renderStack->addRecursionStorage($storage);
-
-        unset($render['#attached']);
-        unset($render['#cache']);
-        unset($render['#post_render_cache']);
-      }
-
+      // @todo Use a #post_render function.
       if (isset($render['#markup'])
          && (variable_get('render_cache_debug_output', FALSE)
            || variable_get('render_cache_debug_output_' . $this->getType(), FALSE)
@@ -229,7 +155,7 @@ abstract class BaseController extends AbstractBaseController {
         $render['#markup'] = "\n$prefix\n" . $render['#markup'] . "\n$suffix\n";
       }
 
-      $build[$id] = $render;
+      $return[$id] = $render;
     }
 
     // If this is the main entry point.
@@ -244,7 +170,7 @@ abstract class BaseController extends AbstractBaseController {
       }
     }
 
-    return $build;
+    return $return;
   }
 
   // -----------------------------------------------------------------------
@@ -316,6 +242,7 @@ abstract class BaseController extends AbstractBaseController {
    */
   protected function getDefaultCacheInfo($context) {
     return array(
+      // @todo indentation.
        // Drupal 7 properties.
        'bin' => 'cache_render',
        'expire' => CACHE_PERMANENT,
@@ -336,7 +263,11 @@ abstract class BaseController extends AbstractBaseController {
        // Special keys that are only related to our implementation.
        // @todo Remove and replace with something else.
        'render_cache_render_to_markup' => FALSE,
+
+       // New internal properties.
        'render_cache_ignore_request_method_check' => FALSE,
+       'render_cache_cache_strategy' => NULL,
+       'render_cache_preserve_properties' => array(),
     );
   }
 
@@ -428,139 +359,83 @@ abstract class BaseController extends AbstractBaseController {
 
     $cache_info['cid'] = implode(':', $cid_parts);
 
-    // Save the placeholder ID.
+    // Save the placeholder ID and remove cache id.
     if (!empty($cache_info['render_strategy'])) {
       $cache_info['placeholder_id'] = $cache_info['cid'];
+      $cache_info['cid'] = NULL;
     }
 
-    // If the caller caches this customly still, unset cid.
+    // If the caller caches this customly, unset cid.
     if ($cache_info['granularity'] == DRUPAL_CACHE_CUSTOM) {
       $cache_info['cid'] = NULL;
     }
+
+    // Convert to the new format. (BC layer)
+    if (empty($cache_info['render_cache_cache_strategy'])) {
+      $strategy = $this->determineCachingStrategy($cache_info);
+      $cache_info['render_cache_cache_strategy'] = $strategy;
+    }
+    if (!empty($cache_info['render_cache_render_to_markup']['preserve properties'])) {
+      $cache_info['render_cache_preserve_properties'] = $cache_info['render_cache_render_to_markup']['preserve properties'];
+    }
+    unset($cache_info['render_cache_render_to_markup']);
 
     return $cache_info;
   }
 
   /**
-   * Retrieves results from the cache.
+   * Returns the cache information map for the given objects.
    *
-   * @param string[] $cids
+   * @param array $objects
+   *   The objects keyed by ID to get cache information for.
+   * @param array $context
+   *   The context given to the controller.
    * @param array $default_cache_info
-   *
-   * @return
-   */
-  protected function getCache(&$cids, $default_cache_info) {
-    $objects = cache_get_multiple($cids, $default_cache_info['bin']);
-    foreach ($objects as $cid => $cache) {
-      $build = $this->processCacheEntry($cache->data, $default_cache_info);
-      if (!$this->validateCacheEntry($build, $default_cache_info)) {
-        unset($objects[$cid]);
-        $cids[] = $cid;
-        continue;
-      }
-      $objects[$cid] = $build;
-    }
-    return $objects;
-  }
-
-  /**
-   * @param array $build
-   * @param array $default_cache_info
+   *   The default cache info structure.
    *
    * @return array
+   *   Array keyed by ID with the cache info structures as values.
    */
-  protected function processCacheEntry(array $build, array $default_cache_info) {
-    // Merge back previously saved properties.
-    if (!empty($build['#attached']['render_cache'])) {
-      $build += $build['#attached']['render_cache'];
-      unset($build['#attached']['render_cache']);
+  protected function getCacheInfoMap(array $objects, array $context, array $default_cache_info) {
+    $cache_info_map = array();
+
+    // Determine if this is cacheable.
+    $is_cacheable = $this->isCacheable($default_cache_info, $context);
+
+    // Retrieve a list of cache_info structures.
+    foreach ($objects as $id => $object) {
+      $object_context = $context;
+      $object_context['id'] = $id;
+      $cache_info_map[$id] = $this->getCacheIdInfo($object, $default_cache_info, $object_context);
+
+      // If it is not cacheable, set the 'cid' to NULL.
+      if (!$is_cacheable) {
+        $cache_info_map[$id]['cid'] = NULL;
+      }
     }
 
-    return $build;
+    return $cache_info_map;
   }
 
   /**
-   * @param array $build
-   * @param array $default_cache_info
+   * Determines the caching strategy for a given cache info structure.
    *
-   * @return bool
-   */
-  protected function validateCacheEntry(array $build, array $default_cache_info) {
-    // @ todo revalidate objects here.
-    return TRUE;
-  }
-
-  /**
    * @param array $cache_info
+   *   The cache information structure.
    *
    * @return int
-   *   One of the RENDER_CACHE_STRATEGY_* constants.
+   *   One of the RenderCache::RENDER_CACHE_STRATEGY_* constants.
    */
   protected function determineCachingStrategy($cache_info) {
     if (empty($cache_info['render_cache_render_to_markup'])) {
-      return RENDER_CACHE_STRATEGY_NO_RENDER;
+      return RenderCache::RENDER_CACHE_STRATEGY_NO_RENDER;
     }
 
     if (!empty($cache_info['render_cache_render_to_markup']['cache late'])) {
-      return RENDER_CACHE_STRATEGY_LATE_RENDER;
+      return RenderCache::RENDER_CACHE_STRATEGY_LATE_RENDER;
     }
 
-    return RENDER_CACHE_STRATEGY_DIRECT_RENDER;
-  }
-
-  /**
-   * @param array $render
-   * @param array $cache_info
-   * @param int $strategy
-   *   One of the RENDER_CACHE_STRATEGY_* constants.
-   */
-  protected function setCache(&$render, $cache_info, $strategy) {
-    switch ($strategy) {
-
-      case RENDER_CACHE_STRATEGY_NO_RENDER:
-        if (!empty($render['#cache']['cid'])) {
-          // Prevent further caching.
-          unset($render['#cache']['cid']);
-          unset($render['#cache']['keys']);
-
-          cache_set($cache_info['cid'], $render, $cache_info['bin'], $cache_info['expire']);
-        }
-        break;
-
-      case RENDER_CACHE_STRATEGY_DIRECT_RENDER:
-        $storage = $this->renderStack->getCleanStorage($render, FALSE);
-
-        // Do not have drupal_render() render this, as we need recursion
-        // support.
-        unset($render['#cache']['cid']);
-        unset($render['#cache']['keys']);
-
-        // This will catch resources added during preprocess phases.
-        $this->renderStack->increaseRecursion();
-        $render = array(
-          '#markup' => drupal_render($render),
-        );
-        $render_storage = $this->renderStack->decreaseRecursion();
-
-        if (!empty($render_storage)) {
-          // Add to storage.
-          $storage['x_render_cache_drupal_render_recursion_storage'] = $render_storage;
-          $storage = $this->renderStack->cacheRenderArray($storage);
-          $storage = $this->renderStack->getCleanStorage($storage, FALSE);
-        }
-
-        $render['#attached'] = $storage['#attached'];
-
-        cache_set($cache_info['cid'], $render, $cache_info['bin'], $cache_info['expire']);
-
-        $render += $storage;
-        $render = $this->processCacheEntry($render, $cache_info);
-        break;
-
-      case RENDER_CACHE_STRATEGY_LATE_RENDER:
-        // Nothing to be done here.
-        break;
-    }
+    return RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER;
   }
 
   /**
@@ -614,6 +489,42 @@ abstract class BaseController extends AbstractBaseController {
       }
     }
     return implode(' ', $flat_tags);
+  }
+
+  /**
+   * Get the placeholders from the cache information map.
+   *
+   * @param array $objects
+   *   The objects keyed by ID to get cache information for.
+   * @param array $cache_info_map
+   *   The cache information map.
+   * @param array $context
+   *   The context given to the controller.
+   *
+   * @return array
+   *   The render array keyed by id with placeholders as values.
+   */
+  protected function getPlaceholders(array $objects, array $cache_info_map, $context) {
+    $build = array();
+    foreach ($cache_info_map as $id => $cache_info) {
+      if (empty($cache_info['placeholder_id'])) {
+        continue;
+      }
+
+      // @todo Serialize the object.
+      $ph_object = array(
+        'id' => $id,
+        'type' => $this->getType(),
+        'context' => $context,
+        'object' => $objects[$id],
+        'cache_info' => $cache_info,
+        // Put this for easy access here.
+        'render_strategy' => $cache_info['render_strategy'],
+      );
+      $build[$id] = RenderCachePlaceholder::getPlaceholder(get_class($this) . '::renderPlaceholders', $ph_object, TRUE);
+    }
+
+    return $build;
   }
 
   /**

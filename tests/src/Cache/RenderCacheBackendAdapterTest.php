@@ -88,7 +88,7 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
     ) + $properties + $preserved;
 
     // @todo This should use more mocked methods.
-    $stack = Mockery::mock('\Drupal\render_cache\Cache\RenderStack[render]');
+    $stack = Mockery::mock('\Drupal\render_cache\Cache\RenderStack[render,collectAttached]');
 
     // @todo Still need to implement those.
     $stack->shouldReceive('render')
