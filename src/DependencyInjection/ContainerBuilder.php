@@ -65,7 +65,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
     $container_definition += array(
       'services' => array(),
       'parameters' => array(),
-    );
+    ); // @codeCoverageIgnore
 
     // Find and setup tags for container altering.
     $container_definition['tags'] = array();
@@ -122,6 +122,8 @@ class ContainerBuilder implements ContainerBuilderInterface {
    *
    * @param $container_definition
    *   The fully build container definition that can be altered by modules now.
+   *
+   * @codeCoverageIgnore
    */
   protected function moduleAlter(&$container_definition) {
     drupal_alter('render_cache_container_build', $container_definition);

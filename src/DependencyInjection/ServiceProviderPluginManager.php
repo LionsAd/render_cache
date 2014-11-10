@@ -21,6 +21,8 @@ class ServiceProviderPluginManager extends DefaultPluginManager {
    * Constructs a ServiceProviderPluginManager object.
    *
    * This uses ctools for discovery of render_cache ServiceProvider objects.
+   *
+   * @codeCoverageIgnore
    */
   public function __construct() {
    $discovery = new CToolsPluginDiscovery('render_cache', 'ServiceProvider');
