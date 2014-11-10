@@ -6,17 +6,19 @@
 
 namespace Drupal\render_cache\Cache;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheableInterface;
-use Drupal\render_cache\Cache\Cache;
+use Drupal\Core\Render\Element;
 
-use SplStack;
+use Drupal\render_cache\Cache\Cache;
+use RenderCache;
 
 /**
  * Defines the RenderStack service.
  *
  * @ingroup cache
  */
-class RenderStack extends SplStack implements CacheableInterface {
+class RenderStack implements RenderStackInterface, CacheableInterface {
   /**
    * {@inheritdoc}
    */
@@ -82,14 +84,14 @@ class RenderStack extends SplStack implements CacheableInterface {
    * {@inheritdoc}
    */
   public function isRecursive() {
-    return $this->count() > 0;
+    return $this->recursionLevel > 0;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getRecursionLevel() {
-    return $this->count();
+    return $this->$recursionLevel;
   }
 
   /**
@@ -127,58 +129,9 @@ class RenderStack extends SplStack implements CacheableInterface {
   /**
    * {@inheritdoc}
    */
-  public function addRecursionStorage(array $render) {
-    $storage = $this->getCleanStorage($render);
+  public function addRecursionStorage(array &$render) {
+    $storage = $this->collectAndRemoveAssets($render);
     $this->recursionStorage[$this->recursionLevel][] = $storage;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function drupalRender(array &$render) {
-    $this->cacheRenderArray($render);
-
-    // Merge back previously saved properties.
-    if (!empty($render['#attached']['render_cache'])) {
-      $render += $render['#attached']['render_cache'];
-      unset($render['#attached']['render_cache']);
-    }
-
-    // Store recursive storage.
-    $this->addRecursionStorage($render);
-
-    return drupal_render($render);
-  }
-
-  /**
-   * @param array $render
-   * @param bool $remove_render_cache
-   *
-   * @return array
-   */
-  public function getCleanStorage($render, $remove_render_cache = TRUE) {
-    // Ensure all properties are set.
-    $render += array(
-      '#cache' => array(),
-      '#attached' => array(),
-      '#post_render_cache' => array(),
-    );
-    $render['#cache'] += array(
-      'tags' => array()
-    );
-
-    // Store only relevant parts.
-    $storage = array(
-      '#attached' => $render['#attached'],
-      '#cache' => array(
-        'tags' => $render['#cache']['tags']
-      ),
-      '#post_render_cache' => $render['#post_render_cache'],
-    );
-    if ($remove_render_cache) {
-      // Remove render cache properties.
-      unset($storage['#attached']['render_cache']);
-    }
 
     return $storage;
   }
@@ -186,59 +139,45 @@ class RenderStack extends SplStack implements CacheableInterface {
   /**
    * {@inheritdoc}
    */
-  public function cacheRenderArray($render, $cache_info = array()) {
-    // Process markup with drupal_render() caching.
+  public function drupalRender(array &$render) {
+    // Store and remove recursive storage.
+    $this->addRecursionStorage($render);
 
-    // Tags are special so collect them first to add them in again.
-    if (isset($render['#cache']['tags'])) {
-      $render['x_render_cache_collected_tags']['#cache']['tags'] = $render['#cache']['tags'];
-      unset($render['#cache']['tags']);
-    }
-    if (!isset($render['#cache'])) {
-      $render['#cache'] = array();
-    }
-
-    $render['#cache'] = drupal_array_merge_deep($render['#cache'], $cache_info);
-    $render['#cache']['tags'] = drupal_render_collect_cache_tags($render);
-    ksort($render['#cache']['tags']);
-
-    $post_render_cache = drupal_render_collect_post_render_cache($render);
-    $render['#post_render_cache'] = $post_render_cache;
-
-    $render_cache_attached = array();
-    // Preserve some properties in #attached?
-    if (!empty($cache_info['render_cache_render_to_markup']['preserve properties']) &&
-        is_array($cache_info['render_cache_render_to_markup']['preserve properties'])) {
-      foreach ($cache_info['render_cache_render_to_markup']['preserve properties'] as $key) {
-        if (isset($render[$key])) {
-          $render_cache_attached[$key] = $render[$key];
-        }
-      }
-    }
-
-    // Store data in #attached for Drupal 7.
-    $render_cache_attached['#cache']['tags'] = $render['#cache']['tags'];
-    $render_cache_attached['#post_render_cache'] = $render['#post_render_cache'];
-
-    $render['#attached'] = drupal_render_collect_attached($render, TRUE);
-    $render['#attached']['render_cache'] = $render_cache_attached;
-
-    return $render;
+    return drupal_render($render);
   }
 
-  public function mergeAssets($assets1, $assets2) {
-    // @todo next
-  }
-
-  public function collectAndRemoveAssets(&$element) {
+  public function collectAndRemoveAssets(&$element, $recursive = FALSE) {
     $assets = $this->collectAndRemoveD8Properties($element);
+
+    $assets['#cache']['tags'] = isset($assets['#cache']['tags']) ? $assets['#cache']['tags'] : array();
+    $assets['#cache']['max-age'] = isset($assets['#cache']['max-age']) ? $assets['#cache']['max-age'] : array();
+    $assets['#post_render_cache'] = isset($assets['#post_render_cache']) ? $assets['#post_render_cache'] : array();
+
     // Get the children of the element, sorted by weight.
     $children = Element::children($element, TRUE);
 
-    $new_assets = array();
     foreach ($children as $key) {
-      $new_assets = $this->collectAndRemoveAssets($element[$key]);
-      $assets = $this->mergeAssets($new_assets, $assets);
+      $new_assets = $this->collectAndRemoveAssets($element[$key], TRUE);
+      $assets['#cache']['tags'] = Cache::mergeTags($new_assets['#cache']['tags'], $assets['#cache']['tags']);
+      $assets['#cache']['max-age'] = NestedArray::mergeDeep($new_assets['#cache']['max-age'], $assets['#cache']['max-age']);
+      $assets['#post_render_cache'] = NestedArray::mergeDeep($new_assets['#post_render_cache'], $assets['#post_render_cache']);
+    }
+
+    if (!$recursive) {
+      // Ensure that there are no empty properties.
+      if (empty($assets['#cache']['tags'])) {
+        unset($assets['#cache']['tags']);
+      }
+      if (empty($assets['#cache']['max-age'])) {
+        unset($assets['#cache']['max-age']);
+      }
+      // Ensure the cache property is empty.
+      if (empty($assets['#cache'])) {
+        unset($assets['#cache']);
+      }
+      if (empty($assets['#post_render_cache'])) {
+        unset($assets['#post_render_cache']);
+      }
     }
 
     return $assets;
@@ -288,5 +227,25 @@ class RenderStack extends SplStack implements CacheableInterface {
     }
 
     return $render;
+  }
+
+  public function processPostRenderCache($render, $cache_info) {
+    $strategy = $cache_info['render_cache_cache_strategy'];
+
+    // Only when we have #markup we can post process.
+    // @todo Use a #post_render function with a closure instead.
+    if ($strategy == RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER
+      && !empty($render['#post_render_cache'])) {
+      // @todo add back recursive post render cache.
+      $this->increaseRecursion();
+      // @todo Fix this!
+      _drupal_render_process_post_render_cache($render);
+      $storage = $this->decreaseRecursion();
+      $this->addRecursionStorage($storage);
+
+      unset($render['#attached']);
+      unset($render['#cache']);
+      unset($render['#post_render_cache']);
+    }
   }
 }
