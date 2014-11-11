@@ -272,7 +272,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
     );
     $services['service_parameter_not_exists'] = array(
       'class' => '\Drupal\render_cache\Tests\DependencyInjection\MockService',
-      'arguments' => array('@service.provider', '%not_exists'),
+      'arguments' => array('@service.provider', '%not_exists', -1),
     );
     $services['service_dependency_not_exists'] = array(
       'class' => '\Drupal\render_cache\Tests\DependencyInjection\MockService',
