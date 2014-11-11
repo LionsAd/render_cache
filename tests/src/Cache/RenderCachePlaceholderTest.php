@@ -51,8 +51,9 @@ class RenderCachePlaceholderTest extends \PHPUnit_Framework_TestCase {
         'callback' => $this->testClass . '::multiCallback',
         'args' => array(
           1,
+          'foo' => 'foo',
         ),
-        'return' => 'bar_1',
+        'return' => 'bar_1_foo',
       ),
       'multi_2' => array(
         'func' => 'postRenderCacheMultiCallback',
@@ -60,8 +61,9 @@ class RenderCachePlaceholderTest extends \PHPUnit_Framework_TestCase {
         'callback' => $this->testClass . '::multiCallback',
         'args' => array(
           2,
+          'foo' => 'foo',
         ),
-        'return' => 'bar_2',
+        'return' => 'bar_2_foo',
       ),
     );
     foreach ($data as $key => $info) {
@@ -219,7 +221,7 @@ class RenderCachePlaceholderTest extends \PHPUnit_Framework_TestCase {
     $placeholders = array();
     foreach ($pholders as $pholder => $args) {
       $placeholders[$pholder] = array(
-        '#markup' => 'bar_' . $args[0],
+        '#markup' => 'bar_' . $args[0] . '_' . $args['foo'],
       );
     }
 

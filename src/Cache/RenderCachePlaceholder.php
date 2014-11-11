@@ -6,6 +6,8 @@
 
 namespace Drupal\render_cache\Cache;
 
+use RenderCache;
+
 /**
  * Provides placeholder utility functions.
  *
@@ -107,7 +109,7 @@ class RenderCachePlaceholder implements RenderCachePlaceholderInterface {
     foreach ($context['args'] as $key => $arg) {
       // In case a dynamic argument has been passed, load it with the loader.
       if (strpos($key, '%') !== 0) {
-        $args[] = $arg;
+        $args[$key] = $arg;
         continue;
       }
 
@@ -121,7 +123,7 @@ class RenderCachePlaceholder implements RenderCachePlaceholderInterface {
           $arg = call_user_func($loader_function, $arg);
         }
       }
-      $args[] = $arg;
+      $args[$key] = $arg;
     }
 
     return $args;
