@@ -111,12 +111,12 @@ class PageController extends BaseController implements PageControllerInterface {
   protected function getCacheTags($object, array $context) {
     $tags = parent::getCacheTags($object, $context);
     // @see drupal_pre_render_page() in Drupal 8.
-    $tags['theme_global_settings'] = TRUE;
+    $tags[] = 'theme_global_settings';
 
     // Deliberately commented out as the theme might not be loaded, yet.
     // We do this in render() instead.
     //global $theme;
-    //$tags['theme'][] = $theme;
+    //$tags[] = 'theme:' . $theme;
 
     return $tags;
   }
@@ -131,7 +131,7 @@ class PageController extends BaseController implements PageControllerInterface {
     // @see drupal_pre_render_page() in Drupal 8.
     global $theme;
     $page_id = current(array_keys($objects));
-    $build[$page_id]['#cache']['tags']['theme'] = $theme;
+    $build[$page_id]['#cache']['tags'][] = 'theme:' . $theme;
 
     return $build;
   }

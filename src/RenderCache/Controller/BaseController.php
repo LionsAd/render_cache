@@ -6,6 +6,7 @@
 
 namespace Drupal\render_cache\RenderCache\Controller;
 
+use Drupal\render_cache\Cache\Cache;
 use Drupal\render_cache\Cache\RenderCacheBackendAdapterInterface;
 use Drupal\render_cache\Cache\RenderCachePlaceholder;
 use Drupal\render_cache\Cache\RenderStack;
@@ -163,7 +164,7 @@ abstract class BaseController extends AbstractBaseController {
       $storage = $this->renderStack->getRecursionStorage();
 
       if (!empty($storage['#cache']['tags'])) {
-        $header = static::convertCacheTagsToHeader($storage['#cache']['tags']);
+        $header = implode(' ', $storage['#cache']['tags']);
         // @todo ensure render_cache is the top module.
         // Currently this header can be send multiple times.
         drupal_add_http_header('X-Drupal-Cache-Tags', $header, TRUE);
@@ -225,8 +226,8 @@ abstract class BaseController extends AbstractBaseController {
    */
   protected function getCacheTags($object, array $context) {
     return array(
-      'rendered' => TRUE,
-      $this->getType() . '_view' => TRUE,
+      'rendered',
+      $this->getType() . '_view',
     );
   }
 
@@ -302,7 +303,7 @@ abstract class BaseController extends AbstractBaseController {
       $cache_info['hash'],
       $this->getCacheHash($object, $context)
     );
-    $cache_info['tags'] = drupal_array_merge_deep(
+    $cache_info['tags'] = Cache::mergeTags(
       $cache_info['tags'],
       $this->getCacheTags($object, $context)
     );
@@ -465,30 +466,6 @@ abstract class BaseController extends AbstractBaseController {
    */
   protected function alter($type, &$data, &$context1 = NULL, &$context2 = NULL, &$context3 = NULL) {
     drupal_alter('render_cache_' . $this->getType() . '_' . $type, $data, $context1, $context2, $context3);
-  }
-
-  /**
-   * Converts a cache tags array into a X-Drupal-Cache-Tags header value.
-   *
-   * @param array $tags
-   *   Associative array of cache tags to flatten.
-   *
-   * @return string
-   *   A space-separated list of flattened cache tag identifiers.
-   */
-  protected static function convertCacheTagsToHeader(array $tags) {
-    $flat_tags = array();
-    foreach ($tags as $namespace => $values) {
-      if (is_array($values)) {
-        foreach ($values as $value) {
-          $flat_tags[] = "$namespace:$value";
-        }
-      }
-      else {
-        $flat_tags[] = "$namespace:$values";
-      }
-    }
-    return implode(' ', $flat_tags);
   }
 
   /**

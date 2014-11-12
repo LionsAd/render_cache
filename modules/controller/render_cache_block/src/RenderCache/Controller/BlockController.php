@@ -104,7 +104,7 @@ class BlockController extends BaseRecursionController {
    */
   protected function getCacheTags($object, array $context) {
     $tags = parent::getCacheTags($object, $context);
-    $tags['block'][] = $context['id'];
+    $tags[] = 'block:' . $context['id'];
 
     return $tags;
   }

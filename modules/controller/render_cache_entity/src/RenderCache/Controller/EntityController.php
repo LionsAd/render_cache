@@ -83,8 +83,8 @@ class EntityController extends BaseRecursionController {
     $entity_id = $context['entity_id'];
 
     $tags = parent::getCacheTags($object, $context);
-    $tags[$entity_type][] = $entity_id;
-    $tags[$entity_type . '_view'] = TRUE;
+    $tags[] = $entity_type . ':' . $entity_id;
+    $tags[] = $entity_type . '_view';
 
     return $tags;
   }
