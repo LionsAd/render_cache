@@ -129,7 +129,11 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
 
     // This normalizes that all #cache, etc. properties are in the top
     // render element.
-    $assets = $this->renderStack->collectAndRemoveAssets($render);
+    $full_render = array();
+    // Ensure that cache_info is processed first.
+    $full_render['#cache'] = $cache_info;
+    $full_render['render'] = &$render;
+    $assets = $this->renderStack->collectAndRemoveAssets($full_render);
     $render += $assets;
 
     $data = $this->renderStack->convertRenderArrayToD7($render);

@@ -54,7 +54,7 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
       'tags' => array('foo:1')
     );
     $data['baz']['lama']['#cache'] = array(
-      'tags' => array('lama:1')
+      'tags' => array('baz:42', 'lama:1')
     );
 
     $this->cacheHitData = (object) array(
@@ -65,9 +65,12 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
       '#cache' => array(
         'tags' => array(
           'bar:1',
+          'baz:42',
           'foo:1',
           'lama:1',
+          'zar:1',
         ),
+        'max-age' => array(600),
       )
     );
     $preserved = array( 'baz' => $data['baz'] );
@@ -259,6 +262,8 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
     return array(
       'cid' => $cid,
       'keys' => array('render', 'foo','bar'), 
+      'tags' => array('zar:1'),
+      'max-age' => array(600),
       'render_cache_ignore_request_method_check' => FALSE,
       'render_cache_cache_strategy' => $strategy,
       'render_cache_preserve_properties' => array('baz'),
