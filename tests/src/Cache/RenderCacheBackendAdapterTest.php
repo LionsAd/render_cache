@@ -264,6 +264,7 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
       'keys' => array('render', 'foo','bar'), 
       'tags' => array('zar:1'),
       'max-age' => array(600),
+      'downstream-ttl' => array(),
       'render_cache_ignore_request_method_check' => FALSE,
       'render_cache_cache_strategy' => $strategy,
       'render_cache_preserve_properties' => array('baz'),

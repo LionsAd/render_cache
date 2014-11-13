@@ -254,12 +254,17 @@ abstract class BaseController extends AbstractBaseController {
        // Drupal 8 properties.
        'tags' => array(),
 
+       // Proposed Drupal 8 properties.
+       'max-age' => array(),
+       'downstream-ttl' => array(),
+
+       // Allows special rendering via big pipe, esi, etc.
+       'render_strategy' => array(),
+
        // Render Cache specific properties.
        // @todo Port to Drupal 8.
        'hash' => array(),
        'validate' => array(),
-       // Allows special rendering via big pipe, esi, etc.
-       'render_strategy' => array(),
 
        // Special keys that are only related to our implementation.
        // @todo Remove and replace with something else.

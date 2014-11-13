@@ -166,6 +166,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
 
     $assets['#cache']['tags'] = isset($assets['#cache']['tags']) ? $assets['#cache']['tags'] : array();
     $assets['#cache']['max-age'] = isset($assets['#cache']['max-age']) ? $assets['#cache']['max-age'] : array();
+    $assets['#cache']['downstream-ttl'] = isset($assets['#cache']['downstream-ttl']) ? $assets['#cache']['downstream-ttl'] : array();
     $assets['#post_render_cache'] = isset($assets['#post_render_cache']) ? $assets['#post_render_cache'] : array();
 
     // Get the children of the element, sorted by weight.
@@ -175,6 +176,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
       $new_assets = $this->collectAndRemoveAssets($element[$key], TRUE);
       $assets['#cache']['tags'] = Cache::mergeTags($assets['#cache']['tags'], $new_assets['#cache']['tags']);
       $assets['#cache']['max-age'] = NestedArray::mergeDeep($assets['#cache']['max-age'], $new_assets['#cache']['max-age']);
+      $assets['#cache']['downstream-ttl'] = NestedArray::mergeDeep($assets['#cache']['downstream-ttl'], $new_assets['#cache']['downstream-ttl']);
       $assets['#post_render_cache'] = NestedArray::mergeDeep($assets['#post_render_cache'], $new_assets['#post_render_cache']);
     }
 
@@ -185,6 +187,9 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
       }
       if (empty($assets['#cache']['max-age'])) {
         unset($assets['#cache']['max-age']);
+      }
+      if (empty($assets['#cache']['downstream-ttl'])) {
+        unset($assets['#cache']['downstream-ttl']);
       }
       // Ensure the cache property is empty.
       if (empty($assets['#cache'])) {
@@ -209,6 +214,11 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
       $render['#cache']['max-age'] = $element['#cache']['max-age'];
       unset($element['#cache']['max-age']);
     }
+    if (!empty($element['#cache']['downstream-ttl'])) {
+      $render['#cache']['downstream-ttl'] = $element['#cache']['downstream-ttl'];
+      unset($element['#cache']['downstream-ttl']);
+    }
+
     // Ensure the cache property is empty.
     if (empty($element['#cache'])) {
       unset($element['#cache']);
