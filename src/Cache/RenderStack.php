@@ -91,7 +91,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
    * {@inheritdoc}
    */
   public function getRecursionLevel() {
-    return $this->$recursionLevel;
+    return $this->recursionLevel;
   }
 
   /**
