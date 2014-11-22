@@ -56,6 +56,22 @@ class RenderCache {
    */
   const RENDER_CACHE_STRATEGY_LATE_RENDER = 2;
 
+  // Drupal 8's constants differ from those in Drupal 7.
+  // So we explicitly define them again as class constants.
+  // Note: Drupal 8 has CACHE_PERMANENT == -1.
+
+  /**
+   * Indicates that the item should never be removed unless explicitly selected.
+   *
+   * The item may be removed using cache_clear_all() with a cache ID.
+   */
+  const CACHE_PERMANENT = 0;
+
+  /**
+   * Indicates that the item should be removed at the next general cache wipe.
+   */
+  const CACHE_TEMPORARY = -1;
+
   /**
    * The currently active container object.
    *
