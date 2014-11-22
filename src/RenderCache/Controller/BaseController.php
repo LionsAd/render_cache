@@ -146,13 +146,23 @@ abstract class BaseController extends AbstractBaseController {
          ) {
         // @todo Move to helper function.
         $prefix = '<!-- START RENDER ID: ' . $id . ' CACHE INFO: ' . "\n" . print_r($cache_info, TRUE);
+        $cache_hit = (!empty($cache_info_map[$id]['cid']) && !isset($object_build[$id])) ? 'YES' : 'NO';
+        $prefix .= "\nCACHE_HIT: $cache_hit\n";
+        $full_storage = $storage;
+        $attached = $this->renderStack->collectAttached($render);
+        if ($attached) {
+          $full_storage['#attached'] = $attached;
+        }
+
+        $attached = print_r($storage, TRUE);
+        $prefix .= "\nATTACHED: " . print_r($full_storage, TRUE) . "\n";
         $prefix .= "\nHOOKS:\n";
         $hook_prefix = 'render_cache_' . $this->getType() . '_';
         foreach (array('default_cache_info', 'cache_info', 'keys', 'tags', 'hash', 'validate') as $hook) {
           $prefix .= '* hook_' . $hook_prefix . $hook . "_alter()\n";
         }
         $prefix .= '-->';
-        $suffix = '<!-- END RENDER -->';
+        $suffix = '<!-- END RENDER: ' . $id . ' -->';
         $render['#markup'] = "\n$prefix\n" . $render['#markup'] . "\n$suffix\n";
       }
 
