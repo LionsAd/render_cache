@@ -65,8 +65,10 @@ interface RenderStackInterface {
    *
    * @param array $render
    *   The render array to retrieve and remove the assets from.
+   * @param bool $collect_attached
+   *   Whether or not #attached assets should be collected.
    */
-  public function addRecursionStorage(array &$render);
+  public function addRecursionStorage(array &$render, $collect_attached = FALSE);
 
   // Render Cache specific functions.
   // --------------------------------

@@ -108,7 +108,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
     // Collect the new storage.
     if (!empty($storage)) {
       $render = $this->collectAndRemoveAssets($storage);
-      $render['#attached'] = drupal_render_collect_attached($storage, TRUE);
+      $render['#attached'] = $this->collectAttached($storage);
     }
 
     return $render;
@@ -126,8 +126,11 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
   /**
    * {@inheritdoc}
    */
-  public function addRecursionStorage(array &$render) {
+  public function addRecursionStorage(array &$render, $collect_attached = FALSE) {
     $storage = $this->collectAndRemoveAssets($render);
+    if ($collect_attached) {
+      $storage['#attached'] = $this->collectAttached($render);
+    }
     $this->recursionStorage[$this->recursionLevel][] = $storage;
 
     return $storage;
