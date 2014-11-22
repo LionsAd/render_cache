@@ -76,6 +76,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
    */
   public function decreaseRecursion() {
     $storage = $this->getRecursionStorage();
+    unset($this->recursionStorage[$this->recursionLevel]);
     $this->recursionLevel -= 1;
     return $storage;
   }
