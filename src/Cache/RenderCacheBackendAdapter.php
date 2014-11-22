@@ -119,12 +119,18 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
 
     // Preserve some properties.
     $properties = $this->preserveProperties($render, $cache_info);
+    if (!empty($cache_info['render_cache_preserve_original'])) {
+      $properties['#render_cache_original'] = $render;
+    }
 
     // Need to first render to markup, else we would need to collect and remove
     // assets twice. This saves a lot performance.
     if ($cache_strategy == RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER) {
       // This internally inc / dec recursion and attaches new out-of-bound assets.
-      $markup = $this->renderStack->render($render);
+      list($markup, $original) = $this->renderStack->render($render);
+      if (!empty($cache_info['render_cache_preserve_original'])) {
+        $properties['#render_cache_original'] = $original;
+      }
     }
 
     // This normalizes that all #cache, etc. properties are in the top

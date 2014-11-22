@@ -65,15 +65,8 @@ class PageController extends BaseController implements PageControllerInterface {
 
     // The page cache is per page and per role by default.
     $default_cache_info['granularity'] = DRUPAL_CACHE_PER_ROLE | DRUPAL_CACHE_PER_PAGE;
-    $default_cache_info['render_cache_render_to_markup'] = array(
-      'preserve properties' => array(
-        // @todo use different render method and solve collecting of assets differently.
-        'page_top',
-        'page_bottom',
-        'sidebar_first',
-        'sidebar_second',
-       ),
-    );
+    $default_cache_info['render_cache_cache_strategy'] = \RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER;
+    $default_cache_info['render_cache_preserve_original'] = TRUE;
     return $default_cache_info;
   }
 

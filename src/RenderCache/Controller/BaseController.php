@@ -256,7 +256,7 @@ abstract class BaseController extends AbstractBaseController {
       // @todo indentation.
        // Drupal 7 properties.
        'bin' => 'cache_render',
-       'expire' => CACHE_PERMANENT,
+       'expire' => RenderCache::CACHE_PERMANENT,
        // Use per role to support contextual and its safer anyway.
        'granularity' => DRUPAL_CACHE_PER_ROLE,
        'keys' => array(),
@@ -284,6 +284,7 @@ abstract class BaseController extends AbstractBaseController {
        'render_cache_ignore_request_method_check' => FALSE,
        'render_cache_cache_strategy' => NULL,
        'render_cache_preserve_properties' => array(),
+       'render_cache_preserve_original' => FALSE,
     );
   }
 

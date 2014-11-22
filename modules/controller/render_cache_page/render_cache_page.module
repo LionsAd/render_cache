@@ -168,6 +168,19 @@ function render_cache_page_drupal_render_page($page) {
     $build['page']['#theme_wrappers'] = $element_info['#theme_wrappers'];
   }
 
+  // Process the assets.
+  drupal_process_attached($build['page']);
+
+  // And restore properties.
+  $build['page'] += $build['page']['#render_cache_original'];
+  unset($build['page']['#render_cache_original']);
+  unset($build['page']['#attached']);
+  unset($build['page']['#printed']);
+  unset($build['page']['#children']);
+  // We need to unset #type and #theme to only render the #markup.
+  unset($build['page']['#type']);
+  unset($build['page']['#theme']);
+
   // Call drupal_render() like the original function, but allow other modules
   // to alter the output before and after rendering.
   drupal_alter('render_cache_page_pre_render', $build);
