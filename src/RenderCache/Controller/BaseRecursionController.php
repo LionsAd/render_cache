@@ -53,6 +53,13 @@ abstract class BaseRecursionController extends BaseController implements Recursi
     // Decrease recursion as the last step.
     $this->renderStack->decreaseRecursion();
 
+    // Remove the render cache controller within the objects again.
+    foreach ($objects as $object) {
+      if (is_object($object)) {
+        unset($object->render_cache_controller);
+      }
+    }
+
     return $build;
   }
 }
