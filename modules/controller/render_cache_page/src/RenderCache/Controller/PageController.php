@@ -16,15 +16,6 @@ use Drupal\render_cache\RenderCache\Controller\BaseController;
 class PageController extends BaseController implements PageControllerInterface {
 
   /**
-   * The page storage.
-   * @todo What is this, really?
-   *
-   * @var array
-   *   A Drupal render array.
-   */
-  private $pageStorage;
-
-  /**
    * {@inheritdoc}
    */
   public function hook_init() {
@@ -39,22 +30,20 @@ class PageController extends BaseController implements PageControllerInterface {
   public function view(array $objects) {
     // We need to decrease recursion again.
     // Because this only adds to the recursion storage, it is safe to call.
-    $this->pageStorage = $this->renderStack->getRecursionStorage();
-    $this->renderStack->decreaseRecursion();
+    foreach ($objects as $id => $page) {
+      // Transform into a render array.
+      if (!is_array($page->content)) {
+        $page->content = array(
+          'main' => array(
+            '#markup' => $page->content
+          ),
+        );
+      }
+      $storage = $this->renderStack->decreaseRecursion();
+      $page->content['x_render_cache_page_recursion_storage'][] = $storage;
+    }
 
     return parent::view($objects);
-  }
-
-  /**
-   * @param object[] $objects
-   *
-   * @return array[]
-   */
-  protected function renderRecursive(array $objects) {
-    $build = parent::renderRecursive($objects);
-    $page_id = current(array_keys($objects));
-    $build[$page_id]['x_render_cache_page_storage'] = $this->pageStorage;
-    return $build;
   }
 
   /**
