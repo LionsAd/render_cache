@@ -112,8 +112,14 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
   public function set(array &$render, array $cache_info) {
     $cid = $this->getCacheId($cache_info);
 
-    $bin = isset($elements['#cache']['bin']) ? $elements['#cache']['bin'] : 'cache';
-    $expire = isset($elements['#cache']['expire']) ? $elements['#cache']['expire'] : CacheBackendInterface::CACHE_PERMANENT;
+    $bin = 'cache';
+    if (isset($cache_info['bin'])) {
+      $bin = $cache_info['bin'];
+    }
+    $expire = RenderCache::CACHE_PERMANENT;
+    if (isset($cache_info['expire'])) {
+      $expire = $cache_info['expire'];
+    }
 
     $cache_strategy = $cache_info['render_cache_cache_strategy'];
 
@@ -146,7 +152,9 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
     $data['#attached']['render_cache'] += $properties;
 
     if ($cache_strategy == RenderCache::RENDER_CACHE_STRATEGY_NO_RENDER) {
-      $this->cache($bin)->set($cid, $data, $expire);
+      if ($cid) {
+        $this->cache($bin)->set($cid, $data, $expire);
+      }
     }
     elseif ($cache_strategy == RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER) {
       $attached = $this->renderStack->collectAttached($data);
@@ -154,7 +162,9 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
       $data = array();
       $data['#markup'] = &$markup;
       $data['#attached'] = $attached;
-      $this->cache($bin)->set($cid, $data, $expire);
+      if ($cid) {
+        $this->cache($bin)->set($cid, $data, $expire);
+      }
 
       $render = $this->renderStack->convertRenderArrayFromD7($data);
     }
@@ -162,7 +172,13 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
       // This cache id was invalidated via cache clear if it was not valid
       // before. This prevents drupal_render_cache_get() from getting an item
       // from the cache.
-      $render['#cache']['cid'] = $cid;
+      if ($cid) {
+        $render['#cache']['cid'] = $cid;
+      }
+      else {
+        unset($render['#cache']['cid']);
+        unset($render['#cache']['keys']);
+      }
       $render['#attached']['render_cache'] = $data['#attached']['render_cache'];
     }
     else {
