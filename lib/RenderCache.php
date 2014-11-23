@@ -245,6 +245,77 @@ class RenderCache {
    *   TRUE if we are within a recursive context, FALSE otherwise.
    */
   public static function isRecursive() {
-    return static::$container->get('render_stack')->isRecursive();
+    return static::$renderStack->isRecursive();
+  }
+
+  /**
+   * Overrides drupal_add_js().
+   *
+   * @see drupal_add_js()
+   */
+  public static function drupal_add_js($data = NULL, $options = NULL) {
+    if (!static::$renderStack) {
+      return static::callOriginalFunction('drupal_add_js', func_get_args());
+    }
+    return static::$renderStack->drupal_add_assets('js', $data, $options);
+  }
+
+  /**
+   * Overrides drupal_add_css().
+   *
+   * @see drupal_add_css()
+   */
+  public static function drupal_add_css($data = NULL, $options = NULL) {
+    if (!static::$renderStack) {
+      return static::callOriginalFunction('drupal_add_css', func_get_args());
+    }
+    return static::$renderStack->drupal_add_assets('css', $data, $options);
+  }
+
+  /**
+   * Overrides drupal_add_library().
+   *
+   * @see drupal_add_library()
+   */
+  public static function drupal_add_library($module, $name, $every_page = NULL) {
+    if (!static::$renderStack) {
+      return static::callOriginalFunction('drupal_add_library', func_get_args());
+    }
+    return static::$renderStack->drupal_add_library($module, $name, $every_page);
+  }
+
+  /**
+   * Overrides drupal_process_attached().
+   *
+   * @see drupal_process_attached()
+   */
+  public static function drupal_process_attached($elements, $group = JS_DEFAULT, $dependency_check = FALSE, $every_page = NULL) {
+    if (!static::$renderStack) {
+      return static::callOriginalFunction('drupal_process_attached', func_get_args());
+    }
+    return static::$renderStack->drupal_process_attached($elements, $group, $dependency_check, $every_page);
+  }
+
+  /**
+   * Calls the original function in case the container is not yet booted.
+   *
+   * @param string $function
+   *   The function name.
+   * @param array $args
+   *   The function args.
+   * @return NULL|mixed
+   *   Returns what the original function returns.
+   */
+  public static function callOriginalFunction($function, $args) {
+    global $conf;
+
+    $name = $function . "_function";
+
+    $old = $conf[$name];
+    unset($conf[$name]);
+    $return = call_user_func_array($function, $args);
+    $conf[$name] = $old;
+
+    return $return;
   }
 }
