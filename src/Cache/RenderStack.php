@@ -140,10 +140,13 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
    * {@inheritdoc}
    */
   public function drupalRender(array &$render) {
+    $markup = drupal_render($render);
+
     // Store and remove recursive storage.
+    // for our properties.
     $this->addRecursionStorage($render);
 
-    return drupal_render($render);
+    return $markup;
   }
 
   /**
