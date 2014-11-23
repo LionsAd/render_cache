@@ -75,9 +75,16 @@ class RenderCache {
   /**
    * The currently active container object.
    *
-   * @var \Drupal\RenderCache\DependencyInjection\ContainerInterface
+   * @var \Drupal\render_cache\DependencyInjection\ContainerInterface
    */
   protected static $container;
+
+  /**
+   * The currently active render stack - for improved performance.
+   *
+   * @var \Drupal\render_cache\Cache\RenderStack
+   */
+  protected static $renderStack;
 
   /**
    * Initializes the container.
@@ -102,6 +109,7 @@ class RenderCache {
 
     if ($container_builder->isCached()) {
       static::$container = $container_builder->compile();
+      static::postInit();
       return TRUE;
     }
 
@@ -112,8 +120,26 @@ class RenderCache {
 
     // Rebuild the container.
     static::$container = $container_builder->compile();
+    static::postInit();
 
     return (bool) static::$container;
+  }
+
+  /**
+   * Post initialization function.
+   *
+   * Will be removed once the base class is moved to service_container.
+   */
+  protected static function postInit() {
+    // Last get the render stack for improved performance.
+    if (static::$container) {
+      static::$renderStack = static::$container->get('render_stack');
+
+      // Check if we support dynamic asset loading via drupal_add_js/css.
+      if (variable_get('render_cache_supports_dynamic_assets', FALSE)) {
+        static::$renderStack->supportsDynamicAssets(TRUE);
+      }
+    }
   }
 
   /**
@@ -206,7 +232,7 @@ class RenderCache {
    * @return string
    */
   public static function drupalRender(&$render) {
-    return static::$container->get('render_stack')->drupalRender($render);
+    return static::$renderStack->drupalRender($render);
   }
 
   /**
