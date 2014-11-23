@@ -64,6 +64,16 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
   protected $recursionStorage = array();
 
   /**
+   * Whether this stack supports dynamic asset adding by overriding
+   * drupal_add_* functions via $conf.
+   *
+   * Default: FALSE
+   *
+   * @var bool
+   */
+  protected $supportsDynamicAssets = FALSE;
+
+  /**
    * Increments the recursion level by 1.
    */
   public function increaseRecursion() {
@@ -154,6 +164,33 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
    */
   public function collectAttached(array $render) {
     return drupal_render_collect_attached($render, TRUE);
+  }
+
+  /**
+   * Getter/Setter for dynamic asset support.
+   *
+   * This should only be set to TRUE, when render_cache.settings.inc is
+   * included in settings.php, which will set
+   * $conf['render_cache_supports_dynamic_assets'] = TRUE.
+   *
+   * This is needed to determine if its necessary to collect assets before
+   * setting the cache ourselves or if they have been added to the stacks
+   * recursive storage.
+   *
+   * Note: This settings include will only work with a core patch for now.
+   *
+   * @param bool $supportsDynamicAssets
+   *   If this isset the stack state will be changed to this.
+   *
+   * @return bool
+   *   Whether or not dynamic assets are supported.
+   */
+  public function supportsDynamicAssets($supportsDynamicAssets = NULL) {
+    if (isset($supportsDynamicAssets)) {
+      $this->supportsDynamicAssets = $supportsDynamicAssets;
+    }
+
+    return $this->supportsDynamicAssets;
   }
 
   /**
