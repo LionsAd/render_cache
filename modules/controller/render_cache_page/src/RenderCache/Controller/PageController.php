@@ -40,7 +40,7 @@ class PageController extends BaseController implements PageControllerInterface {
         );
       }
       $storage = $this->renderStack->decreaseRecursion();
-      $page->content['x_render_cache_page_recursion_storage'][] = $storage;
+      $page->content['x_render_cache_page_recursion_storage'] = $storage;
     }
 
     return parent::view($objects);
@@ -108,6 +108,11 @@ class PageController extends BaseController implements PageControllerInterface {
    */
   protected function render(array $objects) {
     foreach ($objects as $id => $page) {
+      if ($this->renderStack->supportsDynamicAssets()) {
+        $storage = $page->content['x_render_cache_page_recursion_storage'];
+        unset($page->content['x_render_cache_page_recursion_storage']);
+        $this->renderStack->addRecursionStorage($storage, TRUE);
+      }
       $build[$id] = render_cache_page_drupal_render_page_helper($page->content);
     }
     // @see drupal_pre_render_page() in Drupal 8.
