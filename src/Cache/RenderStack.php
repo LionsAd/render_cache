@@ -280,20 +280,49 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
   public function processPostRenderCache(&$render, $cache_info) {
     $strategy = $cache_info['render_cache_cache_strategy'];
 
-    // Only when we have #markup we can post process.
+    // Only when we have rendered to #markup we can post process.
     // @todo Use a #post_render function with a closure instead.
-    if ($strategy == RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER
-      && !empty($render['#post_render_cache'])) {
-      // @todo add back recursive post render cache.
+    if ($strategy != RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER) {
+      // @todo Log an error.
+      return;
+    }
+
+    $storage = $this->collectAndRemoveAssets($render);
+
+    while (!empty($storage['#post_render_cache'])) {
+      // Save the value and unset from the storage.
+      $post_render_cache = $storage['#post_render_cache'];
+      unset($storage['#post_render_cache']);
+
       $this->increaseRecursion();
-      // @todo Fix this!
-      _drupal_render_process_post_render_cache($render);
-      $storage = $this->decreaseRecursion();
+      // Add the storage back first, so order is preserved.
       $this->addRecursionStorage($storage);
 
-      unset($render['#attached']);
-      unset($render['#cache']);
-      unset($render['#post_render_cache']);
+      // Add todo use a helper function.
+      foreach (array_keys($post_render_cache) as $callback) {
+        foreach ($post_render_cache[$callback] as $context) {
+          $render = call_user_func_array($callback, array($render, $context));
+        }
+      }
+      // Get and remove any new storage from the render array.
+      $storage = $this->collectAndRemoveAssets($render);
+      // ... and push to the stack.
+      $this->addRecursionStorage($storage);
+
+      // Now everything is in here.
+      $storage = $this->decreaseRecursion();
+
+      // If there is attached on the stack, then merge it to the #attached data we already have.
+      if (!empty($storage['#attached'])) {
+        $render += array(
+          '#attached' => array(),
+        );
+        $render['#attached'] = NestedArray::mergeDeep($render['#attached'], $storage['#attached']);
+        unset($storage['#attached']);
+      }
     }
+
+    // Put the storage back, so it can be pushed to the stack.
+    $render += $storage;
   }
 }
