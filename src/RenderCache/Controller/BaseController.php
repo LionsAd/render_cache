@@ -129,14 +129,13 @@ abstract class BaseController extends AbstractBaseController {
       // Unset any remaining weight properties.
       unset($render['#weight']);
 
-      // Store recursive storage and remove from render array.
-      $storage = $this->renderStack->addRecursionStorage($render);
-
       $cache_info = $cache_info_map[$id];
       if (!$this->renderStack->isRecursive()) {
-        $render += $storage;
         $this->renderStack->processPostRenderCache($render, $cache_info);
       }
+
+      // Store recursive storage and remove from render array.
+      $storage = $this->renderStack->addRecursionStorage($render);
 
       // @todo Use a #post_render function.
       if (isset($render['#markup'])
