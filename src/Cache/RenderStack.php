@@ -362,4 +362,137 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
     // Put the storage back, so it can be pushed to the stack.
     $render += $storage;
   }
+
+  // JS / CSS asset helper functions.
+  // -------------------------------------------------------------------
+
+  /**
+   * Helper function to add JS/CSS assets to the recursion storage.
+   *
+   * @param string $type
+   *   The type of asset, can be 'js' or 'css'.
+   * @param mixed $data
+   *   The data to add.
+   * @param array|string|NULL $options
+   *   The options to add.
+   *
+   * @return mixed|NULL
+   *   What drupal_add_js/drupal_add_css return or NULL when adding something.
+   *
+   * @see drupal_add_css()
+   * @see drupal_add_js()
+   */
+  public function drupal_add_assets($type, $data, $options) {
+
+    // Construct the options when its not an array.
+    if (isset($options)) {
+      if (!is_array($options)) {
+        $options = array('type' => $options);
+      }
+    }
+    else {
+      $options = array();
+    }
+
+    if (isset($data) && $this->isRecursive()) {
+      $new_options = $options;
+      $new_options['data'] = $data;
+      $storage = array();
+      $storage['#attached'][$type][] = $new_options;
+      $this->addRecursionStorage($storage, TRUE);
+      return;
+    }
+
+    return $this->callOriginalFunction("drupal_add_{$type}", $data, $options);
+  }
+
+  /**
+   * Helper function to add library assets to the recursion storage.
+   *
+   * @param $module
+   *   The name of the module that registered the library.
+   * @param $name
+   *   The name of the library to add.
+   * @param $every_page
+   *   Set to TRUE if this library is added to every page on the site. Only items
+   *   with the every_page flag set to TRUE can participate in aggregation.
+   *
+   * @return
+   *   TRUE if the library was successfully added; FALSE if the library or one of
+   *   its dependencies could not be added.
+   *
+   * @see drupal_add_library()
+   */
+  public function drupal_add_library($module, $name, $every_page = NULL) {
+    if ($this->isRecursive()) {
+      $storage = array();
+      $storage['#attached']['library'][] = array($module, $name);
+      $this->addRecursionStorage($storage, TRUE);
+      // @todo Figure out at runtime if library dependencies are met.
+      return TRUE;
+    }
+    return $this->callOriginalFunction("drupal_add_library", $module, $name, $every_page);
+  }
+
+  /**
+   * Helper function to add any #attached assets to the recursion storage.
+   *
+   * @param $elements
+   *   The structured array describing the data being rendered.
+   * @param $group
+   *   The default group of JavaScript and CSS being added. This is only applied
+   *   to the stylesheets and JavaScript items that don't have an explicit group
+   *   assigned to them.
+   * @param $dependency_check
+   *   When TRUE, will exit if a given library's dependencies are missing. When
+   *   set to FALSE, will continue to add the libraries, even though one or more
+   *   dependencies are missing. Defaults to FALSE.
+   * @param $every_page
+   *   Set to TRUE to indicate that the attachments are added to every page on the
+   *   site. Only attachments with the every_page flag set to TRUE can participate
+   *   in JavaScript/CSS aggregation.
+   *
+   * @return
+   *   FALSE if there were any missing library dependencies; TRUE if all library
+   *   dependencies were met.
+   *
+   * @see drupal_process_attached()
+   */
+  public function drupal_process_attached($elements, $group = JS_DEFAULT, $dependency_check = FALSE, $every_page = NULL) {
+    if ($this->isRecursive()) {
+      $storage = array();
+      $storage['#attached'] = $elements['#attached'];
+      $this->addRecursionStorage($storage, TRUE);
+      // @todo Figure out at runtime if library dependencies are met.
+      return TRUE;
+    }
+
+    return $this->callOriginalFunction("drupal_process_attached", $elements, $group, $dependency_check, $every_page);
+  }
+
+  /**
+   * This calls the given original function by replacing the global $conf
+   * variable, calling the function and putting it back.
+   *
+   * @param string $function
+   *   The function to call, the arguments are gotton via func_get_args().
+   * @return NULL|mixed
+   *   Returns what the original function returns.
+   */
+  public function callOriginalFunction($function) {
+    global $conf;
+
+    $args = func_get_args();
+    array_shift($args);
+
+    $name = $function . "_function";
+
+    $old = $conf[$name];
+    unset($conf[$name]);
+    $return = call_user_func_array($function, $args);
+    $conf[$name] = $old;
+
+    return $return;
+  }
+
 }
