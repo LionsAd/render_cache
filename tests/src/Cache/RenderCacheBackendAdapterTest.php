@@ -154,13 +154,16 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
     $cache_bin->shouldReceive('set')
       ->with('render:foo:direct', Mockery::on(function($data) { return TRUE; }), 0);
 
+    $cache_bin->shouldReceive('set')
+      ->with('render:foo:direct', Mockery::on(function($data) { return TRUE; }), -1);
+
     $cache = Mockery::mock('\Drupal\render_cache\Cache\RenderCacheBackendAdapter[cache]', array($stack));
     $cache->shouldReceive('cache')
       ->once()
       ->andReturn($cache_bin);
     $this->cache = $cache;
   }
-  
+
   /**
    * Tests that RenderCacheBackendAdapter::get() is working properly.
    * @covers ::__construct()
@@ -222,7 +225,7 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
     );
     $this->assertEquals(array('42' => $this->cacheHitData->data), $this->cache->getMultiple($cache_info_map), 'Cache data matches for ::getMultiple()');
   }
-  
+
   /**
    * Tests that RenderCacheBackendAdapter::setMultiple() is working properly.
    * @covers ::setMultiple()
@@ -257,19 +260,48 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
       'late' => $this->getCacheInfo('render:foo:late', RenderCache::RENDER_CACHE_STRATEGY_LATE_RENDER),
     );
 
+    $cache_info_map['late']['cid'] = NULL;
+
     $build = array();
     foreach ($cache_info_map as $id => $cache_info) {
       $build[$id] = $this->cacheHitData->data;
     }
+
     $this->cache->setMultiple($build, $cache_info_map);
+
     $this->assertEquals($this->cacheHitRenderDirect, $build['direct'], 'Data is the same for direct render strategy');
+    $this->assertTrue(empty($build['late']['#cache']['cid']), 'cid property is NULL.');
+    $this->assertTrue(empty($build['late']['#cache']['keys']), 'keys property is NULL');
+
+    // Now restore it:
+    $build['late']['#cache']['cid'] = 'render:foo:late';
     $this->assertEquals($this->cacheHitLateRender, $build['late'], 'Data is the same for late render strategy');
   }
+
+  /**
+   * Tests that RenderCacheBackendAdapter::set() works for preserve_original.
+   * @covers ::set()
+   */
+  public function test_set_preserve_original() {
+    // @todo consider using a data provider instead.
+    $cache_info = $this->getCacheInfo('render:foo:direct', RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER);
+
+    // Test some more code paths.
+    $cache_info['bin'] = 'cache_render';
+    $cache_info['expire'] = -1;
+    $cache_info['render_cache_preserve_original'] = TRUE;
+
+    $render = $this->cacheHitData->data;
+
+    $this->cache->set($render, $cache_info);
+    $this->assertEquals($this->cacheHitRenderDirect, $render, 'Data is the same for direct render strategy');
+  }
+
 
   protected function getCacheInfo($cid, $strategy) {
     return array(
       'cid' => $cid,
-      'keys' => array('render', 'foo','bar'), 
+      'keys' => array('render', 'foo','bar'),
       'tags' => array('zar:1'),
       'max-age' => array(600),
       'downstream-ttl' => array(),
