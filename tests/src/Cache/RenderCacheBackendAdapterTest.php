@@ -76,6 +76,14 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
     $preserved = array( 'baz' => $data['baz'] );
 
     $this->cacheHitRendered = 'foobarbaz';
+
+    $this->cacheHitRenderedOriginal = $this->cacheHitData->data;
+    $this->cacheHitRenderedOriginal['#printed'] = TRUE;
+    $this->cacheHitRenderedOriginal['foo']['#printed'] = TRUE;
+    $this->cacheHitRenderedOriginal['bar']['#printed'] = TRUE;
+    $this->cacheHitRenderedOriginal['baz']['#printed'] = TRUE;
+    $this->cacheHitRenderedOriginal['baz']['lama']['#printed'] = TRUE;
+
     $this->cacheHitNoRender = $data_raw + $properties;
 
     $this->cacheHitLateRender = $data_raw + $properties + array(
@@ -95,7 +103,7 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
 
     // @todo Still need to implement those.
     $stack->shouldReceive('render')
-      ->andReturn($this->cacheHitRendered);
+      ->andReturn(array($this->cacheHitRendered,$this->cacheHitRenderedOriginal));
     $stack->shouldReceive('collectAttached')
       ->andReturn($this->cacheHitLateRender['#attached']);
 
@@ -135,16 +143,16 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
       );
 
     $cache_bin->shouldReceive('set')
-      ->with('render:foo:bar', Mockery::on(function($data) { return TRUE; }), -1);
+      ->with('render:foo:bar', Mockery::on(function($data) { return TRUE; }), 0);
 
     $cache_bin->shouldReceive('set')
-      ->with('render:foo:no', Mockery::on(function($data) { return TRUE; }), -1);
+      ->with('render:foo:no', Mockery::on(function($data) { return TRUE; }), 0);
 
     $cache_bin->shouldReceive('set')
-      ->with('render:foo:late', Mockery::on(function($data) { return TRUE; }), -1);
+      ->with('render:foo:late', Mockery::on(function($data) { return TRUE; }), 0);
 
     $cache_bin->shouldReceive('set')
-      ->with('render:foo:direct', Mockery::on(function($data) { return TRUE; }), -1);
+      ->with('render:foo:direct', Mockery::on(function($data) { return TRUE; }), 0);
 
     $cache = Mockery::mock('\Drupal\render_cache\Cache\RenderCacheBackendAdapter[cache]', array($stack));
     $cache->shouldReceive('cache')
