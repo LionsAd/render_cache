@@ -13,7 +13,7 @@ namespace Drupal\render_cache\Cache;
  */
 interface RenderStackInterface {
   /**
-   * Renders the given render array, but preserves properties
+   * Renders the given render array, but preserves Drupal 8 properties
    * in the stack.
    *
    * @param array $render
@@ -23,6 +23,19 @@ interface RenderStackInterface {
    *   The rendered render array.
    */
   public function drupalRender(array &$render);
+
+  /**
+   * Increments the recursion level by 1.
+   */
+  public function increaseRecursion();
+
+  /**
+   * Decrements the recursion level by 1.
+   *
+   * @return array
+   *   Returns the current recursion storage with the assets.
+   */
+  public function decreaseRecursion();
 
   /**
    * Whether we are in a recursive context.
