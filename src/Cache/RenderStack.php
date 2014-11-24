@@ -153,6 +153,8 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @codeCoverageIgnore
    */
   public function drupalRender(array &$render) {
     $markup = drupal_render($render);
@@ -166,6 +168,8 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @codeCoverageIgnore
    */
   public function collectAttached(array $render) {
     return drupal_render_collect_attached($render, TRUE);
