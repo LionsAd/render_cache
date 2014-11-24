@@ -6,6 +6,7 @@
 
 namespace Drupal\render_cache\Cache;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Render\Element;
 
@@ -146,7 +147,7 @@ class RenderCacheBackendAdapter implements RenderCacheBackendAdapterInterface {
     $full_render['#cache'] = $cache_info;
     $full_render['render'] = &$render;
     $assets = $this->renderStack->collectAndRemoveAssets($full_render);
-    $render += $assets;
+    $render = NestedArray::mergeDeep($render, $assets);
 
     $data = $this->renderStack->convertRenderArrayToD7($render);
     $data['#attached']['render_cache'] += $properties;

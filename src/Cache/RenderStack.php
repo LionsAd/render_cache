@@ -360,7 +360,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
     }
 
     // Put the storage back, so it can be pushed to the stack.
-    $render += $storage;
+    $render = NestedArray::mergeDeep($render, $storage);
   }
 
   // JS / CSS asset helper functions.

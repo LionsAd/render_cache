@@ -267,6 +267,9 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
       $build[$id] = $this->cacheHitData->data;
     }
 
+    $build['late']['#cache']['cid'] = 'foo';
+    $build['late']['#cache']['keys'] = 'foo:bar';
+
     $this->cache->setMultiple($build, $cache_info_map);
 
     $this->assertEquals($this->cacheHitRenderDirect, $build['direct'], 'Data is the same for direct render strategy');
