@@ -74,7 +74,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
   protected $supportsDynamicAssets = FALSE;
 
   /**
-   * Increments the recursion level by 1.
+   * {@inheritdoc}
    */
   public function increaseRecursion() {
     $this->recursionLevel += 1;
@@ -82,7 +82,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
   }
 
   /**
-   * Decrements the recursion level by 1.
+   * {@inheritdoc}
    */
   public function decreaseRecursion() {
     $storage = $this->getRecursionStorage();
@@ -118,7 +118,12 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
     // Collect the new storage.
     if (!empty($storage)) {
       $render = $this->collectAndRemoveAssets($storage);
-      $render['#attached'] = $this->collectAttached($storage);
+      $attached = $this->collectAttached($storage);
+      if ($attached) {
+        $render['#attached'] = $attached;
+      }
+      // Cache the work, no need to do it twice.
+      $this->recursionStorage[$this->recursionLevel] = $render;
     }
 
     return $render;
