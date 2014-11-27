@@ -1,0 +1,10 @@
+name = Render cache - Test module for assets
+description = Test module for testing assets
+package = Performance and scalability
+core = 7.x
+hidden = TRUE
+
+; Dependencies
+dependencies[] = render_cache
+dependencies[] = render_cache_block
+dependencies[] = render_cache_entity

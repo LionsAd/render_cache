@@ -56,7 +56,7 @@ class Container implements ContainerInterface {
   public function get($name, $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE) {
     // This is wrapped in a protected method to allow to mark services private
     // in the future.
-    return $this->getService($name);
+    return $this->getService($name, $invalidBehavior);
   }
 
   /**
@@ -120,7 +120,7 @@ class Container implements ContainerInterface {
       throw new RuntimeException(sprintf('Circular reference detected for service "%s", path: "%s".', $name, implode(' -> ', array_keys($this->loading))));
     }
 
-    $definition = $this->getDefinition($name, $invalidBehavior == ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE);
+    $definition = $this->getDefinition($name, $invalidBehavior === ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE);
 
     if (!$definition) {
       $this->services[$name] = FALSE;
@@ -137,7 +137,7 @@ class Container implements ContainerInterface {
       'arguments' => array(),
       'calls' => array(),
       'tags' => array(),
-    );
+    ); // @codeCoverageIgnore
 
     try {
       $arguments = $this->expandArguments($definition['arguments'], $invalidBehavior);
@@ -153,7 +153,7 @@ class Container implements ContainerInterface {
           $factory = $this->getService($definition['factory_service'], $invalidBehavior);
         }
         else {
-          throw new RuntimeException(sprintf('Cannot create service "%s" from factory method without a factory service or factory class.', $id));
+          throw new RuntimeException(sprintf('Cannot create service "%s" from factory method without a factory service or factory class.', $name));
         }
         $service = call_user_func_array(array($factory, $method), $arguments);
       }
@@ -165,7 +165,7 @@ class Container implements ContainerInterface {
         $service = ($r->getConstructor() === NULL) ? $r->newInstance() : $r->newInstanceArgs($arguments);
       }
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       unset($this->loading[$name]);
       throw $e;
     }

@@ -12,6 +12,8 @@ use Drupal\render_cache\Plugin\Discovery\CToolsPluginDiscovery;
 
 /**
  * Provides render cache service definitions.
+ *
+ * @codeCoverageIgnore
  */
 class RenderCacheServiceProvider implements ServiceProviderInterface {
 
@@ -58,6 +60,14 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
       'tags' => array(
         array('cache.context'),
       ),
+    );
+    // Render Stack
+    $services['render_stack'] = array(
+      'class' => '\Drupal\render_cache\Cache\RenderStack',
+    );
+    $services['render_cache.cache'] = array(
+      'class' => '\Drupal\render_cache\Cache\RenderCacheBackendAdapter',
+      'arguments' => array('@render_stack'),
     );
 
     // Plugin Managers
@@ -137,10 +147,11 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
         $discovery = new CToolsPluginDiscovery($tag['owner'], $tag['type']);
         $definitions = $discovery->getDefinitions();
         foreach ($definitions as $key => $definition) {
-          // If arguments are not set, pass the definition as plugin argument.
-          if (!isset($definition['arguments'])) {
-            $definition['arguments'] = array($definition);
-          }
+          // Always pass the definition as the first argument.
+          $definition += array(
+            'arguments' => array(),
+          );
+          array_unshift($definition['arguments'], $definition);
           $container_definition['services'][$tag['prefix'] . $key] = $definition + array('public' => FALSE);
         }
       }

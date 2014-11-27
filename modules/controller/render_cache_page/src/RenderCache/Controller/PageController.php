@@ -16,21 +16,12 @@ use Drupal\render_cache\RenderCache\Controller\BaseController;
 class PageController extends BaseController implements PageControllerInterface {
 
   /**
-   * The page storage.
-   * @todo What is this, really?
-   *
-   * @var array
-   *   A Drupal render array.
-   */
-  private $pageStorage;
-
-  /**
    * {@inheritdoc}
    */
   public function hook_init() {
     // We need to increase the recursion level before entering here to avoid
     // early rendering of #post_render_cache data.
-    $this->increaseRecursion();
+    $this->renderStack->increaseRecursion();
   }
 
   /**
@@ -39,22 +30,20 @@ class PageController extends BaseController implements PageControllerInterface {
   public function view(array $objects) {
     // We need to decrease recursion again.
     // Because this only adds to the recursion storage, it is safe to call.
-    $this->pageStorage = static::getRecursionStorage();
-    $this->decreaseRecursion();
+    foreach ($objects as $id => $page) {
+      // Transform into a render array.
+      if (!is_array($page->content)) {
+        $page->content = array(
+          'main' => array(
+            '#markup' => $page->content
+          ),
+        );
+      }
+      $storage = $this->renderStack->decreaseRecursion();
+      $page->content['x_render_cache_page_recursion_storage'] = $storage;
+    }
 
     return parent::view($objects);
-  }
-
-  /**
-   * @param object[] $objects
-   *
-   * @return array[]
-   */
-  protected function renderRecursive(array $objects) {
-    $build = parent::renderRecursive($objects);
-    $page_id = current(array_keys($objects));
-    $build[$page_id]['x_render_cache_page_storage'] = $this->pageStorage;
-    return $build;
   }
 
   /**
@@ -65,15 +54,8 @@ class PageController extends BaseController implements PageControllerInterface {
 
     // The page cache is per page and per role by default.
     $default_cache_info['granularity'] = DRUPAL_CACHE_PER_ROLE | DRUPAL_CACHE_PER_PAGE;
-    $default_cache_info['render_cache_render_to_markup'] = array(
-      'preserve properties' => array(
-        // @todo use different render method and solve collecting of assets differently.
-        'page_top',
-        'page_bottom',
-        'sidebar_first',
-        'sidebar_second',
-       ),
-    );
+    $default_cache_info['render_cache_cache_strategy'] = \RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER;
+    $default_cache_info['render_cache_preserve_original'] = TRUE;
     return $default_cache_info;
   }
 
@@ -111,12 +93,12 @@ class PageController extends BaseController implements PageControllerInterface {
   protected function getCacheTags($object, array $context) {
     $tags = parent::getCacheTags($object, $context);
     // @see drupal_pre_render_page() in Drupal 8.
-    $tags['theme_global_settings'] = TRUE;
+    $tags[] = 'theme_global_settings';
 
     // Deliberately commented out as the theme might not be loaded, yet.
     // We do this in render() instead.
     //global $theme;
-    //$tags['theme'][] = $theme;
+    //$tags[] = 'theme:' . $theme;
 
     return $tags;
   }
@@ -126,12 +108,17 @@ class PageController extends BaseController implements PageControllerInterface {
    */
   protected function render(array $objects) {
     foreach ($objects as $id => $page) {
+      if ($this->renderStack->supportsDynamicAssets()) {
+        $storage = $page->content['x_render_cache_page_recursion_storage'];
+        unset($page->content['x_render_cache_page_recursion_storage']);
+        $this->renderStack->addRecursionStorage($storage, TRUE);
+      }
       $build[$id] = render_cache_page_drupal_render_page_helper($page->content);
     }
     // @see drupal_pre_render_page() in Drupal 8.
     global $theme;
     $page_id = current(array_keys($objects));
-    $build[$page_id]['#cache']['tags']['theme'] = $theme;
+    $build[$page_id]['#cache']['tags'][] = 'theme:' . $theme;
 
     return $build;
   }

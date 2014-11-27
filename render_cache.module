@@ -54,19 +54,15 @@ function render_cache_init() {
 function render_cache_ctools_plugin_type() {
   $items['Controller'] = array(
     'cache' => FALSE,
-    'classes' => array('class'),
   );
   $items['ValidationStrategy'] = array(
     'cache' => FALSE,
-    'classes' => array('class'),
   );
   $items['RenderStrategy'] = array(
     'cache' => FALSE,
-    'classes' => array('class'),
   );
   $items['ServiceProvider'] = array(
     'cache' => FALSE,
-    'classes' => array('class'),
   );
 
   return $items;

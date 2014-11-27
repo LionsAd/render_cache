@@ -12,6 +12,9 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 
 /**
  * A discovery mechanism that uses ctools plugins for Drupal 7 compatibility.
+ *
+ * This class cannot be tested as it relies on the existance of procedural code.
+ * @codeCoverageIgnore
  */
 class CToolsPluginDiscovery implements DiscoveryInterface {
 

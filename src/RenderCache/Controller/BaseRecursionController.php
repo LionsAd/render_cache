@@ -19,11 +19,11 @@ abstract class BaseRecursionController extends BaseController implements Recursi
    * {@inheritdoc}
    */
   public function recursionStep(array &$build) {
-    $storage = $this->decreaseRecursion();
+    $storage = $this->renderStack->decreaseRecursion();
     if (!empty($build)) {
       $build['x_render_cache_recursion_storage'] = $storage;
     }
-    $this->increaseRecursion();
+    $this->renderStack->increaseRecursion();
   }
 
   /**
@@ -43,7 +43,7 @@ abstract class BaseRecursionController extends BaseController implements Recursi
     }
 
     // Increase recursion for the first step.
-    $this->increaseRecursion();
+    $this->renderStack->increaseRecursion();
 
     // Now build the objects, the implementing class
     // is responsible to call recursionStep()
@@ -51,7 +51,14 @@ abstract class BaseRecursionController extends BaseController implements Recursi
     $build = $this->render($objects);
 
     // Decrease recursion as the last step.
-    $this->decreaseRecursion();
+    $this->renderStack->decreaseRecursion();
+
+    // Remove the render cache controller within the objects again.
+    foreach ($objects as $object) {
+      if (is_object($object)) {
+        unset($object->render_cache_controller);
+      }
+    }
 
     return $build;
   }

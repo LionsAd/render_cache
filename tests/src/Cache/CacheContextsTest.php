@@ -46,6 +46,8 @@ class CacheContextsTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that CacheContexts::getAll() is working properly.
+   * @covers ::__construct()
+   * @covers ::getAll()
    */
   public function test_getAll() {
     $this->assertEquals(array('cache_context.foo'), $this->cacheContexts->getAll(), 'Cache Contexts service contains the right services.');
@@ -53,6 +55,7 @@ class CacheContextsTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that CacheContexts::getLabels() is working properly.
+   * @covers ::getLabels()
    */
   public function test_getLabels() {
     $this->assertEquals(array('cache_context.foo' => 'Foo'), $this->cacheContexts->getLabels(), 'Cache Contexts service retrieves the right labels.');
@@ -60,6 +63,7 @@ class CacheContextsTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that CacheContexts::convertTokensToKeys() is working properly.
+   * @covers ::convertTokensToKeys()
    */
   public function test_convertTokensToKeys() {
     $tokens = array('foo', 'bar', 'cache_context.foo');

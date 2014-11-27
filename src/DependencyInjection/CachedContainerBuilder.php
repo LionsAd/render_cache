@@ -83,6 +83,8 @@ class CachedContainerBuilder extends ContainerBuilder {
    *
    * @return string
    *   The hardcoded cache id or via variable_get() if defined.
+   *
+   * @codeCoverageIgnore
    */
   protected function getCacheId() {
     return variable_get('render_cache_container_cid', 'render_cache:container_definition');

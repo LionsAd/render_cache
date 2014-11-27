@@ -26,6 +26,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that Container::hasDefinition() works properly.
+   * @covers ::hasDefinition()
    */
   public function test_hasDefinition() {
     $this->assertEquals($this->container->hasDefinition('service_container'), TRUE, 'Container has definition of itself.');
@@ -35,6 +36,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that Container::getDefinition() works properly.
+   * @covers ::getDefinition()
    */
   public function test_getDefinition() {
     $this->assertEquals( $this->containerDefinition['services']['service_container'], $this->container->getDefinition('service_container'), 'Container definition matches for container service.');
@@ -42,7 +44,18 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Tests that Container::getDefinition() works properly.
+   * @expectedException \RuntimeException
+   * @covers ::getDefinition()
+   */
+  public function test_getDefinition_exception() {
+    $this->container->getDefinition('service_not_exist');
+  }
+
+
+  /**
    * Tests that Container::getDefinitions() works properly.
+   * @covers ::getDefinitions()
    */
   public function test_getDefinitions() {
     $this->assertEquals($this->containerDefinition['services'], $this->container->getDefinitions(), 'Container definition matches input.');
@@ -50,6 +63,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that Container::getParameter() works properly.
+   * @covers ::getParameter()
    */
   public function test_getParameter() {
     $this->assertEquals($this->containerDefinition['parameters']['some_config'], $this->container->getParameter('some_config'), 'Container parameter matches for %some_config%.');
@@ -58,6 +72,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that Container::hasParameter() works properly.
+   * @covers ::hasParameter()
    */
   public function test_hasParameter() {
     $this->assertTrue($this->container->hasParameter('some_config'), 'Container parameters include %some_config%.');
@@ -66,6 +81,8 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that Container::get() works properly.
+   * @covers ::get()
+   * @covers ::getService()
    */
   public function test_get() {
     $container = $this->container->get('service_container');
@@ -88,7 +105,84 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Tests that Container::get() for circular dependencies works properly.
+   * @expectedException \RuntimeException
+   * @covers ::get()
+   * @covers ::getService()
+   */
+  public function test_get_circular() {
+    $this->container->get('circular_dependency');
+  }
+
+  /**
+   * Tests that Container::get() for non-existant dependencies works properly.
+   * @expectedException \RuntimeException
+   * @covers ::get()
+   * @covers ::getService()
+   */
+  public function test_get_exception() {
+    $this->container->get('service_not_exists');
+  }
+
+  /**
+   * Tests that Container::get() for non-existant parameters works properly.
+   * @covers ::get()
+   * @covers ::getService()
+   * @covers ::expandArguments()
+   */
+  public function test_get_notFound_parameter() {
+    $service = $this->container->get('service_parameter_not_exists', ContainerInterface::NULL_ON_INVALID_REFERENCE);
+    $this->assertFalse($service->getSomeParameter(), 'Some parameter is FALSE.');
+  }
+
+  /**
+   * Tests that Container::get() for non-existant parameters works properly.
+   * @expectedException \RuntimeException
+   * @covers ::get()
+   * @covers ::getService()
+   * @covers ::expandArguments()
+   */
+  public function test_get_notFound_parameter_exception() {
+    $this->container->get('service_parameter_not_exists');
+  }
+
+  /**
+   * Tests that Container::get() for non-existant dependencies works properly.
+   * @covers ::get()
+   * @covers ::getService()
+   * @covers ::expandArguments()
+   */
+  public function test_get_notFound_dependency() {
+    $service = $this->container->get('service_dependency_not_exists', ContainerInterface::NULL_ON_INVALID_REFERENCE);
+    $this->assertFalse($service->getSomeOtherService(), 'Some other service is FALSE.');
+  }
+
+  /**
+   * Tests that Container::get() for non-existant dependencies works properly.
+   * @expectedException \RuntimeException
+   * @covers ::get()
+   * @covers ::getService()
+   * @covers ::expandArguments()
+   */
+  public function test_get_notFound_dependency_exception() {
+    $this->container->get('service_dependency_not_exists');
+  }
+
+
+  /**
+   * Tests that Container::get() for non-existant dependencies works properly.
+   * @covers ::get()
+   * @covers ::getService()
+   */
+  public function test_get_notFound() {
+    // @todo This should be assertNull, but internally implemented as FALSE for not found.
+    $this->assertFalse($this->container->get('service_not_exists', ContainerInterface::NULL_ON_INVALID_REFERENCE), 'Not found service does not throw exception.');
+  }
+
+  /**
    * Tests that Container::get() for factories via services works properly.
+   * @covers ::get()
+   * @covers ::getService()
    */
   public function test_get_factoryService() {
     $factory_service = $this->container->get('factory_service');
@@ -98,6 +192,8 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that Container::get() for factories via factory_class works.
+   * @covers ::get()
+   * @covers ::getService()
    */
   public function test_get_factoryClass() {
     $service = $this->container->get('service.provider');
@@ -106,6 +202,16 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
     $this->assertInstanceOf(get_class($service), $factory_service);
     $this->assertEquals('bar', $factory_service->getSomeParameter(), 'Correct parameter was passed via the factory class instantiation.');
     $this->assertEquals($this->container, $factory_service->getContainer(), 'Container was injected via setter injection.');
+  }
+
+  /**
+   * Tests that Container::get() for circular dependencies works properly.
+   * @expectedException \RuntimeException
+   * @covers ::get()
+   * @covers ::getService()
+   */
+  public function test_get_factoryWrong() {
+    $this->container->get('wrong_factory');
   }
 
   /**
@@ -155,6 +261,22 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
       'calls' => array(
         array('setContainer', array('@service_container')),
       ),
+    );
+    $services['wrong_factory'] = array(
+      'class' => '\Drupal\render_cache\RenderCache\ControllerInterface',
+      'factory_method' => 'getFactoryMethod',
+    );
+    $services['circular_dependency'] = array(
+      'class' => '\Drupal\render_cache\Tests\DependencyInjection\MockService',
+      'arguments' => array('@circular_dependency'),
+    );
+    $services['service_parameter_not_exists'] = array(
+      'class' => '\Drupal\render_cache\Tests\DependencyInjection\MockService',
+      'arguments' => array('@service.provider', '%not_exists', -1),
+    );
+    $services['service_dependency_not_exists'] = array(
+      'class' => '\Drupal\render_cache\Tests\DependencyInjection\MockService',
+      'arguments' => array('@service_not_exists', '%some_config'),
     );
 
     return array(

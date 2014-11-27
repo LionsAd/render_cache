@@ -49,7 +49,7 @@ function render_cache_page_page_delivery_callback_alter(&$callback) {
 /**
  * Implements hook_module_implements_alter().
  *
- * Moves our hook_page_page_delivery_callback_alte() implementation to occur
+ * Moves our hook_page_page_delivery_callback_alter() implementation to occur
  * last so that we can consistently hijack the delivery callback.
  *
  * @param array $implementations
@@ -167,6 +167,19 @@ function render_cache_page_drupal_render_page($page) {
     $element_info = element_info('page');
     $build['page']['#theme_wrappers'] = $element_info['#theme_wrappers'];
   }
+
+  // Process the assets.
+  drupal_process_attached($build['page']);
+
+  // And restore properties.
+  $build['page'] += $build['page']['#render_cache_original'];
+  unset($build['page']['#render_cache_original']);
+  unset($build['page']['#attached']);
+  unset($build['page']['#printed']);
+  unset($build['page']['#children']);
+  // We need to unset #type and #theme to only render the #markup.
+  unset($build['page']['#type']);
+  unset($build['page']['#theme']);
 
   // Call drupal_render() like the original function, but allow other modules
   // to alter the output before and after rendering.

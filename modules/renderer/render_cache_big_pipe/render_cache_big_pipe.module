@@ -106,6 +106,9 @@ EOF;
 
   // Now render the scripts and closing body tag.
   print $build['#render_cache_bottom'];
+
+  // Now start output buffering again, so that drupal_page_footer() won't fail.
+  ob_start();
 }
 
 // -----------------------------------------------------------------------
