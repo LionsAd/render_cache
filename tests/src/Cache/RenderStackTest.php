@@ -392,11 +392,14 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
       ),
     );
     $render_result = array();
+    $render_result[0] = array();
+    $render_result[1] = array();
     $render_result[2] = array(
       '#attached' => array(
         'css' => 'test.css',
       ),
     );
+    $render_result[3] = array();
     $render_result[4] = array(
       'child_1' => array(
         '#markup' => 'foo',
