@@ -250,6 +250,10 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
 
     foreach ($children as $key) {
       $new_assets = $this->collectAndRemoveAssets($element[$key], TRUE);
+      // Remove empty properties to avoid confusing drupal_render().
+      if (empty($element[$key])) {
+        unset($element[$key]);
+      }
       $assets['#cache']['tags'] = Cache::mergeTags($assets['#cache']['tags'], $new_assets['#cache']['tags']);
       $assets['#cache']['max-age'] = NestedArray::mergeDeep($assets['#cache']['max-age'], $new_assets['#cache']['max-age']);
       $assets['#cache']['downstream-ttl'] = NestedArray::mergeDeep($assets['#cache']['downstream-ttl'], $new_assets['#cache']['downstream-ttl']);
