@@ -1,0 +1,92 @@
+<?php
+
+/**
+ * Implements hook_block_info().
+ */
+function rc_assets_test_block_info() {
+  $names = array( 'JS_CSS', 'Entity');
+  $blocks = array();
+  foreach ($names as $name) {
+    $blocks['rc_assets_test_' . strtolower($name)] = array(
+      'info' => t('RC Assets: @name', array('@name' => $name)),
+      'cache' => DRUPAL_NO_CACHE,
+    );
+  }
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function rc_assets_test_block_view($delta = '') {
+  $block = array();
+  $name = str_replace('rc_assets_test_', '', $delta);
+
+  $block['subject'] = t('RC Assets Block: ' . $name);
+  $block['content'] = _rc_assets_test_view_block($name);
+
+  return $block;
+}
+
+function _rc_assets_test_view_block($name) {
+
+  $path = drupal_get_path('module', 'rc_assets_test');
+  if ($name == 'js_css') {
+    $build['#markup'] = t('Real time data: ' . microtime(TRUE));
+    $build['#attached']['css'][] = $path . '/css/block-foo.css';
+    $build['#attached']['js'][]  = $path . '/js/block-foo.js';
+    return $build;
+  }
+
+  if ($name == 'entity') {
+    $node = node_load(1);
+    $build = render_cache_entity_view_single('node', $node, 'rc_assets_view_mode');
+    $build['#attached']['css'][] = $path . '/css/entity-outer.css';
+    $build['#attached']['js'][]  = $path . '/js/entity-outer.js';
+    return $build;
+  }
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function rc_assets_test_entity_view_alter(&$build, $type) {
+  if ($type == 'node') {
+    $node = $build['#node'];
+    $path = drupal_get_path('module', 'rc_assets_test');
+    $build['#attached']['css'][] = $path . '/css/entity-inner.css';
+    $build['#attached']['js'][]  = $path . '/js/entity-inner.js';
+    $build['#attached']['js'][]  = array( 'type' => 'setting', 'data' => array('foo' => array($node->nid)));
+    $build['some_child'] = array('#markup' => 'Node: ' . $node->nid . t(' Real time data: ' . microtime(TRUE)));
+  }
+}
+
+function rc_assets_test_preprocess_node($variables) {
+  if ($variables['view_mode'] == 'rc_assets_view_mode') {
+    $path = drupal_get_path('module', 'rc_assets_test');
+    drupal_add_css($path . '/css/entity-preprocess.css');
+    drupal_add_js($path . '/js/entity-preprocess.js');
+  }
+}
+
+/**
+ * Implements hook_render_cache_block_cache_info_alter().
+ */
+function rc_assets_test_render_cache_entity_cache_info_alter(&$cache_info, $object, $context) {
+  if ($context['view_mode'] == 'rc_assets_view_mode') {
+    // @todo check for node == 1 with custom view mode ...
+    $cache_info['granularity'] = DRUPAL_CACHE_GLOBAL;
+    $cache_info['render_cache_cache_strategy'] = RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER;
+  }
+}
+
+/**
+ * Implements hook_render_cache_block_cache_info_alter().
+ */
+function rc_assets_test_render_cache_block_cache_info_alter(&$cache_info, $object, $context) {
+  if ($context['module'] == 'rc_assets_test') {
+    $cache_info['granularity'] = DRUPAL_CACHE_GLOBAL;
+    $cache_info['render_cache_cache_strategy'] = RenderCache::RENDER_CACHE_STRATEGY_DIRECT_RENDER;
+  }
+}
