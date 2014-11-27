@@ -373,7 +373,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
       if (!empty($storage['#attached'])) {
         $render += array(
           '#attached' => array(),
-        );
+        ); // @codeCoverageIgnore
         $render['#attached'] = NestedArray::mergeDeep($render['#attached'], $storage['#attached']);
         unset($storage['#attached']);
       }
