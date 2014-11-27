@@ -238,6 +238,13 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
     $assets['#cache']['downstream-ttl'] = isset($assets['#cache']['downstream-ttl']) ? $assets['#cache']['downstream-ttl'] : array();
     $assets['#post_render_cache'] = isset($assets['#post_render_cache']) ? $assets['#post_render_cache'] : array();
 
+    if (!is_array($assets['#cache']['max-age'])) {
+      $assets['#cache']['max-age'] = array($assets['#cache']['max-age']);
+    }
+    if (!is_array($assets['#cache']['downstream-ttl'])) {
+      $assets['#cache']['downstream-ttl'] = array($assets['#cache']['downstream-ttl']);
+    }
+
     // Get the children of the element, sorted by weight.
     $children = Element::children($element, TRUE);
 
