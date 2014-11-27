@@ -391,7 +391,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
    * @see drupal_add_css()
    * @see drupal_add_js()
    */
-  public function drupal_add_assets($type, $data, $options) {
+  public function drupal_add_assets($type, $data = NULL, $options = NULL) {
 
     // Construct the options when its not an array.
     if (isset($options)) {
@@ -467,7 +467,7 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
    *
    * @see drupal_process_attached()
    */
-  public function drupal_process_attached($elements, $group = JS_DEFAULT, $dependency_check = FALSE, $every_page = NULL) {
+  public function drupal_process_attached($elements, $group = 0, $dependency_check = FALSE, $every_page = NULL) {
     if ($this->isRecursive()) {
       $storage = array();
       $storage['#attached'] = $elements['#attached'];
