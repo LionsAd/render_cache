@@ -207,22 +207,27 @@ class RenderStack implements RenderStackInterface, CacheableInterface {
    */
   public function render(array &$render) {
     $this->increaseRecursion();
-    if ($this->supportsDynamicAssets()) {
+
+    // Push our recursive stored storage on the stack first.
+    if (!empty($render['x_render_cache_recursion_storage'])) {
       $storage = $render['x_render_cache_recursion_storage'];
       unset($render['x_render_cache_recursion_storage']);
       $this->addRecursionStorage($storage, TRUE);
     }
 
     $markup = $this->drupalRender($render);
-    $storage = $this->decreaseRecursion();
-
-    $original_render = $render;
 
     // In case the dynamic assets have not been processed via our
     // drupal_process_attached, we need to collect them ourselves.
     if (!$this->supportsDynamicAssets()) {
+      $storage = array();
       $storage['#attached'] = $this->collectAttached($render);
+      $this->addRecursionStorage($storage, TRUE);
     }
+
+    $storage = $this->decreaseRecursion();
+
+    $original_render = $render;
 
     $render = $storage;
     $render['#markup'] = &$markup;
