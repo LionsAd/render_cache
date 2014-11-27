@@ -187,6 +187,173 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
+   * @covers ::render()
+   */
+  public function test_render_common() {
+    $storage = array(
+      '#cache' => array(
+        'tags' => array(
+          'node:1',
+          'node:2',
+        ),
+        'max-age' => array(600),
+        'downstream-ttl' => array(300),
+      ),
+      '#attached' => array(
+        'library' => array(
+          array('foo', 'bar'),
+        ),
+        'js' => array(
+          'foo.js',
+        ),
+        'css' => array(
+          'foo.css',
+        ),
+      ),
+      '#post_render_cache' => array(
+        'test_post_render_cache' => array(),
+      ),
+    );
+    $render = array(
+      '#markup' => 'foo',
+      '#attached' => array(
+        'library' => array(
+          array('inner', 'baz'),
+        ),
+        'js' => array(
+          'baz.js',
+        ),
+      ),
+      '#cache' => array(
+        'tags' => array(
+          'node:1',
+        ),
+      ),
+      'bar' => array(
+        '#markup' => 'bar',
+       ),
+    );
+    $original_render_result = array(
+      '#markup' => 'foo',
+      '#printed' => TRUE,
+      'bar' => array(
+        '#markup' => 'bar',
+        '#printed' => TRUE,
+       ),
+      '#attached' => array(
+        'library' => array(
+          array('inner', 'baz'),
+        ),
+        'js' => array(
+          'baz.js',
+        ),
+      ),
+    );
+    $render_result = array(
+      '#markup' => 'foobar',
+      '#attached' => array(
+        'library' => array(
+          array('foo', 'bar'),
+          array('inner', 'baz'),
+        ),
+        'js' => array(
+          'foo.js',
+          'baz.js',
+        ),
+        'css' => array(
+          'foo.css',
+        ),
+      ),
+    ) + $storage;
+
+    return array($storage, $render, $original_render_result, $render_result);
+  }
+
+  /**
+   * @covers ::render()
+   * @depends test_render_common
+   */
+  public function test_render($args) {
+    list($storage, $render, $original_render_result, $render_result) = $args;
+
+    $this->renderStack
+      ->shouldReceive('collectAttached')
+      ->times(4)
+      ->andReturnUsing(array($this, 'helperCollectAttached'));
+
+    $stack = $this->renderStack;
+
+    $this->renderStack
+      ->shouldReceive('drupalRender')
+      ->with(Mockery::on(function(&$render) use ($stack) {
+          $render['#printed'] = TRUE;
+          $render['bar']['#printed'] = TRUE;
+
+          // This is called by drupal_render() normally.
+          if ($stack->supportsDynamicAssets()) {
+            $stack->drupal_process_attached($render);
+          }
+
+          // Store and remove recursive storage.
+          // for our properties.
+          $stack->addRecursionStorage($render);
+
+          return TRUE;
+        }))
+      ->once()
+      ->andReturn('foobar');
+
+    $render['x_render_cache_recursion_storage'] = $storage;
+    list($markup, $original) = $this->renderStack->render($render);
+    $this->assertEquals('foobar', $markup, 'Markup matches expected rendered data.');
+    $this->assertEquals($original_render_result, $original, 'Original render array matches expected rendered data.');
+    $this->assertEquals($render_result, $render, 'Render array matches expected rendered data.');
+  }
+
+  /**
+   * @covers ::render()
+   * @depends test_render_common
+   */
+  public function test_render_supportsDynamicAssets($args) {
+    list($storage, $render, $original_render_result, $render_result) = $args;
+
+    $this->renderStack
+      ->shouldReceive('collectAttached')
+      ->times(3)
+      ->andReturnUsing(array($this, 'helperCollectAttached'));
+
+    $stack = $this->renderStack;
+
+    $this->renderStack
+      ->shouldReceive('drupalRender')
+      ->with(Mockery::on(function(&$render) use ($stack) {
+          $render['#printed'] = TRUE;
+          $render['bar']['#printed'] = TRUE;
+
+          // This is called by drupal_render() normally.
+          if ($stack->supportsDynamicAssets()) {
+            $stack->drupal_process_attached($render);
+          }
+
+          // Store and remove recursive storage.
+          // for our properties.
+          $stack->addRecursionStorage($render);
+
+          return TRUE;
+        }))
+      ->once()
+      ->andReturn('foobar');
+
+    $this->renderStack->supportsDynamicAssets(TRUE);
+
+    $render['x_render_cache_recursion_storage'] = $storage;
+    list($markup, $original) = $this->renderStack->render($render);
+    $this->assertEquals('foobar', $markup, 'Markup matches expected rendered data.');
+    $this->assertEquals($original_render_result, $original, 'Original render array matches expected rendered data.');
+    $this->assertEquals($render_result, $render, 'Render array matches expected rendered data.');
+  }
+
+  /**
    * @covers ::collectAndRemoveAssets()
    */
   public function test_collectAndRemoveAssets() {
@@ -217,7 +384,7 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
     $render[] = array(
       'child_1' => array(
         '#markup' => 'foo',
-        '#cache' => array( 
+        '#cache' => array(
           'tags' => array(
             'node:2',
           ),
@@ -236,7 +403,7 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
       ),
     );
 
-    $storage = array(      
+    $storage = array(
       '#cache' => array(
         'tags' => array(
           'node:1',
@@ -248,7 +415,6 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
       '#post_render_cache' => array(
         'test_post_render_cache' => array(),
       ),
-
     );
 
     $this->assertEquals($storage, $this->renderStack->collectAndRemoveAssets($render), 'Collected assets match after collectAndRemoveAssets.');
@@ -298,7 +464,7 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
 
     $this->assertEquals($render_result, $this->renderStack->collectAndRemoveD8Properties($render));
   }
-  
+
   /**
    * Tests that RenderStack::convertRenderArrayToD7() is working properly.
    * @covers ::convertRenderArrayToD7()
@@ -509,7 +675,7 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
       '\Drupal\render_cache\Tests\Cache\RenderStackTest::renderStackPostProcessTest' => array(array('bar', 'baz', array('baz', 'foo', FALSE, $this->renderStack), $this->renderStack)),
     );
 
-    $result = $render; 
+    $result = $render;
 
     $this->renderStack->processPostRenderCache($render, $cache_info);
     $this->assertEquals($result, $render, 'Render matches when using post_render_cache with late render strategy.');
@@ -670,6 +836,10 @@ class RenderStackTest extends \PHPUnit_Framework_TestCase {
    *   The collected attachments.
    */
   public function helperCollectAttached(array $render) {
+    if (!empty($render[2]['#attached']) && empty($render[1]['#attached'])) {
+      return NestedArray::mergeDeep($render[0]['#attached'], $render[2]['#attached']);
+    }
+
     if (!empty($render[2]['#attached'])) {
       return NestedArray::mergeDeep($render[0]['#attached'], $render[1]['#attached'], $render[2]['#attached']);
     }
