@@ -17,34 +17,6 @@ function render_cache_flush_caches() {
   return array('cache_render');
 }
 
-/**
- * Implements hook_module_implements_alter().
- *
- * Moves our hook_init() implementation to occur first so that we
- * can initialize the container.
- *
- * @param mixed[] $implementations
- *   Format: $[$module] = string|false
- * @param string $hook
- */
-function render_cache_module_implements_alter(&$implementations, $hook) {
-  if ($hook == 'init') {
-    $group = $implementations['render_cache'];
-    unset($implementations['render_cache']);
-    $implementations = array('render_cache' => $group) + $implementations;
-  }
-}
-
-/**
- * Implements hook_init().
- */
-function render_cache_init() {
-  // Initalize the container, now that Drupal is booted.
-  // Note: If this turns out to be not early enough, move to
-  //       hook_stream_wrappers_alter().
-  RenderCache::init();
-}
-
 // -----------------------------------------------------------------------
 // Contrib Hooks
 
@@ -61,9 +33,6 @@ function render_cache_ctools_plugin_type() {
   $items['RenderStrategy'] = array(
     'cache' => FALSE,
   );
-  $items['ServiceProvider'] = array(
-    'cache' => FALSE,
-  );
 
   return $items;
 }
@@ -77,6 +46,9 @@ function render_cache_ctools_plugin_type() {
  * @return null|string
  */
 function render_cache_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'service_provider') {
+    return 'src/ServiceProvider/' . $plugin_type;
+  }
   if ($owner == 'render_cache') {
     return 'src/RenderCache/' . $plugin_type;
   }
