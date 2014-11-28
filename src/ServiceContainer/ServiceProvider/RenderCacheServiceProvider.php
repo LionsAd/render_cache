@@ -69,7 +69,7 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
 
     // Plugin Managers
     $services['render_cache.controller'] = array(
-      'class' => '\Drupal\render_cache\Plugin\ContainerAwarePluginManager',
+      'class' => '\Drupal\service_container\Plugin\ContainerAwarePluginManager',
       'arguments' => array('render_cache.controller.internal.'),
       'calls' => array(
         array('setContainer', array('@service_container')),
@@ -83,7 +83,7 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
       ),
     );
     $services['render_cache.render_strategy'] = array(
-      'class' => '\Drupal\render_cache\Plugin\ContainerAwarePluginManager',
+      'class' => '\Drupal\service_container\Plugin\ContainerAwarePluginManager',
       'arguments' => array('render_cache.render_strategy.internal.'),
       'calls' => array(
         array('setContainer', array('@service_container')),
@@ -97,7 +97,7 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
       ),
     );
     $services['render_cache.validation_strategy'] = array(
-      'class' => '\Drupal\render_cache\Plugin\ContainerAwarePluginManager',
+      'class' => '\Drupal\service_container\Plugin\ContainerAwarePluginManager',
       'arguments' => array('render_cache.validation_strategy.internal.'),
       'calls' => array(
         array('setContainer', array('@service_container')),
