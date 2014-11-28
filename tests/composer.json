@@ -5,9 +5,9 @@
   },
   "autoload": {
     "psr-0": {
-      "Drupal\\Component\\": "../lib/",
       "Drupal\\Core\\": "../lib/",
-      "RenderCache": "../lib/"
+      "RenderCache": "../lib/",
+      "Drupal\\Component\\": "lib/"
     },
     "psr-4": {
       "Drupal\\render_cache\\": "../src/",
