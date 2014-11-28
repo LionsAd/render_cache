@@ -33,6 +33,9 @@ class RenderCacheBackendAdapterTest extends \PHPUnit_Framework_TestCase {
    * {@inheritdoc}
    */
   public function setUp() {
+    // @todo We need to mock Drupal class, because RenderCache extends it.
+    $drupal = Mockery::mock('alias:Drupal');
+
     $data_raw = array(
       'foo' => array(
         '#markup' => 'foo',

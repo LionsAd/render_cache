@@ -7,7 +7,7 @@
 /**
  * Static Service Container wrapper wrapping Drupal class.
  */
-class RenderCache {
+class RenderCache extends Drupal {
 
   /**
    * Indicates that the item should not be rendered before it is cached.
