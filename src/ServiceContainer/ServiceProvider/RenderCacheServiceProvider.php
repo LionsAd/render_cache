@@ -7,8 +7,7 @@
 
 namespace Drupal\render_cache\RenderCache\ServiceProvider;
 
-use Drupal\render_cache\DependencyInjection\ServiceProviderInterface;
-use Drupal\render_cache\Plugin\Discovery\CToolsPluginDiscovery;
+use Drupal\service_provider\DependencyInjection\ServiceProviderInterface;
 
 /**
  * Provides render cache service definitions.
@@ -25,9 +24,6 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
     $parameters['cache_contexts'] = array();
 
     $services = array();
-    $services['service_container'] = array(
-      'class' => '\Drupal\render_cache\DependencyInjection\Container',
-    );
 
     // Cache Contexts
     $services['cache_contexts'] = array(
@@ -140,21 +136,5 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
   public function alterContainerDefinition(&$container_definition) {
     // Register cache contexts parameter in the container.
     $container_definition['parameters']['cache_contexts'] = array_keys($container_definition['tags']['cache.context']);
-
-    // Register ctools plugins as private services in the container.
-    foreach ($container_definition['tags']['ctools.plugin'] as $service => $tags) {
-      foreach ($tags as $tag) {
-        $discovery = new CToolsPluginDiscovery($tag['owner'], $tag['type']);
-        $definitions = $discovery->getDefinitions();
-        foreach ($definitions as $key => $definition) {
-          // Always pass the definition as the first argument.
-          $definition += array(
-            'arguments' => array(),
-          );
-          array_unshift($definition['arguments'], $definition);
-          $container_definition['services'][$tag['prefix'] . $key] = $definition + array('public' => FALSE);
-        }
-      }
-    }
   }
 }
