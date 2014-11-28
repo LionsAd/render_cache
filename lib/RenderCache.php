@@ -75,13 +75,14 @@ class RenderCache extends Drupal {
   protected static $renderStack;
 
   /**
-   * Post initialization function.
+   * Container Ready event listener.
    *
-   * Will be removed once the base class is moved to service_container.
-   *
-   * @todo This is currently not called.
+   * @param $container
+   *   The service container.
    */
-  protected static function postInit() {
+  public static function containerReady($container) {
+    static::$container = $container;
+
     // Last get the render stack for improved performance.
     if (static::$container) {
       static::$renderStack = static::$container->get('render_stack');

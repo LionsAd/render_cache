@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Contains \Drupal\render_cache\RenderCache\ServiceProvider\RenderCacheServiceProvider
+ * Contains \Drupal\render_cache\ServiceContainer\ServiceProvider\RenderCacheServiceProvider
  */
 
-namespace Drupal\render_cache\RenderCache\ServiceProvider;
+namespace Drupal\render_cache\ServiceContainer\ServiceProvider;
 
-use Drupal\service_provider\DependencyInjection\ServiceProviderInterface;
+use Drupal\service_container\DependencyInjection\ServiceProviderInterface;
 
 /**
  * Provides render cache service definitions.
@@ -22,6 +22,7 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
   public function getContainerDefinition() {
     $parameters = array();
     $parameters['cache_contexts'] = array();
+    $parameters['service_container.static_event_listeners'] = array('RenderCache');
 
     $services = array();
 
