@@ -67,53 +67,6 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
       'arguments' => array('@render_stack'),
     );
 
-    // Plugin Managers
-    $services['render_cache.controller'] = array(
-      'class' => '\Drupal\service_container\Plugin\ContainerAwarePluginManager',
-      'arguments' => array('render_cache.controller.internal.'),
-      'calls' => array(
-        array('setContainer', array('@service_container')),
-      ),
-      'tags' => array(
-        array(
-          'name' => 'ctools.plugin',
-          'owner' => 'render_cache',
-          'type' => 'Controller',
-          'prefix' => 'render_cache.controller.internal.',
-        ),
-      ),
-    );
-    $services['render_cache.render_strategy'] = array(
-      'class' => '\Drupal\service_container\Plugin\ContainerAwarePluginManager',
-      'arguments' => array('render_cache.render_strategy.internal.'),
-      'calls' => array(
-        array('setContainer', array('@service_container')),
-      ),
-      'tags' => array(
-        array(
-          'name' => 'ctools.plugin',
-          'owner' => 'render_cache',
-          'type' => 'RenderStrategy',
-          'prefix' => 'render_cache.render_strategy.internal.',
-        ),
-      ),
-    );
-    $services['render_cache.validation_strategy'] = array(
-      'class' => '\Drupal\service_container\Plugin\ContainerAwarePluginManager',
-      'arguments' => array('render_cache.validation_strategy.internal.'),
-      'calls' => array(
-        array('setContainer', array('@service_container')),
-      ),
-      'tags' => array(
-        array(
-          'name' => 'ctools.plugin',
-          'owner' => 'render_cache',
-          'type' => 'ValidationStrategy',
-          'prefix' => 'render_cache.validation_strategy.internal.',
-        ),
-      ),
-    );
-
     // Services provided normally by user.module.
     $services['cache_context.user'] = array(
       'class' => '\Drupal\render_cache\Cache\UserCacheContext',
@@ -125,6 +78,29 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
       'class' => '\Drupal\render_cache\Cache\UserRolesCacheContext',
       'tags' => array(
         array('name' => 'cache.context'),
+      ),
+    );
+
+    // Plugin Managers - filled out by alterDefinition() of service_container
+    // module.
+    // Key is: <owner>.<identifier>
+    $services['render_cache.controller'] = array();
+    $services['render_cache.render_strategy'] = array();
+    $services['render_cache.validation_strategy'] = array();
+
+    // Syntax is: <owner> => array(<identifier> => <type>)
+    $parameters['service_container.plugin_managers']['ctools'] = array(
+      'render_cache.controller' => array(
+        'owner' => 'render_cache',
+        'type' => 'Controller',
+      ),
+      'render_cache.validation_strategy' => array(
+        'owner' => 'render_cache',
+        'type' => 'ValidationStrategy',
+      ),
+      'render_cache.render_strategy' => array(
+        'owner' => 'render_cache',
+        'type' => 'RenderStrategy',
       ),
     );
 
