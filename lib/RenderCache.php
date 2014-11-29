@@ -4,22 +4,10 @@
  * Contains RenderCache
  */
 
-use Drupal\render_cache\Controller\BaseController;
-use Drupal\render_cache\DependencyInjection\CachedContainerBuilder;
-use Drupal\render_cache\DependencyInjection\ServiceProviderPluginManager;
-
 /**
- * Static Service Container wrapper.
- *
- * Generally, code in Drupal should accept its dependencies via either
- * constructor injection or setter method injection. However, there are cases,
- * particularly in legacy procedural code, where that is infeasible. This
- * class acts as a unified global accessor to arbitrary services within the
- * system in order to ease the transition from procedural code to injected OO
- * code.
- *
+ * Static Service Container wrapper wrapping Drupal class.
  */
-class RenderCache {
+class RenderCache extends Drupal {
 
   /**
    * Indicates that the item should not be rendered before it is cached.
@@ -87,50 +75,14 @@ class RenderCache {
   protected static $renderStack;
 
   /**
-   * Initializes the container.
+   * Container Ready event listener.
    *
-   * This can be safely called from hook_boot() because the container will
-   * only be build if we have reached the DRUPAL_BOOTSTRAP_FULL phase.
-   *
-   * @return bool
-   *   TRUE when the container was initialized, FALSE otherwise.
+   * @param $container
+   *   The service container.
    */
-  public static function init() {
-    // If this is set already, just return.
-    if (isset(static::$container)) {
-      return TRUE;
-    }
+  public static function containerReady($container) {
+    static::$container = $container;
 
-    $service_provider_manager = new ServiceProviderPluginManager();
-    // This is an internal API, but we need the cache object.
-    $cache = _cache_get_object('cache');
-
-    $container_builder = new CachedContainerBuilder($service_provider_manager, $cache);
-
-    if ($container_builder->isCached()) {
-      static::$container = $container_builder->compile();
-      static::postInit();
-      return TRUE;
-    }
-
-    // If we have not yet fully bootstrapped, we can't build the container.
-    if (drupal_bootstrap(NULL, FALSE) != DRUPAL_BOOTSTRAP_FULL) {
-      return FALSE;
-    }
-
-    // Rebuild the container.
-    static::$container = $container_builder->compile();
-    static::postInit();
-
-    return (bool) static::$container;
-  }
-
-  /**
-   * Post initialization function.
-   *
-   * Will be removed once the base class is moved to service_container.
-   */
-  protected static function postInit() {
     // Last get the render stack for improved performance.
     if (static::$container) {
       static::$renderStack = static::$container->get('render_stack');
@@ -140,47 +92,6 @@ class RenderCache {
         static::$renderStack->supportsDynamicAssets(TRUE);
       }
     }
-  }
-
-  /**
-   * Returns the currently active global container.
-   *
-   * @deprecated This method is only useful for the testing environment. It
-   * should not be used otherwise.
-   *
-   * @return \Drupal\render_cache\DependencyInjection\ContainerInterface
-   */
-  public static function getContainer() {
-    return static::$container;
-  }
-
-  /**
-   * Retrieves a service from the container.
-   *
-   * Use this method if the desired service is not one of those with a dedicated
-   * accessor method below. If it is listed below, those methods are preferred
-   * as they can return useful type hints.
-   *
-   * @param string $id
-   *   The ID of the service to retrieve.
-   * @return mixed
-   *   The specified service.
-   */
-  public static function service($id) {
-    return static::$container->get($id);
-  }
-
-  /**
-   * Indicates if a service is defined in the container.
-   *
-   * @param string $id
-   *   The ID of the service to check.
-   *
-   * @return bool
-   *   TRUE if the specified service exists, FALSE otherwise.
-   */
-  public static function hasService($id) {
-    return static::$container && static::$container->has($id);
   }
 
   /**

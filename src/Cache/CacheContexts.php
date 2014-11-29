@@ -6,8 +6,7 @@
 
 namespace Drupal\render_cache\Cache;
 
-use Drupal\render_cache\DependencyInjection\Container;
-use Drupal\render_cache\DependencyInjection\ContainerInterface;
+use Drupal\service_container\DependencyInjection\ContainerInterface;
 
 use Drupal\Core\Cache\CacheContexts as DrupalCacheContexts;
 
@@ -28,14 +27,14 @@ class CacheContexts extends DrupalCacheContexts {
   /**
    * The service container.
    *
-   * @var \Drupal\render_cache\DependencyInjection\ContainerInterface
+   * @var \Drupal\service_container\DependencyInjection\ContainerInterface
    */
   protected $container;
 
  /**
    * Constructs a CacheContexts object.
    *
-   * @param \Drupal\render_cache\DependencyInjection\ContainerInterface $container
+   * @param \Drupal\service_container\DependencyInjection\ContainerInterface $container
    *   The current service container.
    * @param array $contexts
    *   An array of key-value pairs, where the keys are service names (which also

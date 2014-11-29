@@ -9,9 +9,8 @@ configure = admin/config/development/render-cache
 ; Dependencies
 dependencies[] = ctools
 dependencies[] = entity_modified
-
-; Download from https://www.drupal.org/sandbox/fabianx/2354855 until it is a full project.
 dependencies[] = registry_autoload
+dependencies[] = service_container
 
 registry_autoload[] = PSR-0
 registry_autoload[] = PSR-4
