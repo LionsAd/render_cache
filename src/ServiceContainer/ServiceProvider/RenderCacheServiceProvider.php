@@ -37,25 +37,25 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
     $services['cache_context.url'] = array(
       'class' => '\Drupal\render_cache\Cache\UrlCacheContext',
       'tags' => array(
-        array('cache.context'),
+        array('name' => 'cache.context'),
       ),
     );
     $services['cache_context.language'] = array(
       'class' => '\Drupal\render_cache\Cache\LanguageCacheContext',
       'tags' => array(
-        array('cache.context'),
+        array('name' => 'cache.context'),
       ),
     );
     $services['cache_context.theme'] = array(
       'class' => '\Drupal\render_cache\Cache\ThemeCacheContext',
       'tags' => array(
-        array('cache.context'),
+        array('name' => 'cache.context'),
       ),
     );
     $services['cache_context.theme'] = array(
       'class' => '\Drupal\render_cache\Cache\TimezoneCacheContext',
       'tags' => array(
-        array('cache.context'),
+        array('name' => 'cache.context'),
       ),
     );
     // Render Stack
@@ -75,10 +75,11 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
         array('setContainer', array('@service_container')),
       ),
       'tags' => array(
-        array('ctools.plugin', array(
+        array(
+          'name' => 'ctools.plugin',
           'owner' => 'render_cache',
           'type' => 'Controller',
-          'prefix' => 'render_cache.controller.internal.')
+          'prefix' => 'render_cache.controller.internal.',
         ),
       ),
     );
@@ -89,10 +90,11 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
         array('setContainer', array('@service_container')),
       ),
       'tags' => array(
-        array('ctools.plugin', array(
+        array(
+          'name' => 'ctools.plugin',
           'owner' => 'render_cache',
           'type' => 'RenderStrategy',
-          'prefix' => 'render_cache.render_strategy.internal.')
+          'prefix' => 'render_cache.render_strategy.internal.',
         ),
       ),
     );
@@ -103,10 +105,11 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
         array('setContainer', array('@service_container')),
       ),
       'tags' => array(
-        array('ctools.plugin', array(
+        array(
+          'name' => 'ctools.plugin',
           'owner' => 'render_cache',
           'type' => 'ValidationStrategy',
-          'prefix' => 'render_cache.validation_strategy.internal.')
+          'prefix' => 'render_cache.validation_strategy.internal.',
         ),
       ),
     );
@@ -115,13 +118,13 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
     $services['cache_context.user'] = array(
       'class' => '\Drupal\render_cache\Cache\UserCacheContext',
       'tags' => array(
-        array('cache.context'),
+        array('name' => 'cache.context'),
       ),
     );
     $services['cache_context.user.roles'] = array(
       'class' => '\Drupal\render_cache\Cache\UserRolesCacheContext',
       'tags' => array(
-        array('cache.context'),
+        array('name' => 'cache.context'),
       ),
     );
 
