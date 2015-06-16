@@ -81,28 +81,8 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
       ),
     );
 
-    // Plugin Managers - filled out by alterDefinition() of service_container
-    // module.
-    // This needs to exist in an empty state.
-    $services['render_cache.controller'] = array();
-    $services['render_cache.render_strategy'] = array();
-    $services['render_cache.validation_strategy'] = array();
 
-    // Syntax is: <service_name> => <plugin_manager_definition>
-    $parameters['service_container.plugin_managers']['ctools'] = array(
-      'render_cache.controller' => array(
-        'owner' => 'render_cache',
-        'type' => 'Controller',
-      ),
-      'render_cache.validation_strategy' => array(
-        'owner' => 'render_cache',
-        'type' => 'ValidationStrategy',
-      ),
-      'render_cache.render_strategy' => array(
-        'owner' => 'render_cache',
-        'type' => 'RenderStrategy',
-      ),
-    );
+    $parameters['ctools_plugins_auto_discovery']['render_cache'] = TRUE;
 
     return array(
       'parameters' => $parameters,

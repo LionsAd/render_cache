@@ -20,7 +20,7 @@ class BlockController extends BaseRecursionController {
    */
   protected function isCacheable(array $default_cache_info, array $context) {
     // Disabled caching for now.
-    return variable_get('render_cache_' . $this->getType() . '_' . $context['region'] . '_enabled', TRUE)
+    return variable_get('render_cache_' . $this->getPluginId() . '_' . $context['region'] . '_enabled', TRUE)
         && parent::isCacheable($default_cache_info, $context);
   }
 

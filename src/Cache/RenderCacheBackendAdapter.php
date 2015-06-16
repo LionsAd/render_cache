@@ -7,11 +7,8 @@
 namespace Drupal\render_cache\Cache;
 
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Render\Element;
 
-use Drupal\render_cache\Cache\RenderStackInterface;
-use DrupalCacheInterface;
 use RenderCache;
 
 /**

@@ -5,14 +5,13 @@
  */
 
 namespace Drupal\render_cache\RenderCache\RenderStrategy;
-
-use Drupal\render_cache\Plugin\BasePlugin;
+use Drupal\Component\Plugin\PluginBase;
 
 /**
  * Base class for RenderStrategy plugin objects.
  *
  * @ingroup rendercache
  */
-abstract class BaseRenderStrategy extends BasePlugin implements RenderStrategyInterface {
+abstract class BaseRenderStrategy extends PluginBase implements RenderStrategyInterface {
 
 }

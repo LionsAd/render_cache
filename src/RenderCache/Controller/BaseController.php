@@ -9,7 +9,6 @@ namespace Drupal\render_cache\RenderCache\Controller;
 use Drupal\render_cache\Cache\Cache;
 use Drupal\render_cache\Cache\RenderCacheBackendAdapterInterface;
 use Drupal\render_cache\Cache\RenderCachePlaceholder;
-use Drupal\render_cache\Cache\RenderStack;
 use Drupal\render_cache\Cache\RenderStackInterface;
 
 use RenderCache;
@@ -45,15 +44,19 @@ abstract class BaseController extends AbstractBaseController {
   /**
    * Constructs a controller plugin object.
    *
-   * @param array $plugin
-   *   The plugin definition.
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
    * @param \Drupal\render_cache\Cache\RenderStack $render_stack
    *   The render stack.
    * @param \Drupal\render_cache\Cache\RenderCacheBackendAdapter $cache
    *   The cache backend adapter.
    */
-  public function __construct(array $plugin, RenderStackInterface $render_stack, RenderCacheBackendAdapterInterface $cache) {
-    parent::__construct($plugin);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RenderStackInterface $render_stack, RenderCacheBackendAdapterInterface $cache) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->renderStack = $render_stack;
     $this->cache = $cache;
   }
@@ -140,7 +143,7 @@ abstract class BaseController extends AbstractBaseController {
       // @todo Use a #post_render function.
       if (isset($render['#markup'])
          && (variable_get('render_cache_debug_output', FALSE)
-           || variable_get('render_cache_debug_output_' . $this->getType(), FALSE)
+           || variable_get('render_cache_debug_output_' . $this->getPluginId(), FALSE)
            || !empty($cache_info['render_cache_debug_output']))
          ) {
         // @todo Move to helper function.
@@ -156,7 +159,7 @@ abstract class BaseController extends AbstractBaseController {
         $attached = print_r($storage, TRUE);
         $prefix .= "\nATTACHED: " . print_r($full_storage, TRUE) . "\n";
         $prefix .= "\nHOOKS:\n";
-        $hook_prefix = 'render_cache_' . $this->getType() . '_';
+        $hook_prefix = 'render_cache_' . $this->getPluginId() . '_';
         foreach (array('default_cache_info', 'cache_info', 'keys', 'tags', 'hash', 'validate') as $hook) {
           $prefix .= '* hook_' . $hook_prefix . $hook . "_alter()\n";
         }
@@ -193,7 +196,7 @@ abstract class BaseController extends AbstractBaseController {
     $ignore_request_method_check = $default_cache_info['render_cache_ignore_request_method_check'];
     return isset($default_cache_info['granularity'])
         && variable_get('render_cache_enabled', TRUE)
-        && variable_get('render_cache_' . $this->getType() . '_enabled', TRUE)
+        && variable_get('render_cache_' . $this->getPluginId() . '_enabled', TRUE)
         && render_cache_call_is_cacheable(NULL, $ignore_request_method_check);
   }
 
@@ -217,7 +220,7 @@ abstract class BaseController extends AbstractBaseController {
   protected function getCacheKeys($object, array $context) {
     return array(
       'render_cache',
-      $this->getType(),
+      $this->getPluginId(),
     );
   }
 
@@ -236,7 +239,7 @@ abstract class BaseController extends AbstractBaseController {
   protected function getCacheTags($object, array $context) {
     return array(
       'rendered',
-      $this->getType() . '_view',
+      $this->getPluginId() . '_view',
     );
   }
 
@@ -480,7 +483,7 @@ abstract class BaseController extends AbstractBaseController {
    * {@inheritdoc}
    */
   protected function alter($type, &$data, &$context1 = NULL, &$context2 = NULL, &$context3 = NULL) {
-    drupal_alter('render_cache_' . $this->getType() . '_' . $type, $data, $context1, $context2, $context3);
+    drupal_alter('render_cache_' . $this->getPluginId() . '_' . $type, $data, $context1, $context2, $context3);
   }
 
   /**
@@ -506,7 +509,7 @@ abstract class BaseController extends AbstractBaseController {
       // @todo Serialize the object.
       $ph_object = array(
         'id' => $id,
-        'type' => $this->getType(),
+        'type' => $this->getPluginId(),
         'context' => $context,
         'object' => $objects[$id],
         'cache_info' => $cache_info,
