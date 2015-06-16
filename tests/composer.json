@@ -7,7 +7,9 @@
     "psr-0": {
       "Drupal\\Core\\": "../lib/",
       "RenderCache": "../lib/",
-      "Drupal\\Component\\": "lib/"
+      "Drupal\\Component\\": "lib/",
+      "Drupal": "../lib/",
+      "Psr": "../lib/"
     },
     "psr-4": {
       "Drupal\\render_cache\\": "../src/",
