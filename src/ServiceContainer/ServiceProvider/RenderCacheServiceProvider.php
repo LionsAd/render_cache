@@ -81,8 +81,7 @@ class RenderCacheServiceProvider implements ServiceProviderInterface {
       ),
     );
 
-
-    $parameters['ctools_plugins_auto_discovery']['render_cache'] = TRUE;
+    $parameters['ctools_plugins_auto_discovery.render_cache'] = array('render_cache');
 
     return array(
       'parameters' => $parameters,
