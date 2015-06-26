@@ -6,14 +6,14 @@
 
 namespace Drupal\render_cache\RenderCache\Controller;
 
-use Drupal\render_cache\Plugin\BasePlugin;
+use Drupal\Component\Plugin\PluginBase;
 
 /**
  * Controller abstract base class.
  *
  * @ingroup rendercache
  */
-abstract class AbstractBaseController extends BasePlugin implements ControllerInterface {
+abstract class AbstractBaseController extends PluginBase implements ControllerInterface {
   // -----------------------------------------------------------------------
   // Suggested implementation functions.
 

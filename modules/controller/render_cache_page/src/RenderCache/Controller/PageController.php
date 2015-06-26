@@ -64,7 +64,7 @@ class PageController extends BaseController implements PageControllerInterface {
    */
   protected function isCacheable(array $default_cache_info, array $context) {
     // Disabled caching for now.
-    return variable_get('render_cache_' . $this->getType() . '_' . $context['page_callback'] . '_enabled', FALSE)
+    return variable_get('render_cache_' . $this->getPluginId() . '_' . $context['page_callback'] . '_enabled', FALSE)
         && parent::isCacheable($default_cache_info, $context);
   }
 
